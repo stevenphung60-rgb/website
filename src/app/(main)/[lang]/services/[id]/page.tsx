@@ -2,6 +2,7 @@ import { ArrowRight, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getContactInfo } from "src/server/contact";
@@ -43,6 +44,8 @@ export default async function ServiceDetailPage({
 
 	return (
 		<main className="w-full overflow-x-hidden bg-[#FAF7F0]">
+			<ScrollToTopHandler />
+
 			<section className="absolute left-0 top-0 z-20 w-full py-5 sm:py-6">
 				<div className="w-full max-w-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
 					<div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/70 sm:text-sm">

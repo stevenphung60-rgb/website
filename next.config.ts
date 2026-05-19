@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
 			bodySizeLimit: "100mb",
 		},
 		useCache: true,
-		cacheComponents: true,
+		// cacheComponents: true,
 		cacheLife: {
 			default: {
 				stale: 300, // 5 minutes

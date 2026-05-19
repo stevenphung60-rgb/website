@@ -1,6 +1,7 @@
 import { ArrowRight, ChevronRight, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
 import LocaleLink from "src/components/behaviors/LocaleLink";
+import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getContactInfo } from "src/server/contact";
@@ -56,11 +57,13 @@ export default async function ProductDetailPage({
 	const categoryName =
 		category?.name?.[locale] ?? category?.name?.en ?? dictionary.nav.products;
 
-	const categoryFilterId = category?.name?.en ?? category?.id ?? "";
+	const categoryFilterId = category?.id ?? product.categoryId ?? "";
 	const thumbnails = product.gallery ?? [];
 
 	return (
 		<section className="w-full bg-[#FAF7F0] py-6 sm:py-8">
+			<ScrollToTopHandler />
+
 			<div className="w-full max-w-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
 				<div
 					className="reveal-item mb-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs text-[#A87E3C] sm:mb-8 sm:text-[14px]"
@@ -74,7 +77,7 @@ export default async function ProductDetailPage({
 
 					<LocaleLink
 						href={
-							category
+							categoryFilterId
 								? `/products?category=${encodeURIComponent(categoryFilterId)}`
 								: "/products"
 						}
@@ -130,9 +133,9 @@ export default async function ProductDetailPage({
 						</div>
 
 						<div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap sm:gap-4">
-							{phone && (
+							{phone ? (
 								<a
-									href={`tel:${phone}`}
+									href={`tel:${phone.replace(/[^\d+]/g, "")}`}
 									className="group relative inline-flex w-full items-center justify-center gap-3 whitespace-nowrap rounded-full bg-[#342312] px-5 py-3 text-sm font-semibold text-[#E7D0AF] transition hover:scale-105 sm:w-auto sm:px-8 sm:text-base"
 								>
 									<Phone className="size-5 group-hover:animate-shake" />
@@ -142,7 +145,7 @@ export default async function ProductDetailPage({
 										<span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[#E7D0AF] transition-transform duration-500 group-hover:scale-x-100" />
 									</span>
 								</a>
-							)}
+							) : null}
 
 							<LocaleLink
 								href="/contact"
@@ -159,7 +162,7 @@ export default async function ProductDetailPage({
 					</div>
 				</div>
 
-				{relatedProducts.length > 0 && (
+				{relatedProducts.length > 0 ? (
 					<div
 						className="reveal-item mt-12 overflow-visible sm:mt-16"
 						style={{ animationDelay: "300ms" }}
@@ -182,7 +185,7 @@ export default async function ProductDetailPage({
 							))}
 						</RelatedProductsCarousel>
 					</div>
-				)}
+				) : null}
 			</div>
 		</section>
 	);

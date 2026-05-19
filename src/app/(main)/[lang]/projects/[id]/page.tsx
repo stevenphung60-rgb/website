@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getProjectCategoryById } from "src/server/projectcategories/get-projectcategory-by-id.query";
@@ -39,6 +40,8 @@ export default async function ProjectDetailPage({
 	const categoryName =
 		category?.name?.[locale] ?? category?.name?.en ?? dictionary.nav.projects;
 
+	const categoryFilterId = category?.id ?? project.categoryId ?? "";
+
 	const galleryImages = project.gallery?.length
 		? project.gallery
 		: [{ key: "placeholder", url: "/placeholder.svg", isMain: true }];
@@ -60,7 +63,8 @@ export default async function ProjectDetailPage({
 					): relatedProject is NonNullable<typeof relatedProject> =>
 						Boolean(
 							relatedProject &&
-								relatedProject.categoryId === project.categoryId &&
+								relatedProject.id !== project.id &&
+								relatedProject.categoryId === categoryFilterId &&
 								relatedProject.visibilityStatus === "active",
 						),
 				)
@@ -70,6 +74,8 @@ export default async function ProjectDetailPage({
 
 	return (
 		<section className="w-full overflow-x-hidden bg-[#FAF7F0]">
+			<ScrollToTopHandler />
+
 			<div className="relative overflow-hidden">
 				<ProjectHeroGallery
 					projectName={projectName}

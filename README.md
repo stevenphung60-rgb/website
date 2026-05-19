@@ -208,7 +208,7 @@ This project is private and proprietary to Nghiep Hung Company.
 ## 📞 Support
 
 For support and questions:
-- Email: votrungquan99@gmail.com
+- Email: stevenphung60@gmail.com
 - Website: [Company Website]
 - Phone: [Phone Number]
 

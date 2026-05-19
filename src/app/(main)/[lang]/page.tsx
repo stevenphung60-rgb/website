@@ -4,18 +4,16 @@ import HomepageLoading from "src/app/(main)/[lang]/homepage-loading";
 import Prefetch from "src/components/behaviors/prefetch";
 import type { Locale } from "src/lib/i18n/config";
 import { generateHomeMetadata } from "src/lib/seo/metadata";
-import AboutSection from "./about/about-section";
-import ContactSectionDatabase from "./contact/contact-section-database";
-import HeroSection from "./hero-section";
-import ProductsSectionDatabase from "./products/products-section-database";
-import ProjectsSectionDatabase from "./projects/projects-section-database";
-import ServicesSectionDatabase from "./services/services-section-database";
+import { getHeroInfo } from "src/server/hero";
 
-/**
- * Generate metadata for homepage
- * @param params - Route parameters including locale
- * @returns Metadata object
- */
+import AboutProductionCapabilitySection from "./about/about-production-capability-section";
+import HeroSection from "./home-hero-section";
+import HomeFeaturedClientsSection from "./home-featured-clients-section";
+import HomeFeaturedProjectsSection from "./home-featured-projects-section";
+import HomeMachineryTechnologySection from "./home-machinery-technology-section";
+import HomeProductsSectionDatabase from "./home-products-section-database";
+import HomeServicesSection from "./home-services-section";
+
 export async function generateMetadata({
 	params,
 }: {
@@ -25,12 +23,11 @@ export async function generateMetadata({
 	return generateHomeMetadata(locale);
 }
 
-/**
- * Main homepage component that displays database content for covered sections
- * Products, Services, Projects, and Contact use database data
- * About section remains static as it's not covered by admin database store
- */
-export default async function HomePage({ params }: { params: Promise<{ lang: Locale }> }) {
+export default async function HomePage({
+	params,
+}: {
+	params: Promise<{ lang: Locale }>;
+}) {
 	const { lang: locale } = await params;
 
 	return (
@@ -41,21 +38,23 @@ export default async function HomePage({ params }: { params: Promise<{ lang: Loc
 }
 
 async function HomePageContent({ locale }: { locale: Locale }) {
+	const heroInfo = await getHeroInfo();
+
 	return (
 		<>
-			<HeroSection locale={locale} />
-
-			<AboutSection locale={locale} />
+			<HeroSection locale={locale} heroInfo={heroInfo} />
 
 			<Prefetch url={`/${locale}/products`} />
 			<Prefetch url={`/${locale}/services`} />
 			<Prefetch url={`/${locale}/projects`} />
 			<Prefetch url={`/${locale}/contact`} />
 
-			<ProductsSectionDatabase locale={locale} />
-			<ServicesSectionDatabase locale={locale} />
-			<ProjectsSectionDatabase locale={locale} />
-			<ContactSectionDatabase locale={locale} />
+			<HomeProductsSectionDatabase locale={locale} heroInfo={heroInfo} />
+			<HomeServicesSection locale={locale} heroInfo={heroInfo} />
+			<AboutProductionCapabilitySection locale={locale} />
+			<HomeMachineryTechnologySection locale={locale} heroInfo={heroInfo} />
+			<HomeFeaturedClientsSection locale={locale} heroInfo={heroInfo} />
+			<HomeFeaturedProjectsSection locale={locale} heroInfo={heroInfo} />
 		</>
 	);
 }

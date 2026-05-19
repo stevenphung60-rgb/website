@@ -96,6 +96,7 @@ Once logged in, you can manage:
 - **Services**: Manage company services
 - **Projects**: Showcase completed projects
 - **Contact Info**: Update contact details, social media links, working hours
+- **Hero Info**: Update hero details
 
 ## Security Notes
 

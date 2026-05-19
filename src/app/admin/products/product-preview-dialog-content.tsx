@@ -9,23 +9,23 @@ import {
 } from "src/components/image-gallery/image-gallery";
 import { DialogContent, DialogHeader, DialogTitle } from "src/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "src/components/ui/tabs";
+import { getProductCategoryById } from "src/server/productcategories";
 import { getProductById } from "src/server/products";
 
 interface ProductPreviewDialogContentProps {
 	productId: string;
 }
 
-/**
- * Server component that renders the content of the product preview dialog
- * Fetches product data and displays gallery and description
- * @param productId - The ID of the product to display
- */
 export async function ProductPreviewDialogContent({ productId }: ProductPreviewDialogContentProps) {
 	const product = await getProductById(productId);
 
 	if (!product) {
 		return <NotFoundProductPreviewDialogContent />;
 	}
+
+	const productCategory = product.categoryId
+		? await getProductCategoryById(product.categoryId)
+		: null;
 
 	const galleryImages = product.gallery;
 	const convertedImages = convertToGalleryImages(
@@ -43,15 +43,41 @@ export async function ProductPreviewDialogContent({ productId }: ProductPreviewD
 						<TabsTrigger value="en">English</TabsTrigger>
 						<TabsTrigger value="vi">Tiếng Việt</TabsTrigger>
 					</TabsList>
+
 					<TabsContent value="en" className="mt-0">
 						<DialogTitle className="text-2xl font-serif font-bold text-foreground pr-8">
 							{product.name.en}
 						</DialogTitle>
+
+						{product.code && (
+							<p className="mt-1 text-sm font-medium text-muted-foreground">
+								Code: {product.code}
+							</p>
+						)}
+
+						{productCategory && (
+							<p className="mt-1 text-sm font-medium text-muted-foreground">
+								Category: {productCategory.name.en} - {productCategory.name.vi}
+							</p>
+						)}
 					</TabsContent>
+
 					<TabsContent value="vi" className="mt-0">
 						<DialogTitle className="text-2xl font-serif font-bold text-foreground pr-8">
 							{product.name.vi}
 						</DialogTitle>
+
+						{product.code && (
+							<p className="mt-1 text-sm font-medium text-muted-foreground">
+								Mã sản phẩm: {product.code}
+							</p>
+						)}
+
+						{productCategory && (
+							<p className="mt-1 text-sm font-medium text-muted-foreground">
+								Nhóm sản phẩm: {productCategory.name.en} - {productCategory.name.vi}
+							</p>
+						)}
 					</TabsContent>
 				</DialogHeader>
 

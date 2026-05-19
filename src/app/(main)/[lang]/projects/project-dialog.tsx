@@ -1,4 +1,4 @@
-import { Building, Calendar, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import {
 	convertToGalleryImages,
@@ -6,9 +6,7 @@ import {
 	GalleryImage,
 	GalleryNextButton,
 	GalleryRoot,
-	GalleryThumbnails,
 } from "src/components/image-gallery/image-gallery";
-import { Badge } from "src/components/ui/badge";
 import { Card, CardContent, CardTitle } from "src/components/ui/card";
 import {
 	Dialog,
@@ -19,21 +17,19 @@ import {
 } from "src/components/ui/dialog";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
+import { getProjectCategoryById } from "src/server/projectcategories";
 import type { Project } from "src/server/projects";
-import { getProjectById, ProjectCompletionStatus } from "src/server/projects";
+import { getProjectById } from "src/server/projects";
 
 interface ProjectDialogProps {
 	projectId: string;
 	locale: Locale;
 }
 
-/**
- * Server component that fetches project data by ID and renders the project dialog with card trigger
- * Uses the newer image gallery system for consistent UI across admin and public interfaces
- * @param projectId - The ID of the project to display
- * @param locale - The current locale for internationalization
- */
-export default async function ProjectDialog({ projectId, locale }: ProjectDialogProps) {
+export default async function ProjectDialog({
+	projectId,
+	locale,
+}: ProjectDialogProps) {
 	const project: Project | null = await getProjectById(projectId);
 
 	if (!project) {
@@ -43,7 +39,13 @@ export default async function ProjectDialog({ projectId, locale }: ProjectDialog
 	const dictionary = getDictionary(locale);
 	const projectName = project.name[locale];
 	const projectDescription = project.description[locale];
-	const projectCategory = project.category[locale];
+
+	const projectCategory = project.categoryId
+		? await getProjectCategoryById(project.categoryId)
+		: null;
+
+	const projectCategoryName =
+		projectCategory?.name?.[locale] ?? dictionary.projects.filter.all;
 
 	const convertedImages = convertToGalleryImages(
 		project.gallery.map((image, index) => ({
@@ -52,105 +54,113 @@ export default async function ProjectDialog({ projectId, locale }: ProjectDialog
 		})),
 	);
 
-	const mainImage = project.gallery?.find((img) => img.isMain) || project.gallery?.[0];
+	const mainImage =
+		project.gallery?.find((img) => img.isMain) || project.gallery?.[0];
 
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 py-0 hover:-translate-y-1">
-					<div className="aspect-video overflow-hidden rounded-t-lg">
-						<Image
-							src={mainImage?.url || "/placeholder.svg"}
-							alt={projectName}
-							width={400}
-							height={300}
-							className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-						/>
-					</div>
-					<CardContent className="pb-6">
-						<CardTitle className="text-xl font-serif font-bold text-foreground">
-							{projectName}
-						</CardTitle>
-					</CardContent>
-				</Card>
+				<div
+					className="
+						group/project relative cursor-pointer !rounded-none
+						overflow-hidden
+						transition-all duration-300 ease-out
+						hover:-translate-y-2
+						hover:shadow-[0_20px_60px_rgba(0,0,0,0.16)]
+					"
+				>
+					<div
+						className="
+							pointer-events-none absolute left-0 top-0 z-20
+							h-[4px] w-full origin-left scale-x-0
+							bg-[#342312]
+							transition-transform duration-500 ease-out
+							group-hover/project:scale-x-100
+						"
+					/>
+
+					<Card className="cursor-pointer !rounded-none py-0 transition-colors duration-300 group-hover/project:border-transparent">
+						<div className="aspect-video overflow-hidden !rounded-none">
+							<Image
+								src={mainImage?.url || "/placeholder.svg"}
+								alt={projectName}
+								width={400}
+								height={300}
+								className="
+									h-full w-full object-cover
+									transition-transform duration-500 ease-out
+									group-hover/project:scale-105
+								"
+							/>
+						</div>
+
+						<CardContent className="pb-6">
+							<CardTitle
+								className="
+									font-serif text-xl font-bold text-foreground
+									transition-colors duration-300
+									group-hover/project:text-[#A87E3C]
+								"
+							>
+								{projectName}
+							</CardTitle>
+						</CardContent>
+					</Card>
+				</div>
 			</DialogTrigger>
 
-			<DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-				<DialogHeader className="p-6 pb-0 sticky top-0 bg-background z-10">
-					<DialogTitle className="text-2xl font-serif font-bold text-foreground pr-8">
-						{projectName}
-					</DialogTitle>
+			<DialogContent className="max-h-[95vh] w-[95vw] max-w-7xl overflow-hidden border-0 !rounded-none bg-transparent p-0 shadow-none">
+				<DialogHeader className="sr-only">
+					<DialogTitle>{projectName}</DialogTitle>
 				</DialogHeader>
 
-				<div className="px-6 pb-6 space-y-6">
-					<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-						<div className="flex items-center">
-							<Building className="size-4 mr-2 text-primary" />
-							<span>{projectCategory}</span>
-						</div>
-						<div className="flex items-center">
-							<MapPin className="size-4 mr-2 text-primary" />
-							<span>{project.location}</span>
-						</div>
-						<div className="flex items-center">
-							<Calendar className="size-4 mr-2 text-primary" />
-							<span>{project.year}</span>
-						</div>
-						<Badge
-							variant={
-								project.completionStatus === ProjectCompletionStatus.Completed
-									? "default"
-									: "outline"
-							}
-							className="w-fit"
-						>
-							{project.completionStatus === ProjectCompletionStatus.Completed
-								? dictionary.projects.completionStatus.completed
-								: project.completionStatus === ProjectCompletionStatus.InProgress
-									? dictionary.projects.completionStatus.inProgress
-									: dictionary.projects.completionStatus.planning}
-						</Badge>
-					</div>
-
-					<div>
-						<h4 className="font-serif font-bold text-lg mb-3">
-							{dictionary.projects.technicalSpecs}
-						</h4>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-							{project.specs.map((spec, index) => (
-								<div key={`spec-${index}-${spec[locale]}`} className="flex items-start">
-									<div className="size-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
-									<span className="text-muted-foreground text-sm">{spec[locale]}</span>
-								</div>
-							))}
-						</div>
-					</div>
-
-					<div>
-						<h4 className="font-serif font-bold text-lg mb-3">
-							{dictionary.projects.projectImages}
-						</h4>
+				<div className="grid overflow-hidden !rounded-none bg-white shadow-[0_18px_45px_rgba(0,0,0,0.08)] lg:grid-cols-[58%_42%]">
+					<div className="relative min-h-[420px] overflow-hidden">
 						<GalleryRoot images={convertedImages}>
-							<div className="relative">
-								<GalleryImage className="mb-6" />
-								<GalleryBackButton className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white">
+							<div className="relative h-full">
+								<GalleryImage className="h-full w-full object-cover" />
+
+								<GalleryBackButton className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#342312] hover:bg-white">
 									<ChevronLeft className="size-4" />
 								</GalleryBackButton>
-								<GalleryNextButton className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white">
+
+								<GalleryNextButton className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#342312] hover:bg-white">
 									<ChevronRight className="size-4" />
 								</GalleryNextButton>
 							</div>
-							<GalleryThumbnails />
 						</GalleryRoot>
 					</div>
 
-					<div className="border border-border rounded-lg p-6 bg-muted/30">
-						<h4 className="font-serif font-bold text-xl mb-4 text-foreground">
-							{dictionary.projects.projectDescription}
-						</h4>
-						<div className="text-foreground text-lg leading-relaxed whitespace-pre-line">
-							{projectDescription}
+					<div className="flex min-h-[640px] flex-col justify-center bg-[#F7F1E6] px-10 py-14 lg:px-14">
+						<p className="mb-6 text-[15px] font-semibold text-[#B59A63]">
+							{projectCategoryName}
+						</p>
+
+						<h2 className="mb-10 text-[34px] font-black uppercase leading-[1.3] tracking-[-0.02em] text-[#06134A]">
+							{projectName}
+						</h2>
+
+						<div className="mb-12 grid grid-cols-[110px_1fr] gap-y-5 text-[18px]">
+							<span className="font-light text-[#7E869B]">
+								{locale === "vi" ? "Địa điểm" : "Location"}
+							</span>
+
+							<span className="text-[18px] font-black text-[#111827]">
+								{project.location?.[locale]}
+							</span>
+
+							<span className="font-light text-[#7E869B]">
+								{locale === "vi" ? "Thời gian" : "Time"}
+							</span>
+
+							<span className="text-[18px] font-black text-[#111827]">
+								{project.year?.[locale]}
+							</span>
 						</div>
+
+						<p className="line-clamp-6 text-[18px] leading-[2.1] text-[#4B5563]">
+							{projectDescription}
+						</p>
 					</div>
 				</div>
 			</DialogContent>
@@ -158,28 +168,23 @@ export default async function ProjectDialog({ projectId, locale }: ProjectDialog
 	);
 }
 
-/**
- * Fallback component displayed when a project is not found
- * Shows a placeholder card with "Project Not Found" message
- * @param locale - The current locale for internationalization
- * @returns JSX element displaying not found project card
- */
 function NotFoundProjectDialog({ locale }: { locale: Locale }) {
 	const dictionary = getDictionary(locale);
 
 	return (
-		<Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 py-0 hover:-translate-y-1">
-			<div className="aspect-video overflow-hidden rounded-t-lg">
+		<Card className="group cursor-pointer !rounded-none py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+			<div className="aspect-video overflow-hidden !rounded-none">
 				<Image
 					src="/placeholder.svg"
 					alt={dictionary.projects.notFound.title}
 					width={400}
 					height={300}
-					className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+					className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 				/>
 			</div>
+
 			<CardContent className="p-6">
-				<h3 className="text-xl font-serif font-bold text-foreground">
+				<h3 className="font-serif text-xl font-bold text-foreground">
 					{dictionary.projects.notFound.title}
 				</h3>
 			</CardContent>

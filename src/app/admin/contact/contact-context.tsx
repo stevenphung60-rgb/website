@@ -1,12 +1,29 @@
 "use client";
 
 import { createReducerContext } from "src/contexts/createReducerContext";
-import type { ContactInfo } from "./contact.type";
-import type { SocialMediaLink, SocialMediaPlatformId } from "./social-media/social-media.type";
+import type {
+	ContactInfo,
+	ContactSingleImage,
+	LocalizedText,
+} from "./contact.type";
+import type {
+	SocialMediaLink,
+	SocialMediaPlatformId,
+} from "./social-media/social-media.type";
 
 interface ContactState {
 	contactInfo: ContactInfo;
 }
+
+type LocalizedContactField =
+	| "consultanttitle"
+	| "consultantsubtitle"
+	| "consultantdescription"
+	| "footercompanyname"
+	| "footercompanydescription"
+	| "workingHours";
+
+type SingleImageContactField = "consultantimage" | "footerlogo";
 
 type ContactAction =
 	| { type: "SET_CONTACT_INFO"; payload: { contactInfo: ContactInfo } }
@@ -14,10 +31,31 @@ type ContactAction =
 	| { type: "UPDATE_PHONE2"; payload: { phone2: string } }
 	| { type: "UPDATE_EMAIL1"; payload: { email1: string } }
 	| { type: "UPDATE_EMAIL2"; payload: { email2: string } }
-	| { type: "UPDATE_ADDRESS"; payload: { address: string } }
-	| { type: "UPDATE_WORKING_HOURS_EN"; payload: { en: string } }
-	| { type: "UPDATE_WORKING_HOURS_VI"; payload: { vi: string } }
-	| { type: "ADD_SOCIAL_MEDIA_LINK"; payload: { platformId: SocialMediaPlatformId } }
+	| {
+			type: "UPDATE_LOCALIZED_FIELD";
+			payload: {
+				field: LocalizedContactField;
+				locale: "en" | "vi";
+				value: string;
+			};
+	  }
+	| {
+			type: "SET_SINGLE_IMAGE";
+			payload: {
+				field: SingleImageContactField;
+				image: ContactSingleImage;
+			};
+	  }
+	| {
+			type: "REMOVE_SINGLE_IMAGE";
+			payload: {
+				field: SingleImageContactField;
+			};
+	  }
+	| {
+			type: "ADD_SOCIAL_MEDIA_LINK";
+			payload: { platformId: SocialMediaPlatformId };
+	  }
 	| { type: "REMOVE_SOCIAL_MEDIA_LINK"; payload: { linkId: string } }
 	| {
 			type: "UPDATE_SOCIAL_MEDIA_PLATFORM";
@@ -26,16 +64,54 @@ type ContactAction =
 	| { type: "UPDATE_SOCIAL_MEDIA_URL"; payload: { linkId: string; url: string } }
 	| { type: "SET_SOCIAL_MEDIA_LINKS"; payload: { links: SocialMediaLink[] } };
 
+const emptyLocalizedText: LocalizedText = {
+	en: "",
+	vi: "",
+};
+
+const emptySingleImage: ContactSingleImage = {
+	url: "",
+};
+
 const initialContactInfo: ContactInfo = {
 	phone1: "",
 	phone2: "",
 	email1: "",
 	email2: "",
-	address: "",
-	workingHours: {
-		en: "Monday - Friday: 8:00 AM - 5:30 PM | Saturday: 8:00 AM - 12:00 PM",
-		vi: "Thứ 2 - Thứ 6: 08:00 - 17:30 | Thứ 7: 08:00 - 12:00",
+
+	consultanttitle: {
+		en: "",
+		vi: "",
 	},
+	consultantsubtitle: {
+		en: "",
+		vi: "",
+	},
+	consultantdescription: {
+		en: "",
+		vi: "",
+	},
+	consultantimage: {
+		url: "",
+	},
+
+	footerlogo: {
+		url: "",
+	},
+	footercompanyname: {
+		en: "",
+		vi: "",
+	},
+	footercompanydescription: {
+		en: "",
+		vi: "",
+	},
+
+	workingHours: {
+		en: "",
+		vi: "",
+	},
+
 	socialMedia: [],
 };
 
@@ -43,18 +119,18 @@ const initialState: ContactState = {
 	contactInfo: initialContactInfo,
 };
 
-/**
- * Reducer function for contact state management
- * @param state - Current contact state
- * @param action - Action to perform on the state
- * @returns Updated contact state
- */
-function contactReducer(state: ContactState, action: ContactAction): ContactState {
+function contactReducer(
+	state: ContactState,
+	action: ContactAction,
+): ContactState {
 	switch (action.type) {
 		case "SET_CONTACT_INFO":
 			return {
 				...state,
-				contactInfo: action.payload.contactInfo,
+				contactInfo: {
+					...initialContactInfo,
+					...action.payload.contactInfo,
+				},
 			};
 
 		case "UPDATE_PHONE1":
@@ -93,36 +169,37 @@ function contactReducer(state: ContactState, action: ContactAction): ContactStat
 				},
 			};
 
-		case "UPDATE_ADDRESS":
-			return {
-				...state,
-				contactInfo: {
-					...state.contactInfo,
-					address: action.payload.address,
-				},
-			};
+		case "UPDATE_LOCALIZED_FIELD": {
+			const currentValue =
+				state.contactInfo[action.payload.field] || emptyLocalizedText;
 
-		case "UPDATE_WORKING_HOURS_EN":
 			return {
 				...state,
 				contactInfo: {
 					...state.contactInfo,
-					workingHours: {
-						...state.contactInfo.workingHours,
-						en: action.payload.en,
+					[action.payload.field]: {
+						...currentValue,
+						[action.payload.locale]: action.payload.value,
 					},
 				},
 			};
+		}
 
-		case "UPDATE_WORKING_HOURS_VI":
+		case "SET_SINGLE_IMAGE":
 			return {
 				...state,
 				contactInfo: {
 					...state.contactInfo,
-					workingHours: {
-						...state.contactInfo.workingHours,
-						vi: action.payload.vi,
-					},
+					[action.payload.field]: action.payload.image,
+				},
+			};
+
+		case "REMOVE_SINGLE_IMAGE":
+			return {
+				...state,
+				contactInfo: {
+					...state.contactInfo,
+					[action.payload.field]: emptySingleImage,
 				},
 			};
 
@@ -134,7 +211,9 @@ function contactReducer(state: ContactState, action: ContactAction): ContactStat
 					socialMedia: [
 						...state.contactInfo.socialMedia,
 						{
-							id: `link-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+							id: `link-${Date.now()}-${Math.random()
+								.toString(36)
+								.substr(2, 9)}`,
 							platformId: action.payload.platformId,
 							url: "",
 						},
@@ -160,7 +239,11 @@ function contactReducer(state: ContactState, action: ContactAction): ContactStat
 					...state.contactInfo,
 					socialMedia: state.contactInfo.socialMedia.map((link) =>
 						link.id === action.payload.linkId
-							? { ...link, platformId: action.payload.platformId, url: "" }
+							? {
+									...link,
+									platformId: action.payload.platformId,
+									url: "",
+								}
 							: link,
 					),
 				},
@@ -172,7 +255,12 @@ function contactReducer(state: ContactState, action: ContactAction): ContactStat
 				contactInfo: {
 					...state.contactInfo,
 					socialMedia: state.contactInfo.socialMedia.map((link) =>
-						link.id === action.payload.linkId ? { ...link, url: action.payload.url } : link,
+						link.id === action.payload.linkId
+							? {
+									...link,
+									url: action.payload.url,
+								}
+							: link,
 					),
 				},
 			};
@@ -191,17 +279,9 @@ function contactReducer(state: ContactState, action: ContactAction): ContactStat
 	}
 }
 
-const [ContactProviderBase, useContactStateRaw, useContactDispatch] = createReducerContext(
-	contactReducer,
-	initialState,
-);
+const [ContactProviderBase, useContactStateRaw, useContactDispatch] =
+	createReducerContext(contactReducer, initialState);
 
-/**
- * Provider component for contact information state management
- * Accepts initial contact info data directly as props
- * @param props - Component props
- * @returns JSX element providing contact context
- */
 export function ContactProvider({
 	children,
 	contactInfo = initialContactInfo,
@@ -209,125 +289,256 @@ export function ContactProvider({
 	children: React.ReactNode;
 	contactInfo?: ContactInfo;
 }) {
-	return <ContactProviderBase contactInfo={contactInfo}>{children}</ContactProviderBase>;
+	return (
+		<ContactProviderBase
+			contactInfo={{
+				...initialContactInfo,
+				...contactInfo,
+			}}
+		>
+			{children}
+		</ContactProviderBase>
+	);
 }
 
-/**
- * Hook to access contact information
- * @returns Contact information object
- */
 export function useContactInfo() {
 	const state = useContactStateRaw();
-	return state.contactInfo;
+
+	return {
+		...initialContactInfo,
+		...state.contactInfo,
+	};
 }
 
-/**
- * Hook to access phone numbers data and actions
- * @returns Object containing phone numbers and related actions
- */
-export function usePhoneNumbers() {
+export function usePhone1() {
 	const state = useContactStateRaw();
 	const dispatch = useContactDispatch();
 
 	return {
 		phone1: state.contactInfo.phone1,
-		phone2: state.contactInfo.phone2,
 		updatePhone1: (phone1: string) => {
 			dispatch({ type: "UPDATE_PHONE1", payload: { phone1 } });
 		},
+	};
+}
+
+export function usePhone2() {
+	const state = useContactStateRaw();
+	const dispatch = useContactDispatch();
+
+	return {
+		phone2: state.contactInfo.phone2,
 		updatePhone2: (phone2: string) => {
 			dispatch({ type: "UPDATE_PHONE2", payload: { phone2 } });
 		},
 	};
 }
 
-/**
- * Hook to access email addresses data and actions
- * @returns Object containing email addresses and related actions
- */
-export function useEmailAddresses() {
+export function useEmail1() {
 	const state = useContactStateRaw();
 	const dispatch = useContactDispatch();
 
 	return {
 		email1: state.contactInfo.email1,
-		email2: state.contactInfo.email2,
 		updateEmail1: (email1: string) => {
 			dispatch({ type: "UPDATE_EMAIL1", payload: { email1 } });
 		},
+	};
+}
+
+export function useEmail2() {
+	const state = useContactStateRaw();
+	const dispatch = useContactDispatch();
+
+	return {
+		email2: state.contactInfo.email2,
 		updateEmail2: (email2: string) => {
 			dispatch({ type: "UPDATE_EMAIL2", payload: { email2 } });
 		},
 	};
 }
 
-/**
- * Hook to access address data and actions
- * @returns Object containing address and related actions
- */
-export function useAddress() {
+export function useLocalizedContactField(field: LocalizedContactField) {
 	const state = useContactStateRaw();
 	const dispatch = useContactDispatch();
 
+	const value = state.contactInfo[field] || emptyLocalizedText;
+
 	return {
-		address: state.contactInfo.address,
-		updateAddress: (address: string) => {
-			dispatch({ type: "UPDATE_ADDRESS", payload: { address } });
+		value,
+		updateEn: (en: string) => {
+			dispatch({
+				type: "UPDATE_LOCALIZED_FIELD",
+				payload: {
+					field,
+					locale: "en",
+					value: en,
+				},
+			});
+		},
+		updateVi: (vi: string) => {
+			dispatch({
+				type: "UPDATE_LOCALIZED_FIELD",
+				payload: {
+					field,
+					locale: "vi",
+					value: vi,
+				},
+			});
 		},
 	};
 }
 
-/**
- * Hook to access working hours data and actions
- * @returns Object containing working hours and related actions
- */
+export function useSingleContactImage(field: SingleImageContactField) {
+	const state = useContactStateRaw();
+	const dispatch = useContactDispatch();
+
+	const image = state.contactInfo[field] || emptySingleImage;
+
+	return {
+		image,
+		setImage: (newImage: ContactSingleImage) => {
+			dispatch({
+				type: "SET_SINGLE_IMAGE",
+				payload: {
+					field,
+					image: newImage,
+				},
+			});
+		},
+		removeImage: () => {
+			dispatch({
+				type: "REMOVE_SINGLE_IMAGE",
+				payload: {
+					field,
+				},
+			});
+		},
+	};
+}
+
+export function useConsultantContent() {
+	const consultanttitle = useLocalizedContactField("consultanttitle");
+	const consultantsubtitle = useLocalizedContactField("consultantsubtitle");
+	const consultantdescription = useLocalizedContactField(
+		"consultantdescription",
+	);
+	const consultantimage = useSingleContactImage("consultantimage");
+
+	return {
+		consultanttitle: consultanttitle.value,
+		updateConsultanttitleEn: consultanttitle.updateEn,
+		updateConsultanttitleVi: consultanttitle.updateVi,
+
+		consultantsubtitle: consultantsubtitle.value,
+		updateConsultantsubtitleEn: consultantsubtitle.updateEn,
+		updateConsultantsubtitleVi: consultantsubtitle.updateVi,
+
+		consultantdescription: consultantdescription.value,
+		updateConsultantdescriptionEn: consultantdescription.updateEn,
+		updateConsultantdescriptionVi: consultantdescription.updateVi,
+
+		consultantimage: consultantimage.image,
+		setConsultantimage: consultantimage.setImage,
+		removeConsultantimage: consultantimage.removeImage,
+	};
+}
+
+export function useFooterContent() {
+	const footerlogo = useSingleContactImage("footerlogo");
+	const footercompanyname = useLocalizedContactField("footercompanyname");
+	const footercompanydescription = useLocalizedContactField(
+		"footercompanydescription",
+	);
+
+	return {
+		footerlogo: footerlogo.image,
+		setFooterlogo: footerlogo.setImage,
+		removeFooterlogo: footerlogo.removeImage,
+
+		footercompanyname: footercompanyname.value,
+		updateFootercompanynameEn: footercompanyname.updateEn,
+		updateFootercompanynameVi: footercompanyname.updateVi,
+
+		footercompanydescription: footercompanydescription.value,
+		updateFootercompanydescriptionEn: footercompanydescription.updateEn,
+		updateFootercompanydescriptionVi: footercompanydescription.updateVi,
+	};
+}
+
 export function useWorkingHours() {
-	const state = useContactStateRaw();
-	const dispatch = useContactDispatch();
+	const { value, updateEn, updateVi } =
+		useLocalizedContactField("workingHours");
 
 	return {
-		workingHours: state.contactInfo.workingHours,
-		updateWorkingHoursEn: (en: string) => {
-			dispatch({ type: "UPDATE_WORKING_HOURS_EN", payload: { en } });
-		},
-		updateWorkingHoursVi: (vi: string) => {
-			dispatch({ type: "UPDATE_WORKING_HOURS_VI", payload: { vi } });
-		},
+		workingHours: value,
+		updateWorkingHoursEn: updateEn,
+		updateWorkingHoursVi: updateVi,
 	};
 }
 
-/**
- * Hook to access social media links data and actions
- * @returns Object containing social media links and related actions
- */
-export function useSocialMediaLinks() {
+export function useSocialMedia() {
 	const state = useContactStateRaw();
 	const dispatch = useContactDispatch();
 
 	return {
 		socialMedia: state.contactInfo.socialMedia,
 		addSocialMediaLink: (platformId: SocialMediaPlatformId) => {
-			dispatch({ type: "ADD_SOCIAL_MEDIA_LINK", payload: { platformId } });
+			dispatch({
+				type: "ADD_SOCIAL_MEDIA_LINK",
+				payload: { platformId },
+			});
 		},
 		removeSocialMediaLink: (linkId: string) => {
-			dispatch({ type: "REMOVE_SOCIAL_MEDIA_LINK", payload: { linkId } });
+			dispatch({
+				type: "REMOVE_SOCIAL_MEDIA_LINK",
+				payload: { linkId },
+			});
 		},
-		updateSocialMediaPlatform: (linkId: string, platformId: SocialMediaPlatformId) => {
-			dispatch({ type: "UPDATE_SOCIAL_MEDIA_PLATFORM", payload: { linkId, platformId } });
+		updateSocialMediaPlatform: (
+			linkId: string,
+			platformId: SocialMediaPlatformId,
+		) => {
+			dispatch({
+				type: "UPDATE_SOCIAL_MEDIA_PLATFORM",
+				payload: { linkId, platformId },
+			});
 		},
 		updateSocialMediaUrl: (linkId: string, url: string) => {
-			dispatch({ type: "UPDATE_SOCIAL_MEDIA_URL", payload: { linkId, url } });
+			dispatch({
+				type: "UPDATE_SOCIAL_MEDIA_URL",
+				payload: { linkId, url },
+			});
 		},
 		setSocialMediaLinks: (links: SocialMediaLink[]) => {
-			dispatch({ type: "SET_SOCIAL_MEDIA_LINKS", payload: { links } });
+			dispatch({
+				type: "SET_SOCIAL_MEDIA_LINKS",
+				payload: { links },
+			});
 		},
 	};
 }
 
-/**
- * Hook to access general contact actions
- * @returns Object containing general contact actions
- */
+export function useSocialMediaLinks() {
+	const {
+		socialMedia,
+		addSocialMediaLink,
+		removeSocialMediaLink,
+		updateSocialMediaPlatform,
+		updateSocialMediaUrl,
+		setSocialMediaLinks,
+	} = useSocialMedia();
+
+	return {
+		socialMediaLinks: socialMedia,
+		addSocialMediaLink,
+		removeSocialMediaLink,
+		updateSocialMediaPlatform,
+		updateSocialMediaUrl,
+		setSocialMediaLinks,
+	};
+}
+
 export function useContactActions() {
 	const dispatch = useContactDispatch();
 
@@ -338,12 +549,12 @@ export function useContactActions() {
 	};
 }
 
-/**
- * Combined hook for backward compatibility
- * @deprecated Use useContactInfo and useContactActions instead
- */
 export function useContact() {
 	const contactInfo = useContactInfo();
 	const actions = useContactActions();
-	return { contactInfo, actions };
+
+	return {
+		contactInfo,
+		actions,
+	};
 }

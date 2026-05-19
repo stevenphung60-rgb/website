@@ -3,7 +3,7 @@
  * Has the same structure as the static services-section.tsx
  */
 
-import { unstable_cacheTag as cacheTag } from "next/cache";
+import { cacheTag } from "next/cache";
 import Link from "next/link";
 import {
 	EmptyStateCard,
@@ -20,8 +20,9 @@ import {
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
-import { getActiveServiceIds } from "src/server/services";
+import { getActiveServiceIds, getServiceById } from "src/server/services";
 import ServiceDialog from "./service-dialog";
+import { ServiceListNavigation } from "./service-list-navigation";
 
 interface ServicesSectionDatabaseProps {
 	locale: Locale;
@@ -44,42 +45,102 @@ export default async function ServicesSectionDatabase({
 	const serviceIds: string[] = await getActiveServiceIds();
 	const dictionary = getDictionary(locale);
 
+	const services = await Promise.all(
+		serviceIds.map((serviceId) => getServiceById(serviceId)),
+	);
+
+	const serviceNavigationItems = services
+		.filter((service) => service !== null)
+		.map((service) => ({
+			id: service.id,
+			name: service.name?.[locale] ?? service.name?.en ?? "",
+		}))
+		.filter((service) => service.name);
+
 	return (
 		// biome-ignore lint/correctness/useUniqueElementIds: Fixed ID needed for navigation anchor links
-		<section id="services" className="py-20 bg-muted/30">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="text-center mb-16">
-					<h2 className="text-3xl lg:text-5xl font-serif font-bold text-foreground mb-6">
-						{dictionary.services.title}{" "}
-						<span className="text-primary">{dictionary.services.subtitle}</span>
-					</h2>
-					<p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-						{dictionary.services.description}
-					</p>
-				</div>
-
+		<section
+			id="services"
+			className="w-full bg-muted/30 py-12 sm:py-16 lg:py-20"
+		>
+			<div className="w-full max-w-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
 				{serviceIds.length > 0 ? (
-					<StandardGridVisibilityController itemIds={serviceIds} limitRows={!viewAll}>
-						<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-							{serviceIds.map((serviceId) => (
-								<ItemWrapper key={serviceId} id={serviceId}>
-									<ServiceDialog serviceId={serviceId} locale={locale} />
-								</ItemWrapper>
-							))}
+					<StandardGridVisibilityController
+						itemIds={serviceIds}
+						limitRows={!viewAll}
+					>
+					{viewAll ? (
+						<div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+							<div className="w-full lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-[300px] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:pr-2">
+								<ServiceListNavigation
+									locale={locale}
+									items={serviceNavigationItems}
+								/>
+							</div>
+
+							<div className="min-w-0 flex-1">
+								<div className="space-y-8 lg:space-y-10">
+									{serviceIds.map((serviceId, index) => (
+										<ItemWrapper key={serviceId} id={serviceId}>
+											<div
+												id={`service-card-${serviceId}`}
+												data-service-id={serviceId}
+												className="scroll-mt-[120px] service-card-reveal sm:scroll-mt-[140px] lg:scroll-mt-[180px]"
+												style={{
+													animationDelay: `${index * 140}ms`,
+												}}
+											>
+												<ServiceDialog
+													serviceId={serviceId}
+													locale={locale}
+													index={index}
+												/>
+											</div>
+										</ItemWrapper>
+									))}
+								</div>
+							</div>
 						</div>
-						{!viewAll && (
-							<ViewAllButton>
-								<Button asChild variant="outline" size="lg">
-									<Link href={`/${locale}/services`}>{dictionary.services.viewAll}</Link>
-								</Button>
-							</ViewAllButton>
+					) : (
+							<>
+								<div className="space-y-8 lg:space-y-10">
+									{serviceIds.map((serviceId, index) => (
+										<ItemWrapper key={serviceId} id={serviceId}>
+											<div
+												className="service-card-reveal"
+												style={{
+													animationDelay: `${index * 140}ms`,
+												}}
+											>
+												<ServiceDialog
+													serviceId={serviceId}
+													locale={locale}
+													index={index}
+												/>
+											</div>
+										</ItemWrapper>
+									))}
+								</div>
+
+								<ViewAllButton>
+									<Button asChild variant="outline" size="lg">
+										<Link href={`/${locale}/services`}>
+											{dictionary.services.viewAll}
+										</Link>
+									</Button>
+								</ViewAllButton>
+							</>
 						)}
 					</StandardGridVisibilityController>
 				) : (
 					<EmptyStateCard>
 						<EmptyStateIcon>🔧</EmptyStateIcon>
+
 						<EmptyStateTitle>{dictionary.services.empty.title}</EmptyStateTitle>
-						<EmptyStateDescription>{dictionary.services.empty.description}</EmptyStateDescription>
+
+						<EmptyStateDescription>
+							{dictionary.services.empty.description}
+						</EmptyStateDescription>
 					</EmptyStateCard>
 				)}
 			</div>

@@ -11,13 +11,6 @@ import { uploadToS3 } from "src/lib/s3";
 import type { Product, ProductDocument, ProductImage } from "src/server/products";
 import { ProductStatus } from "src/server/products";
 
-/**
- * Generate a unique S3 key for product images
- * @param productName - The name of the product
- * @param fileName - The original file name
- * @param index - The index of the image (for multiple images)
- * @returns A unique S3 key
- */
 function generateProductS3Key(productId: string, fileName: string, index: number = 0): string {
 	const timestamp = Date.now();
 	const fileExtension = fileName.split(".").pop();
@@ -26,25 +19,18 @@ function generateProductS3Key(productId: string, fileName: string, index: number
 	return `products/${productId}/${uniqueKey}.${fileExtension}`;
 }
 
-/**
- * Server action to create a new product with image uploads to S3 and data storage in MongoDB
- * @param formData - Form data containing product information and images
- * @returns Promise that resolves to the creation result
- */
 export async function createProduct(formData: FormData): Promise<FormResult> {
 	try {
-		// Extract form data
+		const productCode = formData.get("productCode") as string;
 		const productNameEn = formData.get("productNameEn") as string;
 		const productNameVi = formData.get("productNameVi") as string;
 		const productDescriptionEn = formData.get("productDescriptionEn") as string;
 		const productDescriptionVi = formData.get("productDescriptionVi") as string;
 		const productStatus = formData.get("productStatus") as string;
-		const productCategoryEn = (formData.get("productCategoryEn") as string) || "";
-		const productCategoryVi = (formData.get("productCategoryVi") as string) || "";
+		const productCategoryId = (formData.get("productCategoryId") as string) || "";
 		const productImages = formData.getAll("productImages") as File[];
 		const selectedImageIndex = formData.get("selectedImageIndex") as string;
 
-		// Validation phase
 		if (productImages.length === 0) {
 			return {
 				success: false,
@@ -59,24 +45,14 @@ export async function createProduct(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate required fields and collect missing field names
 		const missingFields: string[] = [];
 
-		if (!productNameEn) {
-			missingFields.push("Product Name (English)");
-		}
-		if (!productNameVi) {
-			missingFields.push("Product Name (Vietnamese)");
-		}
-		if (!productDescriptionEn) {
-			missingFields.push("Product Description (English)");
-		}
-		if (!productDescriptionVi) {
-			missingFields.push("Product Description (Vietnamese)");
-		}
-		if (!productStatus) {
-			missingFields.push("Product Status");
-		}
+		if (!productCode) missingFields.push("Product Code");
+		if (!productNameEn) missingFields.push("Product Name (English)");
+		if (!productNameVi) missingFields.push("Product Name (Vietnamese)");
+		if (!productDescriptionEn) missingFields.push("Product Description (English)");
+		if (!productDescriptionVi) missingFields.push("Product Description (Vietnamese)");
+		if (!productStatus) missingFields.push("Product Status");
 
 		if (missingFields.length > 0) {
 			return {
@@ -85,46 +61,35 @@ export async function createProduct(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate status value, these are validated in the client already, no need to handle errors here
 		if (!Object.values(ProductStatus).includes(productStatus as ProductStatus)) {
 			throw new Error("Invalid product status");
 		}
 
 		const productId = nanoid();
-
-		// Upload images to S3 in batches of 10 using lodash chunk
 		const batchSize = 10;
 		const imageBatches = chunk(productImages, batchSize);
 		const uploadedImages: ProductImage[] = [];
 
-		// Process each batch
 		for (const [batchIndex, batchImages] of imageBatches.entries()) {
 			const startIndex = batchIndex * batchSize;
 
-			// Create upload promises for current batch
 			const batchUploadPromises = batchImages.map(async (file, i) => {
 				const globalIndex = startIndex + i;
 				const s3Key = generateProductS3Key(productId, file.name, globalIndex);
-
 				const uploadResult: S3UploadResult = await uploadToS3(file, s3Key);
-
-				// Check if this is the main image based on index
 				const mainImageIndex = parseInt(selectedImageIndex, 10);
-				const isMain = globalIndex === mainImageIndex;
 
 				return {
 					key: uploadResult.key,
 					url: uploadResult.url,
-					isMain,
+					isMain: globalIndex === mainImageIndex,
 					uploadedAt: new Date(),
 					index: globalIndex,
 				};
 			});
 
-			// Execute current batch uploads in parallel
 			try {
 				const batchResults = await Promise.all(batchUploadPromises);
-				// Sort by original index to maintain order within batch
 				const sortedBatchResults = batchResults
 					.sort((a, b) => a.index - b.index)
 					.map(({ index, ...image }) => image);
@@ -138,17 +103,14 @@ export async function createProduct(formData: FormData): Promise<FormResult> {
 			}
 		}
 
-		// Create product document for MongoDB
 		const product: Product = {
 			id: productId,
+			code: productCode,
 			name: {
 				en: productNameEn,
 				vi: productNameVi,
 			},
-			// Only include category if at least one language value is provided
-			...(productCategoryEn || productCategoryVi
-				? { category: { en: productCategoryEn, vi: productCategoryVi } }
-				: {}),
+			categoryId: productCategoryId || undefined,
 			description: {
 				en: productDescriptionEn,
 				vi: productDescriptionVi,
@@ -159,7 +121,6 @@ export async function createProduct(formData: FormData): Promise<FormResult> {
 			updatedAt: new Date(),
 		};
 
-		// Save to MongoDB
 		const db = await getDatabase();
 		const result = await db.collection<ProductDocument>("products").insertOne(product);
 
@@ -170,7 +131,6 @@ export async function createProduct(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Revalidate products cache
 		revalidateTag(CACHE_TAGS.PRODUCTS, "max");
 		revalidatePath("/admin/products");
 

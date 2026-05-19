@@ -7,14 +7,40 @@ import type { DictionaryForLocale } from "./types";
 
 export const dictionaries: DictionaryForLocale = {
 	vi: {
+		header: {
+			searchPlaceholder: "Tìm kiếm sản phẩm, dịch vụ ...",
+			companyName: "NGHIỆP HƯNG",
+			companySub: "Co., Ltd",
+			viewAll:"Xem tất cả",
+			featuredproducts: "Sản phẩm nổi bật",
+			featuredcontent: "NỘI DUNG NỔI BẬT",
+			relatedcontent: "Nội dung liên quan",
+
+		},
 		nav: {
-			home: "Trang chủ",
-			about: "Giới thiệu",
-			products: "Sản phẩm",
-			services: "Dịch vụ",
-			projects: "Dự án",
-			contact: "Liên hệ",
-			privacyPolicy: "Chính sách bảo mật",
+			home: "TRANG CHỦ",
+			about: "GIỚI THIỆU",
+
+			products: "SẢN PHẨM",
+			rectangularDuct: "Ống Gió Vuông",
+			roundDuct: "Ống Gió Tròn",
+			hvacAccessories: "Phụ Kiện HVAC",
+
+			services: "DỊCH VỤ",
+			solutionConsulting: "Tư Vấn Giải Pháp",
+        	ductSystemDesign: "Thiết kế Hệ Thống Ống Gió",
+        	ductManufacturing: "Sản xuất Ống Gió",
+	    	ductSystemInstallation: "Thi công & Lắp đặt",
+	    	ductWarrantyMaintenance: "Bảo hành & Sữa chữa",
+
+			projects: "DỰ ÁN",
+			buidingProjects: "Tòa Nhà & Văn Phòng",
+			commercialProjects: "Shop & Trung Tâm Thương Mại",
+			hotelresortProjects: "Khách sạn & Resort",
+			factoryProjects: "Nhà máy",
+
+			contact: "LIÊN HỆ",
+			privacyPolicy: "CHÍNH SÁCH BẢO MẬT",
 		},
 		common: {
 			loading: "Đang tải...",
@@ -221,11 +247,16 @@ export const dictionaries: DictionaryForLocale = {
 				],
 			},
 		},
+		product:{
+			code: "Mã sản phẩm",
+			description: "Mô tả",
+			viewDetail: "Xem chi tiết"
+		},
 		products: {
-			title: "Sản phẩm",
-			subtitle: "Chất lượng cao",
+			title: "SẢN PHẨM",
+			subtitle: "CHẤT LƯỢNG CAO",
 			description:
-				"Chúng tôi cung cấp đa dạng các sản phẩm hệ thống ống gió chất lượng cao, đáp ứng mọi nhu cầu của khách hàng.",
+				"Chuyên sản xuất và cung cấp các giải pháp ống gió đạt tiêu chuẩn kỹ thuật cao, đáp ứng yêu cầu đa dạng của mọi công trình.",
 			notFound: {
 				title: "Không tìm thấy sản phẩm",
 				description: "Sản phẩm được yêu cầu không thể tìm thấy.",
@@ -235,7 +266,7 @@ export const dictionaries: DictionaryForLocale = {
 				description: "Hiện tại chúng tôi chưa có sản phẩm nào để hiển thị. Vui lòng quay lại sau.",
 				action: "Liên hệ tư vấn",
 			},
-			viewAll: "Xem tất cả sản phẩm",
+			viewAll: "XEM TẤT CẢ",
 		},
 		services: {
 			title: "Dịch vụ",
@@ -252,6 +283,11 @@ export const dictionaries: DictionaryForLocale = {
 				action: "Liên hệ tư vấn",
 			},
 			viewAll: "Xem tất cả dịch vụ",
+			viewDetail: "Xem chi tiết",
+			service: "Dịch vụ",
+			serviceOverview: 'TỔNG QUAN',
+			serviceGallery: 'THƯ VIỆN ẢNH',
+			otherServices: 'DỊCH VỤ KHÁC',
 		},
 		projects: {
 			title: "Dự án",
@@ -285,17 +321,17 @@ export const dictionaries: DictionaryForLocale = {
 			description:
 				"Hãy để lại thông tin để được tư vấn miễn phí về giải pháp hệ thống ống gió phù hợp nhất.",
 			contactInfo: {
-				title: "Thông tin liên hệ",
+				title: "THÔNG TIN LIÊN HỆ",
 				phone: "Điện thoại",
 				email: "Email",
 				address: "Địa chỉ",
 				workingHours: "Giờ làm việc",
 			},
 			socialMedia: {
-				title: "Kết nối với chúng tôi",
+				title: "KẾT NỐI",
 			},
 			form: {
-				title: "Gửi yêu cầu tư vấn",
+				title: "GỬI YÊU CẦU TƯ VẤN",
 				fields: {
 					name: {
 						label: "Họ và tên",
@@ -327,23 +363,49 @@ export const dictionaries: DictionaryForLocale = {
 			},
 		},
 		hero: {
-			title: "Giải pháp thông gió chuyên nghiệp",
-			description:
-				"Công ty TNHH Nghiệp Hưng chuyên sản xuất và thi công hệ thống ống gió, ống gió chống cháy, phụ kiện ống gió cho lĩnh vực điều hòa không khí. Công ty sở hữu nhà xưởng 2.000 m² tại Biên Hòa – Đồng Nai, được trang bị máy móc hiện đại, từng thực hiện nhiều dự án cho cơ quan hành chính, resort, khách sạn, trung tâm thương mại, văn phòng, căn hộ và nhà máy. Nghiệp Hưng cam kết cung cấp giải pháp thi công đạt chuẩn kỹ thuật, đúng tiến độ và hỗ trợ khách hàng hiệu quả trên toàn khu vực.",
-			buttons: {
-				viewProducts: "Xem sản phẩm",
-				contactConsultation: "Liên hệ tư vấn",
-			},
-			features: {
-				standardDucts: "Ống gió chuẩn",
-				fastService: "Dịch vụ nhanh",
-				goodPrice: "Giá thành tốt",
-			},
+		badge: "Hơn 10 năm kinh nghiệm sản xuất & thi công",
+
+		title: "Giải Pháp ỐNG GIÓ\nChuyên Nghiệp &\nToàn Diện",
+
+		description:
+			"Nghiệp Hưng chuyên sản xuất, thi công hệ thống ống gió, ống gió chống cháy và phụ kiện HVAC. Nhà máy 2,000m² tại Đồng Nai với máy móc hiện đại, đáp ứng năng lực 12,000m²/tháng.",
+
+		imageAlt: "Hệ thống ống gió công nghiệp Nghiệp Hưng",
+
+		buttons: {
+			viewProducts: "Sản Phẩm",
+			contactConsultation: "Liên Hệ & Tư Vấn",
+		},
+
+		features: {
+			standardDucts: "Sản xuất theo tiêu chuẩn",
+			fastService: "Thi công nhanh chóng",
+			goodPrice: "Tối ưu chi phí",
+		},
+
+		experience: {
+			years: "10+",
+			label: "Năm kinh nghiệm",
+		},
+
+		stats: {
 			experience: {
-				years: "10+",
-				label: "Năm kinh nghiệm",
+			value: "10+",
+			label: "Năm kinh nghiệm",
 			},
-			imageAlt: "Hệ thống ống gió chuyên nghiệp",
+			factory: {
+			value: "2,000 m²",
+			label: "Nhà máy sản xuất",
+			},
+			capacity: {
+			value: "12,000 m²",
+			label: "Công suất/tháng",
+			},
+			projects: {
+			value: "500+",
+			label: "Dự án hoàn thành",
+			},
+		},
 		},
 		meta: {
 			title: "Công ty TNHH Nghiệp Hưng - Hệ thống ống gió chuyên nghiệp",
@@ -353,14 +415,40 @@ export const dictionaries: DictionaryForLocale = {
 		},
 	},
 	en: {
+		header: {
+			searchPlaceholder: "Search products, services ...",
+			companyName: "NGHIEP HUNG",
+			companySub: "Co., Ltd",
+			viewAll: "View all",
+			featuredproducts: "Featured products",
+			featuredcontent: "FEATURED CONTENT",
+			relatedcontent: "Related content",
+		},
 		nav: {
-			home: "Home",
-			about: "About",
-			products: "Products",
-			services: "Services",
-			projects: "Projects",
-			contact: "Contact",
-			privacyPolicy: "Privacy Policy",
+			home: "HOME",
+			about: "ABOUT",
+
+			products: "PRODUCTS",
+			rectangularDuct: "Rectangular Duct",
+			roundDuct: "Round Duct",
+			hvacAccessories: "Accessories",
+
+			services: "SERVICES",
+			solutionConsulting: "Solution Consulting",
+        	ductSystemDesign: "Duct System Design",
+        	ductManufacturing: "Duct Manufacturing",
+	    	ductSystemInstallation: "System Installation",
+	    	ductWarrantyMaintenance: "Warranty & Maintenance",
+
+			projects: "PROJECTS",
+			buidingProjects: "Buiding Office",
+			commercialProjects: "Shop & Commercial Mall",
+			hotelresortProjects: "Resort & Hotel",
+			factoryProjects: "Factory",
+
+			contact: "CONTACT",
+			privacyPolicy: "PRIVACY POLICY",
+
 		},
 		common: {
 			loading: "Loading...",
@@ -566,11 +654,16 @@ export const dictionaries: DictionaryForLocale = {
 				],
 			},
 		},
+		product:{
+			code: "Product Code",
+			description: "Description",
+			viewDetail: "View detail"
+		},
 		products: {
-			title: "Products",
-			subtitle: "High Quality",
+			title: "HIGH-QUALITY",
+			subtitle: "PRODUCTS",
 			description:
-				"We provide a diverse range of high-quality ductwork system products, meeting all customer needs.",
+				"We provide high-quality duct solutions that meet stringent technical standards and the diverse demands of modern projects.",
 			notFound: {
 				title: "Product Not Found",
 				description: "The requested product could not be found.",
@@ -580,7 +673,7 @@ export const dictionaries: DictionaryForLocale = {
 				description: "We currently don't have any products to display. Please check back later.",
 				action: "Contact Consultation",
 			},
-			viewAll: "View all products",
+			viewAll: "VIEW ALL PRODUCTS",
 		},
 		services: {
 			title: "Services",
@@ -597,6 +690,11 @@ export const dictionaries: DictionaryForLocale = {
 				action: "Contact Consultation",
 			},
 			viewAll: "View all services",
+			viewDetail: "View detail",
+			service: "Service",
+			serviceOverview: 'SERVICE OVERVIEW',
+			serviceGallery: 'GALLERY',
+			otherServices: 'OTHER SERVICES',
 		},
 		projects: {
 			title: "Projects",
@@ -622,7 +720,7 @@ export const dictionaries: DictionaryForLocale = {
 			},
 			filter: {
 				all: "All",
-				viewAll: "View all projects",
+				viewAll: "View all projefcts",
 			},
 		},
 		contact: {
@@ -630,17 +728,17 @@ export const dictionaries: DictionaryForLocale = {
 			description:
 				"Leave your information to receive free consultation about the most suitable ductwork system solutions.",
 			contactInfo: {
-				title: "Contact Information",
+				title: "CONTACT INFORMATION",
 				phone: "Phone",
 				email: "Email",
 				address: "Address",
 				workingHours: "Working Hours",
 			},
 			socialMedia: {
-				title: "Connect with Us",
+				title: "CONNECT WITH US",
 			},
 			form: {
-				title: "Send Consultation Request",
+				title: "SEND CONSULTATION REQUEST",
 				fields: {
 					name: {
 						label: "Full Name",
@@ -672,23 +770,49 @@ export const dictionaries: DictionaryForLocale = {
 			},
 		},
 		hero: {
-			title: "Professional Ventilation Solutions",
-			description:
-				"Nghiep Hung Co., Ltd specializes in manufacturing and installing air duct systems, fire-resistant ducts, and duct accessories for the air conditioning sector. We own a 2,000 m² factory in Bien Hoa – Dong Nai equipped with modern machinery and have executed numerous projects for administrative agencies, resorts, hotels, commercial centers, offices, apartments, and factories. Nghiep Hung is committed to providing construction solutions that meet technical standards, ensure timely delivery, and offer effective customer support throughout the region.",
-			buttons: {
-				viewProducts: "View Products",
-				contactConsultation: "Contact Consultation",
-			},
-			features: {
-				standardDucts: "Standard Ducts",
-				fastService: "Fast Service",
-				goodPrice: "Good Price",
-			},
+		badge: "More than 10 years of manufacturing & installation experience",
+
+		title: "Professional &\nComprehensive\nDUCT Solutions",
+
+		description:
+			"Nghiep Hung specializes in manufacturing and installing duct systems, fire-rated ducts, and HVAC accessories. With a 2,000m² factory in Dong Nai and modern machinery, we deliver up to 12,000m² per month.",
+
+		imageAlt: "Nghiep Hung industrial duct system",
+
+		buttons: {
+			viewProducts: "View Products",
+			contactConsultation: "Contact Consultation",
+		},
+
+		features: {
+			standardDucts: "Standard manufacturing",
+			fastService: "Fast execution",
+			goodPrice: "Competitive pricing",
+		},
+
+		experience: {
+			years: "10+",
+			label: "Years of experience",
+		},
+
+		stats: {
 			experience: {
-				years: "10+",
-				label: "Years Experience",
+			value: "10+",
+			label: "Years of experience",
 			},
-			imageAlt: "Professional ductwork systems",
+			factory: {
+			value: "2,000 m²",
+			label: "Factory area",
+			},
+			capacity: {
+			value: "12,000 m²",
+			label: "Monthly capacity",
+			},
+			projects: {
+			value: "500+",
+			label: "Completed projects",
+			},
+		},
 		},
 		meta: {
 			title: "Nghiep Hung Co., Ltd - Professional Ductwork Systems",

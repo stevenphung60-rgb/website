@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useState,
+} from "react";
 import { useProjectFilterState } from "../project-filter/project-filter.state";
 import { ProjectVisibilityContext } from "./project-visibility.state";
 
-const MAX_ROWS = 2;
+const PAGE_SIZE = 5;
 
 /**
  * Get number of columns based on window width
@@ -24,14 +30,10 @@ interface ProjectGridControllerProps {
 
 /**
  * Client component that manages project visibility based on:
- * - Filter state (selected category)
- * - Window width (columns)
- * - Row limit (MAX_ROWS, only applied if limitRows is true)
+ * - Filter state selected categoryId
+ * - Pagination, 5 projects per page
  *
  * Cards register themselves when they load, and visibility is recalculated.
- * @param projectIds - Array of project IDs to manage
- * @param limitRows - Whether to apply row limiting (default: true)
- * @param children - Child components to render
  */
 export function ProjectGridController({
 	projectIds,
@@ -39,54 +41,75 @@ export function ProjectGridController({
 	children,
 }: ProjectGridControllerProps) {
 	const { selectedCategory } = useProjectFilterState();
-	const [columns, setColumns] = useState(3);
 	const [isReady, setIsReady] = useState(false);
-	const [loadedProjects, setLoadedProjects] = useState<Map<string, string>>(new Map());
+	const [currentPage, setCurrentPage] = useState(1);
+	const [loadedProjects, setLoadedProjects] = useState<
+		Map<string, string | null>
+	>(new Map());
 
 	useLayoutEffect(() => {
-		const updateColumns = () => {
-			setColumns(getColumns(window.innerWidth));
+		const updateReady = () => {
+			getColumns(window.innerWidth);
 			setIsReady(true);
 		};
-		updateColumns();
-		window.addEventListener("resize", updateColumns);
-		return () => window.removeEventListener("resize", updateColumns);
+
+		updateReady();
+		window.addEventListener("resize", updateReady);
+
+		return () => window.removeEventListener("resize", updateReady);
 	}, []);
 
-	const registerProject = useCallback((id: string, categoryEn: string) => {
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [selectedCategory]);
+
+	const registerProject = useCallback((id: string, categoryId: string | null) => {
 		setLoadedProjects((prev) => {
-			if (prev.get(id) === categoryEn) return prev;
+			if (prev.get(id) === categoryId) return prev;
+
 			const next = new Map(prev);
-			next.set(id, categoryEn);
+			next.set(id, categoryId);
 			return next;
 		});
 	}, []);
 
-	const { visibleIds, hasMore } = useMemo(() => {
-		// Filter loaded projects by category (maintain original order from projectIds)
+	const { visibleIds, hasMore, totalPages } = useMemo(() => {
 		const filtered = projectIds.filter((id) => {
-			const category = loadedProjects.get(id);
-			if (!category) return false; // Not loaded yet
-			return !selectedCategory || category === selectedCategory;
+			if (!loadedProjects.has(id)) return false;
+
+			const categoryId = loadedProjects.get(id) ?? null;
+
+			if (selectedCategory === null) return true;
+
+			return categoryId === selectedCategory;
 		});
 
-		// If limitRows is false, show all filtered items
 		if (!limitRows) {
 			return {
 				visibleIds: new Set(filtered),
 				hasMore: false,
+				totalPages: 1,
 			};
 		}
 
-		// Apply row limiting
-		const maxItems = MAX_ROWS * columns;
-		const visible = new Set(filtered.slice(0, maxItems));
+		const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+		const safePage = Math.min(currentPage, pageCount);
+		const startIndex = (safePage - 1) * PAGE_SIZE;
+		const visible = new Set(filtered.slice(startIndex, startIndex + PAGE_SIZE));
 
 		return {
 			visibleIds: visible,
-			hasMore: filtered.length > maxItems,
+			hasMore: pageCount > 1,
+			totalPages: pageCount,
 		};
-	}, [projectIds, loadedProjects, selectedCategory, columns, limitRows]);
+	}, [projectIds, loadedProjects, selectedCategory, limitRows, currentPage]);
+
+	const goToPage = useCallback(
+		(page: number) => {
+			setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+		},
+		[totalPages],
+	);
 
 	const isVisible = useCallback((id: string) => visibleIds.has(id), [visibleIds]);
 
@@ -96,13 +119,26 @@ export function ProjectGridController({
 			isVisible,
 			hasMore,
 			isReady,
+			currentPage,
+			totalPages,
+			goToPage,
 		}),
-		[registerProject, isVisible, hasMore, isReady],
+		[
+			registerProject,
+			isVisible,
+			hasMore,
+			isReady,
+			currentPage,
+			totalPages,
+			goToPage,
+		],
 	);
 
 	return (
 		<ProjectVisibilityContext.Provider value={contextValue}>
-			<div style={{ visibility: isReady ? "visible" : "hidden" }}>{children}</div>
+			<div style={{ visibility: isReady ? "visible" : "hidden" }}>
+				{children}
+			</div>
 		</ProjectVisibilityContext.Provider>
 	);
 }

@@ -15,6 +15,7 @@ import {
 	VisualTabsList,
 	VisualTabsTrigger,
 } from "src/components/ui/visual-tabs";
+import { getProductCategories, type ProductCategory } from "src/server/productcategories";
 import type { Product } from "src/server/products";
 import { ProductStatus } from "src/server/products";
 import { updateProduct } from "./edit-product-dialog.actions";
@@ -23,20 +24,25 @@ interface EditProductFormProps {
 	product: Product;
 }
 
-/**
- * Server component for product editing form
- * Composes static content with client components for interactivity
- * @param product - The product to edit
- */
-export function EditProductForm({ product }: EditProductFormProps) {
+export async function EditProductForm({ product }: EditProductFormProps) {
+	const productCategories = await getProductCategories();
+
 	return (
 		<Form action={updateProduct}>
-			{/* Hidden product ID */}
 			<input type="hidden" name="productId" value={product.id} />
 
-			{/* Form Fields */}
 			<div className="space-y-6">
-				{/* Product Name - Multilingual */}
+				<FormField
+					fieldId="productCode"
+					name="productCode"
+					placeholder="Enter product code"
+					required
+				>
+					<FormLabel>Product Code</FormLabel>
+					<FormInput defaultValue={product.code} />
+					<FieldError />
+				</FormField>
+
 				<div className="space-y-4">
 					<FormField>
 						<FormLabel>Product Name</FormLabel>
@@ -69,7 +75,6 @@ export function EditProductForm({ product }: EditProductFormProps) {
 					</FormField>
 				</div>
 
-				{/* Product Description - Multilingual */}
 				<div className="space-y-4">
 					<FormField>
 						<FormLabel>Product Description</FormLabel>
@@ -107,42 +112,30 @@ export function EditProductForm({ product }: EditProductFormProps) {
 				</div>
 			</div>
 
-			{/* Product Category - Optional, Multilingual */}
 			<div className="space-y-4">
-				<FormField>
+				<FormField fieldId="productCategoryId" name="productCategoryId">
 					<FormLabel>
 						Product Category <span className="text-muted-foreground font-normal">(optional)</span>
 					</FormLabel>
-					<VisualTabs defaultValue="en" className="w-full">
-						<VisualTabsList className="grid w-full grid-cols-2">
-							<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-							<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-						</VisualTabsList>
-						<VisualTabsContent value="en">
-							<FormField
-								fieldId="productCategoryEn"
-								name="productCategoryEn"
-								placeholder="e.g. Ventilation Ducts"
-							>
-								<FormInput defaultValue={product.category?.en ?? ""} />
-								<FieldError />
-							</FormField>
-						</VisualTabsContent>
-						<VisualTabsContent value="vi">
-							<FormField
-								fieldId="productCategoryVi"
-								name="productCategoryVi"
-								placeholder="vd. Ống gió thông gió"
-							>
-								<FormInput defaultValue={product.category?.vi ?? ""} />
-								<FieldError />
-							</FormField>
-						</VisualTabsContent>
-					</VisualTabs>
+
+					<select
+						id="productCategoryId"
+						name="productCategoryId"
+						defaultValue={product.categoryId ?? ""}
+						className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+					>
+						<option value="">Select category</option>
+						{productCategories.map((category: ProductCategory) => (
+							<option key={category.id} value={category.id}>
+								{category.name.en} - {category.name.vi}
+							</option>
+						))}
+					</select>
+
+					<FieldError />
 				</FormField>
 			</div>
 
-			{/* Product Status */}
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<div className="text-sm font-medium text-foreground">Product Status</div>
@@ -182,10 +175,8 @@ export function EditProductForm({ product }: EditProductFormProps) {
 				</FormField>
 			</div>
 
-			{/* Error Display */}
 			<FormErrorDisplay />
 
-			{/* Form Actions */}
 			<div className="flex justify-end space-x-2 pt-4">
 				<DialogClose asChild>
 					<FormResetButton>Close</FormResetButton>

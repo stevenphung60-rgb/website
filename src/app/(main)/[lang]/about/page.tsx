@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateAboutMetadata } from "src/lib/seo/metadata";
-import AboutSection from "./about-section";
 
-/**
- * Generate metadata for about page
- * @param params - Route parameters including locale
- * @returns Metadata object
- */
+import AboutBanner from "./about-banner";
+import AboutBusinessPhilosophySection from "./about-business-philosophy-section";
+import AboutCompanyHistorySection from "./about-company-history-section";
+import AboutCoreValuesSection from "./about-core-values-section";
+import AboutProductionCapabilitySection from "./about-production-capability-section";
+import AboutRevealSection from "./about-reveal-section";
+import AboutYoutubeSection from "./about-youtube-section";
+
 export async function generateMetadata({
 	params,
 }: {
@@ -18,10 +20,6 @@ export async function generateMetadata({
 	return generateAboutMetadata(locale);
 }
 
-/**
- * About page component that displays company information and values
- * @param params - Route parameters including the language locale
- */
 export default async function AboutPage({
 	params,
 }: Readonly<{
@@ -32,7 +30,18 @@ export default async function AboutPage({
 	return (
 		<>
 			<ScrollToTopHandler />
-			<AboutSection locale={locale} />
+
+			<main className="w-full overflow-hidden bg-[#F7F1E6] text-[#342312]">
+					<AboutBanner locale={locale} />
+					<AboutYoutubeSection locale={locale} />
+					<AboutCompanyHistorySection locale={locale} />
+					<AboutBusinessPhilosophySection locale={locale} />
+					<AboutCoreValuesSection locale={locale} />
+
+				<AboutRevealSection variant="fade-up">
+					<AboutProductionCapabilitySection locale={locale} />
+				</AboutRevealSection>
+			</main>
 		</>
 	);
 }

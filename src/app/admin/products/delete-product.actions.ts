@@ -66,7 +66,7 @@ export async function deleteProductAction(formData: FormData): Promise<FormResul
 		}
 
 		// Revalidate products cache
-		revalidateTag(CACHE_TAGS.PRODUCTS);
+		// revalidateTag(CACHE_TAGS.PRODUCTS);
 		revalidatePath("/admin/products");
 
 		// Return success with refresh to update the UI

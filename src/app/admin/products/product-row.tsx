@@ -25,6 +25,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "src/components/ui/dropdown-menu";
+import { getProductCategoryById } from "src/server/productcategories";
 import { getProductById } from "src/server/products";
 import { deleteProductAction } from "./delete-product.actions";
 import {
@@ -52,6 +53,10 @@ export async function ProductRow({ productId }: ProductRowProps) {
 	if (!product) {
 		throw new Error(`Product with id ${productId} not found`);
 	}
+
+	const productCategory = product.categoryId
+		? await getProductCategoryById(product.categoryId)
+		: null;
 
 	const mainImage = product.gallery.find((img) => img.isMain) || product.gallery[0];
 
@@ -82,6 +87,16 @@ export async function ProductRow({ productId }: ProductRowProps) {
 						<div className="mb-2">
 							<h3 className="text-lg font-semibold text-foreground truncate">{product.name.en}</h3>
 							<p className="text-sm text-muted-foreground truncate">{product.name.vi}</p>
+							{product.code && (
+								<p className="text-xs font-medium text-muted-foreground truncate">
+									Code: {product.code}
+								</p>
+							)}
+							{productCategory && (
+								<p className="text-xs font-medium text-muted-foreground truncate">
+									Category: {productCategory.name.en} - {productCategory.name.vi}
+								</p>
+							)}
 						</div>
 						<div className="text-sm text-muted-foreground mb-3 min-w-0 max-w-full">
 							<p className="truncate mb-1 whitespace-nowrap overflow-hidden">
@@ -180,6 +195,16 @@ export async function ProductRow({ productId }: ProductRowProps) {
 										<div className="mb-2">
 											<p className="font-medium text-foreground">{product.name.en}</p>
 											<p className="text-sm text-muted-foreground">{product.name.vi}</p>
+											{product.code && (
+												<p className="text-xs font-medium text-muted-foreground">
+													Code: {product.code}
+												</p>
+											)}
+											{productCategory && (
+												<p className="text-xs font-medium text-muted-foreground">
+													Category: {productCategory.name.en} - {productCategory.name.vi}
+												</p>
+											)}
 										</div>
 										<div className="text-sm text-muted-foreground leading-relaxed mb-3">
 											<p className="mb-1">
@@ -238,6 +263,7 @@ export async function ProductRow({ productId }: ProductRowProps) {
 					)}
 				</div>
 			)}
+
 			{/* Dialog wrappers for preview and edit */}
 			<ProductRowDialog type="preview">
 				<ProductPreviewDialogContent productId={product.id} />

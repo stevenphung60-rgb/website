@@ -1,29 +1,48 @@
 "use client";
 
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { useProjectVisibility } from "./project-visibility";
 
 interface ProjectCardWrapperProps {
 	id: string;
-	categoryEn: string;
+	categoryId: string | null;
 	children: ReactNode;
 }
 
 /**
  * Wrapper that:
- * 1. Registers the project's category with the visibility controller
- * 2. Shows/hides children based on visibility state (filter + row limit)
+ * 1. Registers the project's categoryId with the visibility controller
+ * 2. Shows/hides children based on visibility state
+ * 3. Adds stagger reveal animation
  */
-export function ProjectCardWrapper({ id, categoryEn, children }: ProjectCardWrapperProps) {
+export function ProjectCardWrapper({
+	id,
+	categoryId,
+	children,
+}: ProjectCardWrapperProps) {
 	const { registerProject, isVisible } = useProjectVisibility();
 
-	// Register this project's category when mounted
 	useEffect(() => {
-		registerProject(id, categoryEn);
-	}, [id, categoryEn, registerProject]);
+		registerProject(id, categoryId);
+	}, [id, categoryId, registerProject]);
 
-	// Hide if not visible (filtered out or beyond row limit)
+	const animationDelay = useMemo(() => {
+		const number = Number.parseInt(id.replace(/\D/g, "").slice(-2) || "0", 10);
+
+		return `${(number % 5) * 120}ms`;
+	}, [id]);
+
 	if (!isVisible(id)) return null;
 
-	return <>{children}</>;
+	return (
+		<div
+			className="animate-project-card-reveal opacity-0"
+			style={{
+				animationDelay,
+				animationFillMode: "forwards",
+			}}
+		>
+			{children}
+		</div>
+	);
 }

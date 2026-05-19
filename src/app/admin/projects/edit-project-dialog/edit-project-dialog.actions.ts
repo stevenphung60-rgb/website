@@ -15,24 +15,22 @@ import { ProjectCompletionStatus, ProjectVisibilityStatus } from "src/server/pro
  */
 export async function updateProject(formData: FormData): Promise<FormResult> {
 	try {
-		// Extract form data
 		const projectId = formData.get("projectId") as string;
 		const projectNameEn = formData.get("projectNameEn") as string;
 		const projectNameVi = formData.get("projectNameVi") as string;
-		const projectCategoryEn = formData.get("projectCategoryEn") as string;
-		const projectCategoryVi = formData.get("projectCategoryVi") as string;
-		const projectLocation = formData.get("projectLocation") as string;
-		const projectYear = formData.get("projectYear") as string;
+		const projectCategoryId = formData.get("projectCategoryId") as string;
+		const projectLocationEn = formData.get("projectLocationEn") as string;
+		const projectLocationVi = formData.get("projectLocationVi") as string;
+		const projectYearEn = formData.get("projectYearEn") as string;
+		const projectYearVi = formData.get("projectYearVi") as string;
 		const projectDescriptionEn = formData.get("projectDescriptionEn") as string;
 		const projectDescriptionVi = formData.get("projectDescriptionVi") as string;
 		const projectVisibilityStatus = formData.get("projectVisibilityStatus") as string;
 		const projectCompletionStatus = formData.get("projectCompletionStatus") as string;
 
-		// Extract specs (dynamic fields)
 		const specsEn: string[] = [];
 		const specsVi: string[] = [];
 
-		// Process dynamic specs fields
 		for (const [key, value] of formData.entries()) {
 			if (key.startsWith("specEn_") && typeof value === "string" && value.trim()) {
 				specsEn.push(value.trim());
@@ -42,7 +40,6 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 			}
 		}
 
-		// Validation phase
 		if (!projectId) {
 			return {
 				success: false,
@@ -50,39 +47,18 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate required fields and collect missing field names
 		const missingFields: string[] = [];
 
-		if (!projectNameEn) {
-			missingFields.push("Project Name (English)");
-		}
-		if (!projectNameVi) {
-			missingFields.push("Project Name (Vietnamese)");
-		}
-		if (!projectCategoryEn) {
-			missingFields.push("Project Category (English)");
-		}
-		if (!projectCategoryVi) {
-			missingFields.push("Project Category (Vietnamese)");
-		}
-		if (!projectLocation) {
-			missingFields.push("Location");
-		}
-		if (!projectYear) {
-			missingFields.push("Year");
-		}
-		if (!projectDescriptionEn) {
-			missingFields.push("Project Description (English)");
-		}
-		if (!projectDescriptionVi) {
-			missingFields.push("Project Description (Vietnamese)");
-		}
-		if (!projectVisibilityStatus) {
-			missingFields.push("Visibility Status");
-		}
-		if (!projectCompletionStatus) {
-			missingFields.push("Completion Status");
-		}
+		if (!projectNameEn) missingFields.push("Project Name (English)");
+		if (!projectNameVi) missingFields.push("Project Name (Vietnamese)");
+		if (!projectLocationEn) missingFields.push("Project Location (English)");
+		if (!projectLocationVi) missingFields.push("Project Location (Vietnamese)");
+		if (!projectYearEn) missingFields.push("Project Year (English)");
+		if (!projectYearVi) missingFields.push("Project Year (Vietnamese)");
+		if (!projectDescriptionEn) missingFields.push("Project Description (English)");
+		if (!projectDescriptionVi) missingFields.push("Project Description (Vietnamese)");
+		if (!projectVisibilityStatus) missingFields.push("Visibility Status");
+		if (!projectCompletionStatus) missingFields.push("Completion Status");
 
 		if (missingFields.length > 0) {
 			return {
@@ -91,7 +67,6 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate status values, these are validated in the client already, no need to handle errors here
 		if (
 			!Object.values(ProjectVisibilityStatus).includes(
 				projectVisibilityStatus as ProjectVisibilityStatus,
@@ -108,9 +83,9 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 			throw new Error("Invalid project completion status");
 		}
 
-		// Combine specs into multilingual objects
 		const specs: MultilingualText[] = [];
 		const maxSpecs = Math.max(specsEn.length, specsVi.length);
+
 		for (let i = 0; i < maxSpecs; i++) {
 			if (specsEn[i] || specsVi[i]) {
 				specs.push({
@@ -120,29 +95,30 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 			}
 		}
 
-		// Create updated project document for MongoDB
 		const updatedProject: Partial<Project> = {
 			name: {
 				en: projectNameEn,
 				vi: projectNameVi,
 			},
-			category: {
-				en: projectCategoryEn,
-				vi: projectCategoryVi,
+			categoryId: projectCategoryId || null,
+			location: {
+				en: projectLocationEn,
+				vi: projectLocationVi,
 			},
-			location: projectLocation,
-			year: projectYear,
+			year: {
+				en: projectYearEn,
+				vi: projectYearVi,
+			},
 			description: {
 				en: projectDescriptionEn,
 				vi: projectDescriptionVi,
 			},
-			specs: specs,
+			specs,
 			visibilityStatus: projectVisibilityStatus as ProjectVisibilityStatus,
 			completionStatus: projectCompletionStatus as ProjectCompletionStatus,
 			updatedAt: new Date(),
 		};
 
-		// Update in MongoDB
 		const db = await getDatabase();
 		const result = await db
 			.collection<ProjectDocument>("projects")
@@ -154,11 +130,8 @@ export async function updateProject(formData: FormData): Promise<FormResult> {
 				error: "Project not found",
 			};
 		}
-
-		// Revalidate projects cache
-		revalidateTag(CACHE_TAGS.PROJECTS);
+		revalidateTag(CACHE_TAGS.PROJECTS, "max");
 		revalidatePath("/admin/projects");
-
 		return {
 			success: true,
 			refresh: true,

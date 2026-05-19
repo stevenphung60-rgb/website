@@ -1,23 +1,9 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import {
-	convertToGalleryImages,
-	GalleryBackButton,
-	GalleryImage,
-	GalleryNextButton,
-	GalleryRoot,
-	GalleryThumbnails,
-} from "src/components/image-gallery/image-gallery";
+import LocaleLink from "src/components/behaviors/LocaleLink";
 import { Card, CardContent, CardHeader, CardTitle } from "src/components/ui/card";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "src/components/ui/dialog";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
+import { getProductCategoryById } from "src/server/productcategories";
 import type { Product } from "src/server/products";
 import { getProductById } from "src/server/products";
 
@@ -26,93 +12,87 @@ interface ProductDialogProps {
 	locale: Locale;
 }
 
-/**
- * Server component that fetches product data by ID and renders the product dialog with card trigger
- * Uses the newer image gallery system for consistent UI across admin and public interfaces
- * @param productId - The ID of the product to display
- * @param locale - The current locale for internationalization
- */
-export default async function ProductDialog({ productId, locale }: ProductDialogProps) {
+export default async function ProductDialog({
+	productId,
+	locale,
+}: ProductDialogProps) {
 	const product: Product | null = await getProductById(productId);
 
 	if (!product) {
 		return <NotFoundProductDialog locale={locale} />;
 	}
 
-	const galleryImages = product.gallery || [];
-	const productName = product.name[locale];
-	const productDescription = product.description[locale];
+	const dictionary = getDictionary(locale);
 
-	const convertedImages = convertToGalleryImages(
-		galleryImages.map((image, index) => ({
-			src: image.url,
-			alt: `${productName} - ${index + 1}`,
-		})),
-	);
+	const productName = product.name?.[locale] ?? product.name?.en ?? "";
+	const productCode = product.code ?? "";
 
-	const mainImage = product.gallery?.find((img) => img.isMain) || product.gallery?.[0];
+	const productCategory = product.categoryId
+		? await getProductCategoryById(product.categoryId)
+		: null;
+
+	const productCategoryName =
+		productCategory?.name?.[locale] ?? productCategory?.name?.en ?? "";
+
+	const mainImage =
+		product.gallery?.find((img) => img.isMain) || product.gallery?.[0];
 
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
+		<LocaleLink href={`/products/${product.id}`} className="block h-full">
+			<div className="group relative h-full cursor-pointer transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[-18px_24px_45px_rgba(0,0,0,0.12)]">
+				<div className="pointer-events-none absolute left-0 top-0 z-20 h-[3px] w-full origin-left scale-x-0 bg-[#342312] transition-transform duration-500 ease-out group-hover:scale-x-100 sm:h-[4px]" />
+
 				<Card
 					data-testid="product-card"
-					className="group hover:shadow-xl transition-all duration-300 py-0 hover:-translate-y-1 cursor-pointer"
+					className="relative h-full overflow-hidden rounded-none border-x border-t border-[#e5e7eb] bg-[#F7F1E6] py-0 transition-colors duration-300 group-hover:border-transparent"
 				>
-					<div className="aspect-square overflow-hidden rounded-t-lg px-0">
+					<div className="aspect-square overflow-hidden rounded-none px-0">
 						<Image
 							src={mainImage?.url || "/placeholder.svg"}
 							alt={productName}
 							width={400}
 							height={300}
-							className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+							className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
 						/>
 					</div>
-					<CardContent className="pb-6">
-						<CardTitle className="text-xl font-serif font-bold text-foreground">
-							{productName}
-						</CardTitle>
+
+					<CardContent className="flex min-h-[142px] flex-col items-center justify-end px-3 pb-3 pt-3 sm:min-h-[172px] sm:px-5 sm:pb-5 sm:pt-4 lg:min-h-[188px] lg:px-6 lg:pb-6">
+						<div className="flex w-full min-w-0 flex-col items-center text-center">
+							{productCategoryName ? (
+								<p className="mb-1.5 line-clamp-1 max-w-full text-[10px] font-bold uppercase tracking-[0.04em] text-[#A87E3C] sm:mb-2 sm:text-[12px] lg:text-[13px]">
+									{productCategoryName}
+								</p>
+							) : null}
+
+							<CardTitle className="flex min-h-[38px] w-full min-w-0 items-center justify-center text-center font-serif text-[13px] font-semibold leading-[1.35] text-foreground transition-colors duration-300 group-hover:text-[#A87E3C] sm:min-h-[42px] sm:text-[15px] lg:min-h-[44px] lg:text-[16px]">
+								<span className="line-clamp-2 max-w-full break-words">
+									{productName}
+								</span>
+							</CardTitle>
+
+							{productCode ? (
+								<p className="mt-1.5 line-clamp-1 max-w-full text-[10px] font-medium text-[#342312]/60 sm:mt-2 sm:text-[12px]">
+									#{productCode}
+								</p>
+							) : null}
+						</div>
+
+						<div className="mt-auto pt-3 sm:pt-4">
+							<button
+								type="button"
+								className="group/detail relative overflow-hidden rounded-xl bg-[#E7D0AF] px-3 py-1.5 text-[11px] font-medium text-[#342312] sm:rounded-2xl sm:px-4 sm:py-2 sm:text-sm"
+							>
+								<span className="relative z-10">
+									{dictionary.product.viewDetail}
+								</span>
+
+								<span className="absolute inset-0 translate-x-[-100%] bg-[#A87E3C] transition-transform duration-300 ease-out group-hover/detail:translate-x-0" />
+							</button>
+						</div>
 					</CardContent>
 				</Card>
-			</DialogTrigger>
-			<DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-				<DialogHeader className="p-6 pb-0 sticky top-0 bg-background z-10">
-					<DialogTitle className="text-2xl font-serif font-bold text-foreground pr-8">
-						{productName}
-					</DialogTitle>
-				</DialogHeader>
-
-				<div className="px-6 pb-6 space-y-6">
-					{product.category && (
-						<p
-							data-testid="product-category-label"
-							className="text-sm font-medium text-primary bg-primary/10 rounded-full px-3 py-1 inline-block"
-						>
-							{product.category[locale]}
-						</p>
-					)}
-					<GalleryRoot images={convertedImages}>
-						<div className="relative">
-							<GalleryImage className="mb-6" />
-							<GalleryBackButton className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white">
-								<ChevronLeft className="h-4 w-4" />
-							</GalleryBackButton>
-							<GalleryNextButton className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white">
-								<ChevronRight className="h-4 w-4" />
-							</GalleryNextButton>
-						</div>
-						<GalleryThumbnails />
-					</GalleryRoot>
-
-					<div className="border border-border rounded-lg p-6 bg-muted/30">
-						<h4 className="font-serif font-bold text-xl mb-4 text-foreground">Description</h4>
-						<div className="text-foreground text-lg leading-relaxed whitespace-pre-line">
-							{productDescription}
-						</div>
-					</div>
-				</div>
-			</DialogContent>
-		</Dialog>
+			</div>
+		</LocaleLink>
 	);
 }
 
@@ -120,20 +100,19 @@ interface NotFoundProductDialogProps {
 	locale: Locale;
 }
 
-/**
- * Fallback component for when product is not found
- * @param locale - The current locale for internationalization
- */
 function NotFoundProductDialog({ locale }: NotFoundProductDialogProps) {
 	const dictionary = getDictionary(locale);
 
 	return (
-		<Card className="group hover:shadow-xl transition-all duration-300 py-0 hover:-translate-y-1 cursor-pointer">
-			<div className="aspect-square overflow-hidden rounded-t-lg px-0 bg-muted flex items-center justify-center">
-				<p className="text-muted-foreground">{dictionary.products.notFound.title}</p>
+		<Card className="group cursor-pointer py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+			<div className="flex aspect-square items-center justify-center overflow-hidden rounded-t-lg bg-[#F7F1E6] px-0">
+				<p className="text-muted-foreground">
+					{dictionary.products.notFound.title}
+				</p>
 			</div>
+
 			<CardHeader>
-				<CardTitle className="text-xl font-serif font-bold text-foreground">
+				<CardTitle className="font-serif text-xl font-bold text-foreground">
 					{dictionary.products.notFound.title}
 				</CardTitle>
 			</CardHeader>

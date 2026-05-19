@@ -1,79 +1,89 @@
-import { Fragment } from "react";
-import { Button } from "src/components/ui/button";
+import { ChevronsRight } from "lucide-react";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
-import { cn } from "src/lib/utils";
-import { getActiveProductCategories, PRODUCT_OTHER_CATEGORY } from "src/server/products";
 import { ActiveFilterButton, InactiveFilterButton } from "./product-filter-button";
-import { PRODUCT_OTHER_ID } from "./product-filter.type";
+
+interface ProductFilterCategory {
+	id: string;
+	name: {
+		en: string;
+		vi: string;
+	};
+}
 
 interface ProductFilterButtonsProps {
 	locale: Locale;
-	hasUncategorized: boolean;
+	categories: ProductFilterCategory[];
 }
 
-/**
- * Server component that renders filter buttons for product categories.
- * Fetches unique categories from DB; optionally adds an "Other" button
- * for uncategorized products (only when named categories also exist).
- *
- * Returns null when no products have a category — no filter bar is shown.
- */
 export async function ProductFilterButtons({
 	locale,
-	hasUncategorized,
+	categories,
 }: ProductFilterButtonsProps) {
-	const categories = await getActiveProductCategories();
 	const dictionary = getDictionary(locale);
+	const allLabel = locale === "vi" ? "Tất cả" : "All";
 
-	// Don't render filter bar at all when no products have a category
-	if (categories.length === 0) return null;
+	const activeButtonClassName =
+		"group flex w-full min-w-0 items-center justify-between gap-2 border-b border-[#A87E3C] bg-[#F7F1E6] px-3 py-3 text-left text-[13px] font-black uppercase leading-[1.45] tracking-[0.08em] text-[#A87E3C] transition-colors duration-300 sm:px-4 sm:py-4 sm:text-[14px] sm:tracking-[0.1em] lg:px-6 lg:py-4 lg:text-[16px] lg:tracking-[0.12em]";
+
+	const inactiveButtonClassName =
+		"group flex w-full min-w-0 items-center justify-between gap-2 border-b border-[#E7D0AF] bg-transparent px-3 py-3 text-left text-[13px] font-black uppercase leading-[1.45] tracking-[0.08em] text-[#342312] transition-colors duration-300 hover:bg-[#F7F1E6] hover:text-[#A87E3C] sm:px-4 sm:py-4 sm:text-[14px] sm:tracking-[0.1em] lg:px-6 lg:py-4 lg:text-[16px] lg:tracking-[0.12em]";
 
 	return (
-		<div className="flex flex-wrap justify-center gap-2 mb-8">
-			{/* All button */}
-			<ActiveFilterButton id={null}>
-				<Button variant="default" size="sm" className={cn("transition-all shadow-md")}>
-					{dictionary.projects.filter.all}
-				</Button>
-			</ActiveFilterButton>
-			<InactiveFilterButton id={null}>
-				<Button variant="outline" size="sm" className="transition-all">
-					{dictionary.projects.filter.all}
-				</Button>
-			</InactiveFilterButton>
+		<aside className="w-full lg:w-[300px] lg:shrink-0 xl:w-[320px]">
+			<div className="w-full bg-[#FAF7F0]">
+				<div className="mb-4 sm:mb-5 lg:mb-6">
+					<h3 className="break-words text-[18px] font-black uppercase leading-tight tracking-[0.04em] text-[#342312] sm:text-[20px]">
+						{dictionary.products.title}
+					</h3>
 
-			{/* Named category buttons */}
-			{categories.map((category) => (
-				<Fragment key={category.en}>
-					<ActiveFilterButton id={category.en}>
-						<Button variant="default" size="sm" className={cn("transition-all shadow-md")}>
-							{category[locale]}
-						</Button>
-					</ActiveFilterButton>
-					<InactiveFilterButton id={category.en}>
-						<Button variant="outline" size="sm" className="transition-all">
-							{category[locale]}
-						</Button>
-					</InactiveFilterButton>
-				</Fragment>
-			))}
+					<div className="mt-3 h-[2px] w-[90px] bg-[#A87E3C] sm:mt-4 sm:w-[120px] lg:w-[135px]" />
+				</div>
 
-			{/* "Other" button — only when there are named categories AND uncategorized products */}
-			{hasUncategorized && (
-				<Fragment key={PRODUCT_OTHER_ID}>
-					<ActiveFilterButton id={PRODUCT_OTHER_ID}>
-						<Button variant="default" size="sm" className={cn("transition-all shadow-md")}>
-							{PRODUCT_OTHER_CATEGORY[locale]}
-						</Button>
-					</ActiveFilterButton>
-					<InactiveFilterButton id={PRODUCT_OTHER_ID}>
-						<Button variant="outline" size="sm" className="transition-all">
-							{PRODUCT_OTHER_CATEGORY[locale]}
-						</Button>
-					</InactiveFilterButton>
-				</Fragment>
-			)}
-		</div>
+				<div className="w-full">
+					<div className="min-w-0">
+						<ActiveFilterButton id={null}>
+							<button type="button" className={activeButtonClassName}>
+								<span className="min-w-0 break-words">{allLabel}</span>
+
+								<ChevronsRight className="size-4 shrink-0 text-[#A87E3C] lg:size-5" />
+							</button>
+						</ActiveFilterButton>
+
+						<InactiveFilterButton id={null}>
+							<button type="button" className={inactiveButtonClassName}>
+								<span className="min-w-0 break-words">{allLabel}</span>
+
+								<ChevronsRight className="size-4 shrink-0 text-[#A87E3C] opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:size-5" />
+							</button>
+						</InactiveFilterButton>
+					</div>
+
+					{categories.map((category) => (
+						<div key={category.id} className="min-w-0">
+							<ActiveFilterButton id={category.id}>
+								<button type="button" className={activeButtonClassName}>
+									<span className="min-w-0 break-words">
+										{category.name[locale]}
+									</span>
+
+									<ChevronsRight className="size-4 shrink-0 text-[#A87E3C] lg:size-5" />
+								</button>
+							</ActiveFilterButton>
+
+							<InactiveFilterButton id={category.id}>
+								<button type="button" className={inactiveButtonClassName}>
+									<span className="min-w-0 break-words">
+										{category.name[locale]}
+									</span>
+
+									<ChevronsRight className="size-4 shrink-0 text-[#A87E3C] opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:size-5" />
+								</button>
+							</InactiveFilterButton>
+						</div>
+					))}
+				</div>
+			</div>
+		</aside>
 	);
 }

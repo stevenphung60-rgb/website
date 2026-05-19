@@ -10,13 +10,6 @@ import { uploadToS3 } from "src/lib/s3";
 import type { ProjectDocument, ProjectImageDocument } from "src/server/projects";
 import { ProjectCompletionStatus, ProjectVisibilityStatus } from "src/server/projects";
 
-/**
- * Generates a unique S3 key for project images
- * @param projectId - Unique identifier for the project
- * @param fileName - Original name of the uploaded file
- * @param index - Index of the image in the batch (defaults to 0)
- * @returns Unique S3 key for the image
- */
 function generateProjectS3Key(projectId: string, fileName: string, index: number = 0): string {
 	const fileExtension = fileName.split(".").pop() || "jpg";
 	const uniqueKey = `${index}-${nanoid(8)}`;
@@ -24,20 +17,15 @@ function generateProjectS3Key(projectId: string, fileName: string, index: number
 	return `projects/${projectId}/${uniqueKey}.${fileExtension}`;
 }
 
-/**
- * Server action to create a new project with image uploads to S3 and data storage in MongoDB
- * @param formData - Form data containing project information and images
- * @returns Promise that resolves to the creation result
- */
 export async function createProject(formData: FormData): Promise<FormResult> {
 	try {
-		// Extract form data
 		const projectNameEn = formData.get("projectNameEn") as string;
 		const projectNameVi = formData.get("projectNameVi") as string;
-		const projectCategoryEn = formData.get("projectCategoryEn") as string;
-		const projectCategoryVi = formData.get("projectCategoryVi") as string;
-		const projectLocation = formData.get("projectLocation") as string;
-		const projectYear = formData.get("projectYear") as string;
+		const projectCategoryId = formData.get("projectCategoryId") as string;
+		const projectLocationEn = formData.get("projectLocationsEn") as string;
+		const projectLocationVi = formData.get("projectLocationVi") as string;
+		const projectYearEn = formData.get("projectYearEn") as string;
+		const projectYearVi = formData.get("projectYearVi") as string;
 		const projectDescriptionEn = formData.get("projectDescriptionEn") as string;
 		const projectDescriptionVi = formData.get("projectDescriptionVi") as string;
 		const projectSpecsJson = formData.get("projectSpecs") as string;
@@ -46,7 +34,6 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 		const projectImages = formData.getAll("projectImages") as File[];
 		const selectedImageIndex = formData.get("selectedImageIndex") as string;
 
-		// Validation phase
 		if (projectImages.length === 0) {
 			return {
 				success: false,
@@ -61,8 +48,8 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Parse specifications
 		let projectSpecs: { en: string; vi: string }[] = [];
+
 		if (projectSpecsJson) {
 			try {
 				projectSpecs = JSON.parse(projectSpecsJson);
@@ -74,25 +61,25 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			}
 		}
 
-		// Validate required fields - check for empty strings after trimming
 		const trimmedNameEn = projectNameEn?.trim() || "";
 		const trimmedNameVi = projectNameVi?.trim() || "";
-		const trimmedCategoryEn = projectCategoryEn?.trim() || "";
-		const trimmedCategoryVi = projectCategoryVi?.trim() || "";
-		const trimmedLocation = projectLocation?.trim() || "";
-		const trimmedYear = projectYear?.trim() || "";
+		const trimmedCategoryId = projectCategoryId?.trim() || "";
+		const trimmedLocationEn = projectLocationEn?.trim() || "";
+		const trimmedLocationVi = projectLocationVi?.trim() || "";
+		const trimmedYearEn = projectYearEn?.trim() || "";
+		const trimmedYearVi = projectYearVi?.trim() || "";
 		const trimmedDescriptionEn = projectDescriptionEn?.trim() || "";
 		const trimmedDescriptionVi = projectDescriptionVi?.trim() || "";
 
-		// Check for missing required fields and provide specific error messages
 		const missingFields: string[] = [];
 
 		if (!trimmedNameEn) missingFields.push("Project Name (English)");
 		if (!trimmedNameVi) missingFields.push("Project Name (Vietnamese)");
-		if (!trimmedCategoryEn) missingFields.push("Project Category (English)");
-		if (!trimmedCategoryVi) missingFields.push("Project Category (Vietnamese)");
-		if (!trimmedLocation) missingFields.push("Location");
-		if (!trimmedYear) missingFields.push("Year");
+		if (!trimmedCategoryId) missingFields.push("Project Category");
+		if (!trimmedLocationEn) missingFields.push("Project Location (English)");
+		if (!trimmedLocationVi) missingFields.push("Project Location (Vietnamese)");
+		if (!trimmedYearEn) missingFields.push("Project Year (English)");
+		if (!trimmedYearVi) missingFields.push("Project Year (Vietnamese)");
 		if (!trimmedDescriptionEn) missingFields.push("Project Description (English)");
 		if (!trimmedDescriptionVi) missingFields.push("Project Description (Vietnamese)");
 		if (!visibilityStatus) missingFields.push("Visibility Status");
@@ -105,7 +92,6 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate specifications - if any spec exists, both en and vi must be provided
 		for (let i = 0; i < projectSpecs.length; i++) {
 			const spec = projectSpecs[i];
 			const hasEn = spec.en && spec.en.trim().length > 0;
@@ -117,6 +103,7 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 					error: `Specification ${i + 1} is missing Vietnamese translation`,
 				};
 			}
+
 			if (hasVi && !hasEn) {
 				return {
 					success: false,
@@ -125,9 +112,10 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			}
 		}
 
-		// Validate status values
 		if (
-			!Object.values(ProjectVisibilityStatus).includes(visibilityStatus as ProjectVisibilityStatus)
+			!Object.values(ProjectVisibilityStatus).includes(
+				visibilityStatus as ProjectVisibilityStatus,
+			)
 		) {
 			return {
 				success: false,
@@ -136,7 +124,9 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 		}
 
 		if (
-			!Object.values(ProjectCompletionStatus).includes(completionStatus as ProjectCompletionStatus)
+			!Object.values(ProjectCompletionStatus).includes(
+				completionStatus as ProjectCompletionStatus,
+			)
 		) {
 			return {
 				success: false,
@@ -146,13 +136,11 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 
 		const projectId = nanoid();
 
-		// Upload images to S3 in batches of 10 using lodash chunk
 		const batchSize = 10;
 		const imageBatches = chunk(projectImages, batchSize);
 		const uploadedImages: ProjectImageDocument[] = [];
 
 		try {
-			// Process each batch
 			for (const [batchIndex, batchImages] of imageBatches.entries()) {
 				const uploadPromises = batchImages.map(async (image, imageIndex) => {
 					const globalImageIndex = batchIndex * batchSize + imageIndex;
@@ -172,30 +160,36 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			}
 		} catch (error) {
 			console.error("Failed to upload images:", error);
+
 			return {
 				success: false,
-				error: `Failed to upload images: ${error instanceof Error ? error.message : "Unknown error"}`,
+				error: `Failed to upload images: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`,
 			};
 		}
 
-		// Filter out completely empty specifications (both en and vi must be empty)
 		const validSpecs = projectSpecs.filter(
-			(spec) => (spec.en && spec.en.trim().length > 0) || (spec.vi && spec.vi.trim().length > 0),
+			(spec) =>
+				(spec.en && spec.en.trim().length > 0) ||
+				(spec.vi && spec.vi.trim().length > 0),
 		);
 
-		// Create project document
 		const projectDoc: ProjectDocument = {
 			id: projectId,
 			name: {
 				en: trimmedNameEn,
 				vi: trimmedNameVi,
 			},
-			category: {
-				en: trimmedCategoryEn,
-				vi: trimmedCategoryVi,
+			categoryId: trimmedCategoryId,
+			location: {
+				en: trimmedLocationEn,
+				vi: trimmedLocationVi,
 			},
-			location: trimmedLocation,
-			year: trimmedYear,
+			year: {
+				en: trimmedYearEn,
+				vi: trimmedYearVi,
+			},
 			description: {
 				en: trimmedDescriptionEn,
 				vi: trimmedDescriptionVi,
@@ -208,12 +202,10 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 			updatedAt: new Date(),
 		};
 
-		// Save to database
 		const db = await getDatabase();
 		await db.collection<ProjectDocument>("projects").insertOne(projectDoc);
 
-		// Revalidate projects cache
-		revalidateTag(CACHE_TAGS.PROJECTS);
+		revalidateTag(CACHE_TAGS.PROJECTS, "max");
 		revalidatePath("/admin/projects");
 
 		return {
@@ -222,6 +214,7 @@ export async function createProject(formData: FormData): Promise<FormResult> {
 		};
 	} catch (error) {
 		console.error("Error creating project:", error);
+
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Failed to create project",

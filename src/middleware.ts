@@ -18,7 +18,7 @@ function isLocale(value: string): value is Locale {
  * Priority: URL pathname > Cookie > Accept-Language header > Default
  */
 function getLocale(request: NextRequest): Locale {
-	// 1. Check URL pathname
+	// 1. URL
 	const pathname = request.nextUrl.pathname;
 	const pathnameLocale = pathname.split("/")[1];
 
@@ -26,40 +26,38 @@ function getLocale(request: NextRequest): Locale {
 		return pathnameLocale;
 	}
 
-	// 2. Check cookie
+	// 2. Cookie
 	const cookieLocale = request.cookies.get(languageDetection.cookieName)?.value;
 	if (cookieLocale && isLocale(cookieLocale)) {
 		return cookieLocale;
 	}
 
-	// 3. Check Accept-Language header
+	// 3. Accept-Language (chỉ ưu tiên vi)
 	const acceptLanguage = request.headers.get("accept-language");
-	if (acceptLanguage) {
-		// Parse Accept-Language header and find best match
-		const preferredLocales = acceptLanguage
-			.split(",")
-			.map((lang) => lang.split(";")[0].trim().toLowerCase())
-			.map((lang) => {
-				// Extract language code (e.g., 'en-US' -> 'en')
-				const langCode = lang.split("-")[0];
-				return langCode;
-			});
 
-		// Find first matching locale
-		for (const preferred of preferredLocales) {
-			if (preferred === "vi" || preferred === "en") {
-				return preferred;
-			}
+	if (acceptLanguage) {
+		if (acceptLanguage.toLowerCase().includes("vi")) {
+			return "vi";
 		}
 	}
 
-	// 4. Default to Vietnamese
-	return defaultLocale;
+	// 4. Default
+	return "vi";
 }
 
 export function middleware(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
+	const pathnameLocale = pathname.split("/")[1];
 
+		if (
+			pathnameLocale &&
+			isLocale(pathnameLocale) &&
+			pathname.startsWith(`/${pathnameLocale}/admin`)
+		) {
+			const url = request.nextUrl.clone();
+			url.pathname = pathname.replace(`/${pathnameLocale}`, "");
+			return NextResponse.redirect(url);
+		}
 	// Skip processing for static assets and specific files
 	const staticExtensions = [
 		".png",

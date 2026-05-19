@@ -1,9 +1,20 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { FieldError, FormField, FormHelpText, FormInput } from "src/components/form-field";
+import {
+	FieldError,
+	FormField,
+	FormHelpText,
+	FormInput,
+} from "src/components/form-field";
 import { Button } from "src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "src/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "src/components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -12,8 +23,14 @@ import {
 	SelectValue,
 } from "src/components/ui/select";
 import { useSocialMediaLinks } from "../contact-context";
-import { getSocialMediaPlatform, SOCIAL_MEDIA_PLATFORMS } from "../social-media.config";
-import type { SocialMediaLinkInput, SocialMediaPlatformId } from "./social-media.type";
+import {
+	getSocialMediaPlatform,
+	SOCIAL_MEDIA_PLATFORMS,
+} from "../social-media.config";
+import type {
+	SocialMediaLinkInput,
+	SocialMediaPlatformId,
+} from "./social-media.type";
 
 /**
  * Social media form card component
@@ -22,12 +39,14 @@ import type { SocialMediaLinkInput, SocialMediaPlatformId } from "./social-media
  */
 export function SocialMediaFormCard() {
 	const {
-		socialMedia,
+		socialMediaLinks,
 		addSocialMediaLink,
 		removeSocialMediaLink,
 		updateSocialMediaPlatform,
 		updateSocialMediaUrl,
 	} = useSocialMediaLinks();
+
+	const socialMedia = socialMediaLinks ?? [];
 
 	/**
 	 * Convert social media links to input format for form submission
@@ -46,6 +65,7 @@ export function SocialMediaFormCard() {
 	 */
 	const addLink = () => {
 		const availablePlatforms = getAvailablePlatforms("new");
+
 		if (availablePlatforms.length > 0) {
 			addSocialMediaLink(availablePlatforms[0].id as SocialMediaPlatformId);
 		}
@@ -62,18 +82,22 @@ export function SocialMediaFormCard() {
 			.map((link) => link.platformId);
 
 		return SOCIAL_MEDIA_PLATFORMS.filter(
-			(platform) => !selectedPlatforms.includes(platform.id as SocialMediaPlatformId),
+			(platform) =>
+				!selectedPlatforms.includes(platform.id as SocialMediaPlatformId),
 		);
 	};
 
 	return (
-		<Card>
+		<Card className="w-full">
 			<CardHeader>
 				<CardTitle>Social Media Links</CardTitle>
+
 				<CardDescription>
-					Add and manage social media profiles shown in contact section and footer
+					Add and manage social media profiles shown in contact section and
+					footer
 				</CardDescription>
 			</CardHeader>
+
 			<CardContent className="space-y-4">
 				{/* Hidden input for social media links data */}
 				<input
@@ -103,54 +127,70 @@ export function SocialMediaFormCard() {
 						return (
 							<div
 								key={link.id}
-								className="flex items-center space-x-3 p-3 border rounded-lg bg-card"
+								className="grid w-full gap-3 rounded-lg border bg-card p-3 sm:grid-cols-[220px_minmax(0,1fr)_auto] sm:items-start"
 							>
 								{/* Platform Selector */}
-								<div className="flex-shrink-0 w-32">
+								<div className="min-w-0">
 									<FormField
 										fieldId={`socialMedia-${link.id}-platformId`}
 										name={`socialMedia-${link.id}-platformId`}
 										required
 									>
 										<Select
-											defaultValue={link.platformId}
+											value={link.platformId}
 											onValueChange={(value: string) =>
-												updateSocialMediaPlatform(link.id, value as SocialMediaPlatformId)
+												updateSocialMediaPlatform(
+													link.id,
+													value as SocialMediaPlatformId,
+												)
 											}
 										>
-											<SelectTrigger>
+											<SelectTrigger className="w-full">
 												<SelectValue />
 											</SelectTrigger>
+
 											<SelectContent>
-												{availablePlatforms.map((platform) => {
-													const Icon = platform.icon;
+												{availablePlatforms.map((availablePlatform) => {
+													const Icon = availablePlatform.icon;
+
 													return (
-														<SelectItem key={platform.id} value={platform.id}>
+														<SelectItem
+															key={availablePlatform.id}
+															value={availablePlatform.id}
+														>
 															<div className="flex items-center space-x-2">
 																<Icon className="size-4" />
-																<span>{platform.name}</span>
+																<span>{availablePlatform.name}</span>
 															</div>
 														</SelectItem>
 													);
 												})}
 											</SelectContent>
 										</Select>
+
 										<FieldError />
 									</FormField>
 								</div>
 
 								{/* URL Input */}
-								<div className="flex-1">
+								<div className="min-w-0">
 									<FormField
 										fieldId={`socialMedia-${link.id}-url`}
 										name={`socialMedia-${link.id}-url`}
 										placeholder={platform?.placeholder || "Enter URL"}
-										helpText={`Enter your ${platform?.name} URL (e.g., ${platform?.placeholder})`}
+										helpText={`Enter your ${platform?.name || "social media"} URL${
+											platform?.placeholder
+												? ` (e.g., ${platform.placeholder})`
+												: ""
+										}`}
 									>
 										<FormInput
-											defaultValue={link.url}
-											onChange={(e) => updateSocialMediaUrl(link.id, e.target.value)}
+											value={link.url}
+											onChange={(e) =>
+												updateSocialMediaUrl(link.id, e.target.value)
+											}
 										/>
+
 										<FormHelpText />
 										<FieldError />
 									</FormField>
@@ -162,7 +202,7 @@ export function SocialMediaFormCard() {
 									variant="ghost"
 									size="icon"
 									onClick={() => removeSocialMediaLink(link.id)}
-									className="flex-shrink-0 text-destructive hover:text-destructive"
+									className="shrink-0 text-destructive hover:text-destructive"
 								>
 									<Trash2 className="size-4" />
 								</Button>
@@ -173,9 +213,11 @@ export function SocialMediaFormCard() {
 
 				{/* Empty State */}
 				{socialMedia.length === 0 && (
-					<div className="text-center py-8 text-muted-foreground">
+					<div className="py-8 text-center text-muted-foreground">
 						<p>No social media links added yet.</p>
-						<p className="text-sm">Click "Add Social Media Link" to get started.</p>
+						<p className="text-sm">
+							Click "Add Social Media Link" to get started.
+						</p>
 					</div>
 				)}
 			</CardContent>

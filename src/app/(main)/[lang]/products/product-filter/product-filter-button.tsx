@@ -1,29 +1,80 @@
 "use client";
 
 import { Slot } from "@radix-ui/react-slot";
-import { useProductFilterActions, useProductFilterState } from "./product-filter.state";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
+import {
+	useProductFilterActions,
+	useProductFilterState,
+} from "./product-filter.state";
 
-interface FilterButtonSlotProps {
-	id: string | null; // null = "All"
-	children: React.ReactNode;
+interface ProductFilterButtonProps {
+	id: string | null;
+	children: ReactNode;
 }
 
-/** Slot shown when this ID matches the selected category */
-export function ActiveFilterButton({ id, children }: FilterButtonSlotProps) {
+function useUpdateProductFilterUrl() {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	return (categoryId: string | null) => {
+		const params = new URLSearchParams(searchParams.toString());
+
+		if (categoryId) {
+			params.set("category", categoryId);
+		} else {
+			params.delete("category");
+		}
+
+		const queryString = params.toString();
+
+		router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+			scroll: false,
+		});
+	};
+}
+
+function useHandleClick(id: string | null) {
 	const { selectedCategory } = useProductFilterState();
-	const { selectCategory, selectAll } = useProductFilterActions();
+	const { selectAll, selectCategory } = useProductFilterActions();
+	const updateProductFilterUrl = useUpdateProductFilterUrl();
+
+	return () => {
+		if (selectedCategory === id) return;
+
+		if (id === null) {
+			selectAll();
+			updateProductFilterUrl(null);
+			return;
+		}
+
+		selectCategory(id);
+		updateProductFilterUrl(id);
+	};
+}
+
+export function ActiveFilterButton({ id, children }: ProductFilterButtonProps) {
+	const { selectedCategory } = useProductFilterState();
+	const handleClick = useHandleClick(id);
 
 	if (selectedCategory !== id) return null;
 
-	return <Slot onClick={id === null ? selectAll : () => selectCategory(id)}>{children}</Slot>;
+	return (
+		<Slot onClick={handleClick} aria-current="true">
+			{children}
+		</Slot>
+	);
 }
 
-/** Slot shown when this ID does NOT match the selected category */
-export function InactiveFilterButton({ id, children }: FilterButtonSlotProps) {
+export function InactiveFilterButton({
+	id,
+	children,
+}: ProductFilterButtonProps) {
 	const { selectedCategory } = useProductFilterState();
-	const { selectCategory, selectAll } = useProductFilterActions();
+	const handleClick = useHandleClick(id);
 
 	if (selectedCategory === id) return null;
 
-	return <Slot onClick={id === null ? selectAll : () => selectCategory(id)}>{children}</Slot>;
+	return <Slot onClick={handleClick}>{children}</Slot>;
 }

@@ -7,7 +7,7 @@
 - Current site is Vietnamese-only with hardcoded Vietnamese content
 - Uses `MultilingualText` interface for database storage
 - Main pages: Home, About, Products, Services, Projects, Contact, Privacy Policy
-- Products, Services, Projects, Contact pages read content from database
+- Products, Services, Projects, Contact, Hero pages read content from database
 
 **Current Issues:**
 - Root layout hardcoded to `lang="vi"`
@@ -197,7 +197,7 @@ export function middleware(request: NextRequest) {
 
 **Content Categories:**
 1. **Static Content** - UI text, navigation, forms
-2. **Database Content** - Products, Services, Projects, Contact info
+2. **Database Content** - Products, Services, Projects, Contact info, Hero Info
 3. **SEO Content** - Meta descriptions, titles, structured data
 
 **Translation Approach:**

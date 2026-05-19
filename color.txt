@@ -1,0 +1,10 @@
+#342312 (màu chủ đạo) 
+
+
+#E7D0AF (màu chữ) 
+
+
+#F7F1E6 (background)
+#FAF7F0 (sub bg)
+
+#A87E3C (hover chữ)

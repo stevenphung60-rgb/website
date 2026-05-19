@@ -154,6 +154,7 @@ export const CACHE_TAGS = {
   services: "services",
   projects: "projects",
   contact: "contact",
+  hero: "hero",
 };
 ```
 
@@ -180,12 +181,13 @@ revalidateTag(CACHE_TAGS.products);
 - `services` - Service offerings
 - `projects` - Completed projects
 - `contact` - Contact information
+- `hero` - Hero information
 - `user` - Better Auth users
 - `session` - Better Auth sessions
 
 ## Domain Organization
 
-Each domain (products, services, projects, contact) follows this structure:
+Each domain (products, services, projects, contact, hero) follows this structure:
 
 ```
 src/server/[domain]/

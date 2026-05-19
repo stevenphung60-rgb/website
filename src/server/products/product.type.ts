@@ -14,7 +14,8 @@ export type { MultilingualText };
 export interface ProductDocument {
 	id: string;
 	name: MultilingualText;
-	category?: MultilingualText;
+	categoryId?: string;
+	code: string;
 	description: MultilingualText;
 	status: ProductStatus;
 	gallery: ProductImageDocument[];
@@ -40,7 +41,8 @@ export interface ProductImageDocument {
 export interface Product {
 	id: string;
 	name: MultilingualText;
-	category?: MultilingualText;
+	categoryId?: string;
+	code: string;
 	description: MultilingualText;
 	status: ProductStatus;
 	gallery: ProductImage[];
@@ -63,7 +65,8 @@ export enum ProductStatus {
 
 export interface CreateProductData {
 	name: MultilingualText;
-	category?: MultilingualText;
+	categoryId?: string;
+	code: string;
 	description: MultilingualText;
 	status: ProductStatus;
 	images: File[];

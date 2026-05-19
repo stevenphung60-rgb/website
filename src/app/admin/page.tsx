@@ -12,6 +12,24 @@ export default async function AdminPage() {
 	return (
 		<div className="container mx-auto px-4 py-8">
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+								{/* Hero Management */}
+				<Card className="hover:shadow-md transition-shadow">
+					<CardHeader>
+						<div className="flex items-center space-x-3">
+							<div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/20">
+								<Phone className="size-5 text-orange-600 dark:text-orange-400" />
+							</div>
+							<CardTitle className="text-lg">{"Hero (Banner)"}</CardTitle>
+						</div>
+						<CardDescription>{"Update hero details and social media"}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Link href="/admin/hero">
+							<Button className="w-full">{"Manage Hero"}</Button>
+						</Link>
+					</CardContent>
+				</Card>
+
 				{/* Products Management */}
 				<Card className="hover:shadow-md transition-shadow">
 					<CardHeader>
@@ -26,6 +44,23 @@ export default async function AdminPage() {
 					<CardContent>
 						<Link href="/admin/products">
 							<Button className="w-full">{"Manage Products"}</Button>
+						</Link>
+					</CardContent>
+				</Card>
+				{/* Product Categories Management */}
+				<Card className="hover:shadow-md transition-shadow">
+					<CardHeader>
+						<div className="flex items-center space-x-3">
+							<div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+								<Package className="size-5 text-blue-600 dark:text-blue-400" />
+							</div>
+							<CardTitle className="text-lg">{"Product Categories"}</CardTitle>
+						</div>
+						<CardDescription>{"Manage product categories"}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Link href="/admin/productcategories">
+							<Button className="w-full">{"Manage Product Categories"}</Button>
 						</Link>
 					</CardContent>
 				</Card>
@@ -65,6 +100,26 @@ export default async function AdminPage() {
 						</Link>
 					</CardContent>
 				</Card>
+
+				{/* Project Categories Management */}
+				<Card className="hover:shadow-md transition-shadow">
+					<CardHeader>
+						<div className="flex items-center space-x-3">
+							<div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+								<Package className="size-5 text-blue-600 dark:text-blue-400" />
+							</div>
+							<CardTitle className="text-lg">{"Project Categories"}</CardTitle>
+						</div>
+						<CardDescription>{"Manage project categories"}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Link href="/admin/projectcategories">
+							<Button className="w-full">{"Manage Project Categories"}</Button>
+						</Link>
+					</CardContent>
+				</Card>
+
+
 
 				{/* Contact Management */}
 				<Card className="hover:shadow-md transition-shadow">

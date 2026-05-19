@@ -1,0 +1,121 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { ChevronDown } from "lucide-react";
+import LocaleLink from "src/components/behaviors/LocaleLink";
+import { HeaderMegaMenu } from "src/components/header-mega-menu";
+import type { Locale } from "src/lib/i18n/config";
+
+type MegaProduct = {
+	id?: string;
+	name: string;
+	href: string;
+	image?: string;
+};
+
+type MegaChild = {
+	name: string;
+	href: string;
+	image?: string;
+	products?: MegaProduct[];
+};
+
+type NavigationItem = {
+	name: string;
+	href: string;
+	children?: MegaChild[];
+};
+
+export function HeaderNavClient({
+	navigation,
+	dictionary,
+	locale,
+}: {
+	navigation: NavigationItem[];
+	dictionary: any;
+	locale: Locale;
+}) {
+	const pathname = usePathname();
+	const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+	useEffect(() => {
+		setActiveMenu(null);
+	}, [pathname]);
+
+	return (
+		<nav className="hidden w-full items-center justify-center gap-8 md:flex">
+			{navigation.map((item) => {
+				const hasChildren = !!item.children?.length;
+				const isActive = activeMenu === item.name;
+
+				if (!hasChildren) {
+					return (
+						<LocaleLink
+							key={item.name}
+							href={item.href}
+							prefetch={true}
+							onClick={() => setActiveMenu(null)}
+							className="relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.12em] text-[#342312] hover:text-[#342312]
+							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
+							after:origin-left after:scale-x-0 after:bg-[#342312] after:transition-transform
+							hover:after:scale-x-100"
+						>
+							{item.name}
+						</LocaleLink>
+					);
+				}
+
+				return (
+					<div
+						key={item.name}
+						className="relative"
+						onMouseEnter={() => setActiveMenu(item.name)}
+						onMouseLeave={() => setActiveMenu(null)}
+					>
+						<LocaleLink
+							href={item.href}
+							prefetch={true}
+							onClick={() => setActiveMenu(null)}
+							className={`relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.12em] text-[#342312]
+							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
+							after:origin-left after:bg-[#342312] after:transition-transform ${
+								isActive ? "after:scale-x-100" : "after:scale-x-0"
+							}`}
+						>
+							<span className="inline-flex items-center gap-1 whitespace-nowrap">
+								<span>{item.name}</span>
+
+								<ChevronDown
+									className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
+										isActive ? "rotate-[-90deg]" : ""
+									}`}
+								/>
+							</span>
+						</LocaleLink>
+
+						<div
+							className={`fixed inset-x-0 z-50 max-w-full overflow-x-hidden transition-all duration-300 before:absolute before:left-0 before:top-[-12px] before:h-[12px] before:w-full before:content-[''] ${
+								isActive
+									? "visible translate-y-0 opacity-100"
+									: "invisible translate-y-2 opacity-0"
+							}`}
+							style={{
+								top: "var(--header-h, 130px)",
+							}}
+						>
+							<HeaderMegaMenu
+								title={item.name}
+								href={item.href}
+								childrenItems={item.children || []}
+								viewAllText={dictionary.header.viewAll}
+								locale={locale}
+								onClose={() => setActiveMenu(null)}
+							/>
+						</div>
+					</div>
+				);
+			})}
+		</nav>
+	);
+}

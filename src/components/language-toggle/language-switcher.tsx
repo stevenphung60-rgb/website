@@ -1,77 +1,49 @@
-/**
- * Language switcher component for header navigation
- * Allows users to switch between Vietnamese and English
- */
-
 "use client";
 
-import { Check } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "src/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "src/components/ui/dropdown-menu";
-import type { Locale } from "../../lib/i18n/config";
-import { localeNames, locales } from "../../lib/i18n/config";
-import { cn } from "../../lib/utils";
+import type { Locale } from "src/lib/i18n/config";
 
-/**
- * Language switcher component props
- */
-interface LanguageSwitcherProps {
+interface Props {
 	currentLang: Locale;
-	currentPath?: string;
-	className?: string;
 }
 
-/**
- * Language switcher component
- * Displays current language and provides dropdown to switch languages
- */
-export function LanguageSwitcher({ currentLang, className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ currentLang }: Props) {
 	const pathname = usePathname();
+	const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
 
-	// Remove current language prefix from pathname
-	const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, "") || "/";
+	const buildPath = (lang: Locale) => `/${lang}${pathWithoutLocale}`;
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="sm"
-					className={cn(
-						"flex items-center gap-2 px-2 py-1 h-auto",
-						"border border-border rounded-md",
-						"hover:bg-muted/50 focus:bg-muted/50",
-						className,
-					)}
-				>
-					<span className="font-medium">{currentLang.toUpperCase()}</span>
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-48">
-				{locales.map((locale) => {
-					const isActive = currentLang === locale;
-					const href = `/${locale}${pathWithoutLang}`;
+		<div className="inline-flex shrink-0 items-center overflow-hidden rounded-full border border-[#E7D0AF] bg-[#E7D0AF] text-[12px] font-semibold leading-none shadow-sm sm:text-[14px]">
+			<button
+				type="button"
+				aria-pressed={currentLang === "vi"}
+				className={`min-h-8 min-w-9 px-2.5 py-1 transition-colors duration-200 sm:min-h-9 sm:min-w-10 sm:px-3 ${
+					currentLang === "vi"
+						? "bg-[#342312] text-[#E7D0AF]"
+						: "bg-[#E7D0AF] text-[#342312] hover:bg-[#DABF96]"
+				}`}
+				onClick={() => {
+					window.location.href = buildPath("vi");
+				}}
+			>
+				VI
+			</button>
 
-					return (
-						<DropdownMenuItem key={locale} asChild>
-							<Link
-								href={href}
-								className="flex items-center space-x-2 px-2 py-1 cursor-pointer hover:bg-accent"
-							>
-								<span className="flex-1 font-medium">{localeNames[locale]}</span>
-								{isActive && <Check className="h-4 w-4 text-foreground" />}
-							</Link>
-						</DropdownMenuItem>
-					);
-				})}
-			</DropdownMenuContent>
-		</DropdownMenu>
+			<button
+				type="button"
+				aria-pressed={currentLang === "en"}
+				className={`min-h-8 min-w-9 px-2.5 py-1 transition-colors duration-200 sm:min-h-9 sm:min-w-10 sm:px-3 ${
+					currentLang === "en"
+						? "bg-[#342312] text-[#E7D0AF]"
+						: "bg-[#E7D0AF] text-[#342312] hover:bg-[#DABF96]"
+				}`}
+				onClick={() => {
+					window.location.href = buildPath("en");
+				}}
+			>
+				EN
+			</button>
+		</div>
 	);
 }

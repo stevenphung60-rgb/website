@@ -16,13 +16,13 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 	try {
 		// Extract form data
 		const productId = formData.get("productId") as string;
+		const productCode = formData.get("productCode") as string;
 		const productNameEn = formData.get("productNameEn") as string;
 		const productNameVi = formData.get("productNameVi") as string;
 		const productDescriptionEn = formData.get("productDescriptionEn") as string;
 		const productDescriptionVi = formData.get("productDescriptionVi") as string;
 		const productStatus = formData.get("productStatus") as string;
-		const productCategoryEn = (formData.get("productCategoryEn") as string) || "";
-		const productCategoryVi = (formData.get("productCategoryVi") as string) || "";
+		const productCategoryId = (formData.get("productCategoryId") as string) || "";
 
 		// Validation phase
 		if (!productId) {
@@ -35,6 +35,9 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 		// Validate required fields and collect missing field names
 		const missingFields: string[] = [];
 
+		if (!productCode) {
+			missingFields.push("Product Code");
+		}
 		if (!productNameEn) {
 			missingFields.push("Product Name (English)");
 		}
@@ -58,21 +61,16 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Validate status value, these are validated in the client already, no need to handle errors here
 		if (!Object.values(ProductStatus).includes(productStatus as ProductStatus)) {
 			throw new Error("Invalid product status");
 		}
 
-		// Create updated product document for MongoDB
 		const updatedProduct: Partial<Product> = {
+			code: productCode,
 			name: {
 				en: productNameEn,
 				vi: productNameVi,
 			},
-			// Only include category in $set if a value was provided
-			...(productCategoryEn || productCategoryVi
-				? { category: { en: productCategoryEn, vi: productCategoryVi } }
-				: {}),
 			description: {
 				en: productDescriptionEn,
 				vi: productDescriptionVi,
@@ -81,14 +79,15 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 			updatedAt: new Date(),
 		};
 
-		// Update in MongoDB — set category if provided, unset if cleared
-		const hasCategory = productCategoryEn || productCategoryVi;
 		const db = await getDatabase();
 		const result = await db.collection<ProductDocument>("products").updateOne(
 			{ id: productId },
 			{
-				$set: updatedProduct,
-				...(hasCategory ? {} : { $unset: { category: "" } }),
+				$set: {
+					...updatedProduct,
+					...(productCategoryId ? { categoryId: productCategoryId } : {}),
+				},
+				...(productCategoryId ? {} : { $unset: { categoryId: "" } }),
 			},
 		);
 
@@ -99,7 +98,6 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 			};
 		}
 
-		// Revalidate products cache
 		revalidateTag(CACHE_TAGS.PRODUCTS, "max");
 		revalidatePath("/admin/products");
 

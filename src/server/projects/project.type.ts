@@ -42,9 +42,9 @@ export enum ProjectCompletionStatus {
 export interface ProjectDocument {
 	id: string;
 	name: MultilingualText;
-	category: MultilingualText;
-	location: string;
-	year: string;
+	categoryId?: string | null;
+	location: MultilingualText;
+	year: MultilingualText;
 	description: MultilingualText;
 	specs: MultilingualText[];
 	visibilityStatus: ProjectVisibilityStatus;
@@ -71,9 +71,9 @@ export interface ProjectImageDocument {
 export interface Project {
 	id: string;
 	name: MultilingualText;
-	category: MultilingualText;
-	location: string;
-	year: string;
+	categoryId?: string | null;
+	location: MultilingualText;
+	year: MultilingualText;
 	description: MultilingualText;
 	specs: MultilingualText[];
 	visibilityStatus: ProjectVisibilityStatus;
@@ -92,9 +92,9 @@ export interface ProjectImage {
 
 export interface CreateProjectData {
 	name: MultilingualText;
-	category: MultilingualText;
-	location: string;
-	year: string;
+	categoryId?: string | null;
+	location: MultilingualText;
+	year: MultilingualText;
 	description: MultilingualText;
 	specs: MultilingualText[];
 	visibilityStatus: ProjectVisibilityStatus;

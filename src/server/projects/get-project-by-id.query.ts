@@ -1,7 +1,22 @@
 import { cache } from "react";
 import { getDatabase } from "src/lib/database";
 import { getS3Url } from "src/lib/s3";
+import type { MultilingualText } from "src/lib/types/common.type";
 import type { Project, ProjectDocument } from "./project.type";
+
+function toMultilingualText(value: string | MultilingualText | undefined | null): MultilingualText {
+	if (typeof value === "string") {
+		return {
+			en: value,
+			vi: value,
+		};
+	}
+
+	return {
+		en: value?.en ?? "",
+		vi: value?.vi ?? "",
+	};
+}
 
 /**
  * Retrieves a project by its ID from the database
@@ -17,13 +32,12 @@ export const getProjectById = cache(async (id: string): Promise<Project | null> 
 			return null;
 		}
 
-		// Convert database document to client interface
-		const project: Project = {
+		return {
 			id: projectDoc.id,
 			name: projectDoc.name,
-			category: projectDoc.category,
-			location: projectDoc.location,
-			year: projectDoc.year,
+			categoryId: projectDoc.categoryId,
+			location: toMultilingualText(projectDoc.location),
+			year: toMultilingualText(projectDoc.year),
 			description: projectDoc.description,
 			specs: projectDoc.specs,
 			visibilityStatus: projectDoc.visibilityStatus,
@@ -37,8 +51,6 @@ export const getProjectById = cache(async (id: string): Promise<Project | null> 
 			createdAt: projectDoc.createdAt,
 			updatedAt: projectDoc.updatedAt,
 		};
-
-		return project;
 	} catch (error) {
 		console.error("Error fetching project by ID:", error);
 		return null;

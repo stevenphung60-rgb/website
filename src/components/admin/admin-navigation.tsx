@@ -1,89 +1,47 @@
-import { FolderOpen, Home, Package, Phone, Shield, Wrench } from "lucide-react";
+import { Home } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { Button } from "src/components/ui/button";
 import { AdminAccountDisplay } from "./admin-account-display";
-import { AdminNavigationItem } from "./admin-navigation-item";
+import { AdminNavigationMenu } from "./admin-navigation-menu";
 
-/**
- * Admin navigation component
- * Provides consistent navigation across all admin pages
- * Server component that composes navigation items with client-side active state
- */
 export function AdminNavigation() {
-	const navigationItems = [
-		{
-			href: "/admin",
-			label: "Dashboard",
-			icon: Shield,
-			description: "Overview and quick access",
-		},
-		{
-			href: "/admin/products",
-			label: "Products",
-			icon: Package,
-			description: "Manage air duct products",
-		},
-		{
-			href: "/admin/services",
-			label: "Services",
-			icon: Wrench,
-			description: "Manage company services",
-		},
-		{
-			href: "/admin/projects",
-			label: "Projects",
-			icon: FolderOpen,
-			description: "Showcase completed projects",
-		},
-		{
-			href: "/admin/contact",
-			label: "Contact",
-			icon: Phone,
-			description: "Update contact information",
-		},
-	];
-
 	return (
-		<div className="border-b border-border bg-card">
-			<div className="container mx-auto px-4 py-6">
-				<div className="flex items-center justify-between">
-					{/* Back to Homepage - Left Side */}
-					<div className="flex items-center">
-						<Link href="/">
-							<Button variant="outline" size="sm">
-								<Home className="mr-2 size-4" />
-								Back to Homepage
-							</Button>
-						</Link>
-					</div>
+		<aside className="fixed left-0 top-0 z-50 h-screen w-64 bg-[#342312] text-white shadow-xl">
+			<div className="flex h-full flex-col px-3 py-6">
+				<div className="mb-6 flex items-center gap-3 px-2">
+					<Image
+						src="/nghiep_hung_logo_no_bg.svg"
+						alt="NH Logo"
+						width={40}
+						height={40}
+						className="shrink-0"
+					/>
 
-					{/* Navigation Menu and Account - Right Side */}
-					<div className="flex items-center space-x-4">
-						<div className="flex items-center space-x-2">
-							{navigationItems.map((item) => (
-								<AdminNavigationItem key={item.href} href={item.href}>
-									<item.icon className="size-4" />
-									<span>{item.label}</span>
-								</AdminNavigationItem>
-							))}
-						</div>
-						<AdminAccountDisplay />
-					</div>
+					<span className="text-[16px] font-semibold text-[#E7D0AF]">
+						NH Website Admin
+					</span>
 				</div>
 
-				{/* Mobile Navigation */}
-				<div className="md:hidden mt-4">
-					<div className="flex flex-wrap gap-2 items-center">
-						{navigationItems.map((item) => (
-							<AdminNavigationItem key={item.href} href={item.href}>
-								<item.icon className="size-4" />
-								<span>{item.label}</span>
-							</AdminNavigationItem>
-						))}
-						<AdminAccountDisplay />
-					</div>
+				<Link
+					href="/"
+					className="group mb-6 inline-flex items-center gap-2 text-sm font-medium text-white transition-colors hover:text-[#E7D0AF]"
+				>
+					<Home className="size-4 shrink-0" />
+
+					<span className="relative">
+						Back to HOMEPAGE
+						<span className="absolute -bottom-1 left-0 h-[1px] w-0 bg-[#E7D0AF] transition-all duration-300 group-hover:w-full" />
+					</span>
+				</Link>
+
+				<div className="my-4 h-[1px] w-full bg-white/20" />
+
+				<AdminNavigationMenu />
+
+				<div className="border-t border-white/20 pt-4 text-[#342312]">
+					<AdminAccountDisplay />
 				</div>
 			</div>
-		</div>
+		</aside>
 	);
 }

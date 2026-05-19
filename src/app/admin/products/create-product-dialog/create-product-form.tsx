@@ -23,21 +23,29 @@ import {
 	VisualTabsList,
 	VisualTabsTrigger,
 } from "src/components/ui/visual-tabs";
+import { getProductCategories } from "src/server/productcategories";
 import { ProductStatus } from "src/server/products";
 import { createProduct } from "./create-product-dialog.actions";
 import { HiddenSelectedImageInput } from "./hidden-selected-image-input";
 import { ProductImageRenderer } from "./product-image-renderer";
 
-/**
- * Server component for product creation form
- * Composes static content with client components for interactivity
- */
-export function CreateProductForm() {
+export async function CreateProductForm() {
+	const productCategories = await getProductCategories();
+
 	return (
 		<Form action={createProduct}>
-			{/* Form Fields */}
 			<div className="space-y-6">
-				{/* Product Name - Multilingual */}
+				<FormField
+					fieldId="productCode"
+					name="productCode"
+					placeholder="Enter product code"
+					required
+				>
+					<FormLabel>Product Code</FormLabel>
+					<FormInput />
+					<FieldError />
+				</FormField>
+
 				<div className="space-y-4">
 					<FormField>
 						<FormLabel>Product Name</FormLabel>
@@ -46,6 +54,7 @@ export function CreateProductForm() {
 								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
 								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
 							</VisualTabsList>
+
 							<VisualTabsContent value="en">
 								<FormField
 									fieldId="productNameEn"
@@ -56,6 +65,7 @@ export function CreateProductForm() {
 									<FieldError />
 								</FormField>
 							</VisualTabsContent>
+
 							<VisualTabsContent value="vi">
 								<FormField
 									fieldId="productNameVi"
@@ -70,7 +80,6 @@ export function CreateProductForm() {
 					</FormField>
 				</div>
 
-				{/* Product Description - Multilingual */}
 				<div className="space-y-4">
 					<FormField>
 						<FormLabel>Product Description</FormLabel>
@@ -79,6 +88,7 @@ export function CreateProductForm() {
 								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
 								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
 							</VisualTabsList>
+
 							<VisualTabsContent value="en">
 								<FormField
 									fieldId="productDescriptionEn"
@@ -91,6 +101,7 @@ export function CreateProductForm() {
 									<FieldError />
 								</FormField>
 							</VisualTabsContent>
+
 							<VisualTabsContent value="vi">
 								<FormField
 									fieldId="productDescriptionVi"
@@ -106,44 +117,30 @@ export function CreateProductForm() {
 						</VisualTabs>
 					</FormField>
 				</div>
-			</div>
 
-			{/* Product Category - Optional, Multilingual */}
-			<div className="space-y-4">
-				<FormField>
+				<FormField fieldId="productCategoryId" name="productCategoryId">
 					<FormLabel>
 						Product Category <span className="text-muted-foreground font-normal">(optional)</span>
 					</FormLabel>
-					<VisualTabs defaultValue="en" className="w-full">
-						<VisualTabsList className="grid w-full grid-cols-2">
-							<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-							<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-						</VisualTabsList>
-						<VisualTabsContent value="en">
-							<FormField
-								fieldId="productCategoryEn"
-								name="productCategoryEn"
-								placeholder="e.g. Ventilation Ducts"
-							>
-								<FormInput />
-								<FieldError />
-							</FormField>
-						</VisualTabsContent>
-						<VisualTabsContent value="vi">
-							<FormField
-								fieldId="productCategoryVi"
-								name="productCategoryVi"
-								placeholder="vd. Ống gió thông gió"
-							>
-								<FormInput />
-								<FieldError />
-							</FormField>
-						</VisualTabsContent>
-					</VisualTabs>
+
+					<select
+						id="productCategoryId"
+						name="productCategoryId"
+						className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+					>
+						<option value="">Select category</option>
+
+						{productCategories.map((category) => (
+							<option key={category.id} value={category.id}>
+								{category.name.en} - {category.name.vi}
+							</option>
+						))}
+					</select>
+
+					<FieldError />
 				</FormField>
 			</div>
 
-			{/* Image Upload Section */}
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<div className="text-sm font-medium text-foreground">Product Images</div>
@@ -153,7 +150,6 @@ export function CreateProductForm() {
 				</div>
 
 				<ImageUploadRoot maxFiles={10} maxFileSize={5 * 1024 * 1024} name="productImages">
-					{/* Drop Zone with integrated trigger */}
 					<ImageUploadArea
 						className="p-8 w-full flex items-center justify-center"
 						clickable={false}
@@ -163,6 +159,7 @@ export function CreateProductForm() {
 								<div className="size-16 rounded-full bg-muted flex items-center justify-center">
 									<Upload className="size-8 text-muted-foreground" />
 								</div>
+
 								<div className="space-y-1">
 									<h3 className="text-sm font-medium text-foreground">Upload Product Images</h3>
 									<p className="text-xs text-muted-foreground">
@@ -183,22 +180,19 @@ export function CreateProductForm() {
 							</ImageUploadTrigger>
 						</div>
 					</ImageUploadArea>
-					{/* Upload Progress */}
+
 					<ImageUploadProgress />
-					{/* Upload Errors */}
 					<ImageUploadError />
-					{/* Image Review with Custom Component */}
+
 					<ImageUploadReview
 						ImageComponent={ProductImageRenderer}
 						className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"
 					/>
 
-					{/* Hidden Selected Image Input - need to be in the ImageUploadRoot so that it can use the files context */}
 					<HiddenSelectedImageInput />
 				</ImageUploadRoot>
 			</div>
 
-			{/* Product Status */}
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<div className="text-sm font-medium text-foreground">Product Status</div>
@@ -221,6 +215,7 @@ export function CreateProductForm() {
 								Draft
 							</div>
 						</label>
+
 						<label className="flex-1">
 							<input
 								type="radio"
@@ -237,10 +232,8 @@ export function CreateProductForm() {
 				</FormField>
 			</div>
 
-			{/* Error Display */}
 			<FormErrorDisplay />
 
-			{/* Form Actions */}
 			<div className="flex justify-end space-x-2 pt-4">
 				<FormResetButton>Cancel</FormResetButton>
 

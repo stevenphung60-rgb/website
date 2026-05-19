@@ -12,21 +12,20 @@ export const metadata: Metadata = {
 
 function CheckingAdminAuth() {
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-muted/30">
+		<div className="min-h-screen flex items-center justify-center bg-[#FAF7F1]">
 			<div className="flex items-center space-x-2">
-				<Loader2 className="size-6 animate-spin text-primary" />
-				<span>{"Đang kiểm tra phiên đăng nhập..."}</span>
+				<Loader2 className="size-6 animate-spin text-[#342312]" />
+				<span>Đang kiểm tra phiên đăng nhập...</span>
 			</div>
 		</div>
 	);
 }
 
-/**
- * Admin layout component
- * Wraps all admin pages with consistent layout and navigation
- * Redirects to login if not authenticated
- */
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	return (
 		<Suspense fallback={<CheckingAdminAuth />}>
 			<AdminLayoutContent>{children}</AdminLayoutContent>
@@ -34,14 +33,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 	);
 }
 
-async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-	// This will redirect to login if not authenticated
+async function AdminLayoutContent({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	await requireAdminAuth();
 
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="min-h-screen bg-[#FAF7F1]">
+			{/* Sidebar */}
 			<AdminNavigation />
-			{children}
+
+			{/* Content */}
+			<div className="pl-64">
+				<main className="min-h-screen px-8 py-10">
+					{children}
+				</main>
+			</div>
 		</div>
 	);
 }

@@ -28,7 +28,10 @@ export default function LocaleLink({ href, ...props }: LocaleLinkProps) {
 	const locale = useLocale();
 
 	// Convert href to string if it's a UrlObject
-	const hrefString = typeof href === "string" ? href : href.pathname || "/";
+	const hrefString =
+	typeof href === "string"
+		? href
+		: `${href.pathname || "/"}${href.query ? `?${new URLSearchParams(href.query as Record<string, string>).toString()}` : ""}`;
 
 	// Ensure path starts with "/"
 	const normalizedPath = hrefString.startsWith("/") ? hrefString : `/${hrefString}`;

@@ -5,26 +5,38 @@ import { useProductVisibility } from "./product-visibility";
 
 interface ProductCardWrapperProps {
 	id: string;
-	categoryEn: string | null; // null = uncategorized ("Other")
+	categoryId: string | null;
 	children: ReactNode;
 }
 
-/**
- * Wrapper that:
- * 1. Registers the product's category with the visibility controller
- * 2. Shows/hides children based on visibility state (filter + row limit)
- *
- * Products with no category pass null, which the grid controller
- * maps to the "Other" bucket.
- */
-export function ProductCardWrapper({ id, categoryEn, children }: ProductCardWrapperProps) {
-	const { registerProduct, isVisible } = useProductVisibility();
+export function ProductCardWrapper({
+	id,
+	categoryId,
+	children,
+}: ProductCardWrapperProps) {
+	const { registerProduct, isVisible, animationKey, getAnimationDelay } =
+		useProductVisibility();
 
 	useEffect(() => {
-		registerProduct(id, categoryEn);
-	}, [id, categoryEn, registerProduct]);
+		registerProduct(id, categoryId);
+	}, [id, categoryId, registerProduct]);
 
 	if (!isVisible(id)) return null;
 
-	return <>{children}</>;
+	return (
+		<div className="overflow-visible">
+			<div
+				key={`${id}-${animationKey}`}
+				className="h-full animate-product-row-reveal overflow-visible opacity-0 will-change-transform"
+				style={{
+					animationDelay: `${getAnimationDelay(id)}ms`,
+					animationDuration: "780ms",
+					animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+					animationFillMode: "forwards",
+				}}
+			>
+				{children}
+			</div>
+		</div>
+	);
 }

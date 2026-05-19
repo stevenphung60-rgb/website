@@ -9,12 +9,37 @@ import type { Locale } from "./config";
  */
 export interface Dictionary {
 	// Navigation
+	header: {
+		searchPlaceholder: string;
+		companyName: string;
+		companySub: string;
+		viewAll: string;
+		featuredproducts: string;
+		relatedcontent: string;
+		featuredcontent: string;
+	},
 	nav: {
 		home: string;
 		about: string;
+
 		products: string;
+		rectangularDuct: string;
+		roundDuct: string;
+		hvacAccessories: string;
+
 		services: string;
+		solutionConsulting: string;
+        ductSystemDesign: string;
+        ductManufacturing: string;
+	    ductSystemInstallation: string;
+	    ductWarrantyMaintenance: string;
+
 		projects: string;
+		buidingProjects: string;
+		commercialProjects: string;
+		hotelresortProjects: string;
+		factoryProjects: string;
+
 		contact: string;
 		privacyPolicy: string;
 	};
@@ -113,6 +138,12 @@ export interface Dictionary {
 		};
 	};
 
+	product:{
+		code: string;
+		description: string;
+		viewDetail: string;
+	},
+
 	// Products section
 	products: {
 		title: string;
@@ -145,6 +176,11 @@ export interface Dictionary {
 			action: string;
 		};
 		viewAll: string;
+		viewDetail: string;
+		service: string;
+		serviceOverview: string;
+		serviceGallery: string;
+		otherServices: string;
 	};
 
 	// Projects section
@@ -223,6 +259,13 @@ export interface Dictionary {
 
 	// Hero section
 	hero: {
+		badge: string;
+		stats: {
+		experience: { value: string; label: string };
+		factory: { value: string; label: string };
+		capacity: { value: string; label: string };
+		projects: { value: string; label: string };
+		};
 		title: string;
 		description: string;
 		buttons: {

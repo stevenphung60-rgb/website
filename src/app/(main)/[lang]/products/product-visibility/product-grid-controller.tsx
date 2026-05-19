@@ -1,16 +1,29 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useState,
+} from "react";
 import { useProductFilterState } from "../product-filter/product-filter.state";
 import { PRODUCT_OTHER_ID } from "../product-filter/product-filter.type";
 import { ProductVisibilityContext } from "./product-visibility.state";
 
-const MAX_ROWS = 2;
+const DESKTOP_PAGE_SIZE = 12;
+const MOBILE_PAGE_SIZE = 8;
+const PRODUCT_STAGGER_DELAY = 110;
+const PRODUCT_MAX_DELAY = 770;
 
 function getColumns(width: number): number {
-	if (width >= 1024) return 3; // lg
-	if (width >= 768) return 2; // md
-	return 1;
+	if (width >= 1024) return 3;
+	return 2;
+}
+
+function getPageSize(width: number): number {
+	if (width < 768) return MOBILE_PAGE_SIZE;
+	return DESKTOP_PAGE_SIZE;
 }
 
 interface ProductGridControllerProps {
@@ -19,15 +32,6 @@ interface ProductGridControllerProps {
 	children: React.ReactNode;
 }
 
-/**
- * Client component that manages product visibility based on:
- * - Filter state (selected category, including "__other__" for uncategorized)
- * - Window width (columns)
- * - Row limit (MAX_ROWS, only if limitRows is true)
- *
- * Products register their category (null = uncategorized) when they mount.
- * The "Other" filter shows products with null category.
- */
 export function ProductGridController({
 	productIds,
 	limitRows = true,
@@ -35,53 +39,133 @@ export function ProductGridController({
 }: ProductGridControllerProps) {
 	const { selectedCategory } = useProductFilterState();
 	const [columns, setColumns] = useState(3);
+	const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE);
 	const [isReady, setIsReady] = useState(false);
-	// Map of productId → categoryEn (null = uncategorized)
-	const [loadedProducts, setLoadedProducts] = useState<Map<string, string | null>>(new Map());
+	const [animationKey, setAnimationKey] = useState(0);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [loadedProducts, setLoadedProducts] = useState<
+		Map<string, string | null>
+	>(new Map());
 
 	useLayoutEffect(() => {
-		const updateColumns = () => {
+		const updateLayoutState = () => {
 			setColumns(getColumns(window.innerWidth));
+			setPageSize(getPageSize(window.innerWidth));
 			setIsReady(true);
 		};
-		updateColumns();
-		window.addEventListener("resize", updateColumns);
-		return () => window.removeEventListener("resize", updateColumns);
+
+		updateLayoutState();
+		window.addEventListener("resize", updateLayoutState);
+
+		return () => window.removeEventListener("resize", updateLayoutState);
 	}, []);
 
-	const registerProduct = useCallback((id: string, categoryEn: string | null) => {
+	useEffect(() => {
+		setCurrentPage(1);
+		setAnimationKey((prev) => prev + 1);
+	}, [selectedCategory, pageSize]);
+
+	const registerProduct = useCallback((id: string, categoryId: string | null) => {
 		setLoadedProducts((prev) => {
-			if (prev.get(id) === categoryEn) return prev;
+			if (prev.get(id) === categoryId) return prev;
+
 			const next = new Map(prev);
-			next.set(id, categoryEn);
+			next.set(id, categoryId);
 			return next;
 		});
 	}, []);
 
-	const { visibleIds, hasMore } = useMemo(() => {
+	const { visibleIds, hasMore, totalPages } = useMemo(() => {
 		const filtered = productIds.filter((id) => {
-			if (!loadedProducts.has(id)) return false; // not registered yet
-			const category = loadedProducts.get(id) ?? null;
+			if (!loadedProducts.has(id)) return false;
 
-			if (selectedCategory === null) return true; // "All"
-			if (selectedCategory === PRODUCT_OTHER_ID) return category === null; // "Other" = uncategorized
-			return category === selectedCategory; // named category match
+			const categoryId = loadedProducts.get(id) ?? null;
+
+			if (selectedCategory === null) return true;
+			if (selectedCategory === PRODUCT_OTHER_ID) return categoryId === null;
+
+			return categoryId === selectedCategory;
 		});
 
 		if (!limitRows) {
-			return { visibleIds: new Set(filtered), hasMore: false };
+			return {
+				visibleIds: new Set(filtered),
+				hasMore: false,
+				totalPages: 1,
+			};
 		}
 
-		const maxItems = MAX_ROWS * columns;
-		const visible = new Set(filtered.slice(0, maxItems));
-		return { visibleIds: visible, hasMore: filtered.length > maxItems };
-	}, [productIds, loadedProducts, selectedCategory, columns, limitRows]);
+		const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+		const safePage = Math.min(currentPage, pageCount);
+		const startIndex = (safePage - 1) * pageSize;
+		const visible = new Set(filtered.slice(startIndex, startIndex + pageSize));
+
+		return {
+			visibleIds: visible,
+			hasMore: pageCount > 1,
+			totalPages: pageCount,
+		};
+	}, [
+		productIds,
+		loadedProducts,
+		selectedCategory,
+		limitRows,
+		currentPage,
+		pageSize,
+	]);
+
+	useEffect(() => {
+		setCurrentPage((prev) => Math.min(Math.max(prev, 1), totalPages));
+	}, [totalPages]);
+
+	const goToPage = useCallback(
+		(page: number) => {
+			setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+			setAnimationKey((prev) => prev + 1);
+		},
+		[totalPages],
+	);
+
+	const visibleOrder = useMemo(() => {
+		return productIds.filter((id) => visibleIds.has(id));
+	}, [productIds, visibleIds]);
+
+	const getAnimationDelay = useCallback(
+		(id: string) => {
+			const index = visibleOrder.indexOf(id);
+
+			if (index === -1) return 0;
+
+			return Math.min(index * PRODUCT_STAGGER_DELAY, PRODUCT_MAX_DELAY);
+		},
+		[visibleOrder],
+	);
 
 	const isVisible = useCallback((id: string) => visibleIds.has(id), [visibleIds]);
 
 	const contextValue = useMemo(
-		() => ({ registerProduct, isVisible, hasMore, isReady }),
-		[registerProduct, isVisible, hasMore, isReady],
+		() => ({
+			registerProduct,
+			isVisible,
+			hasMore,
+			isReady,
+			animationKey,
+			getAnimationDelay,
+			currentPage,
+			totalPages,
+			goToPage,
+		}),
+		[
+			registerProduct,
+			isVisible,
+			hasMore,
+			isReady,
+			animationKey,
+			getAnimationDelay,
+			currentPage,
+			totalPages,
+			goToPage,
+		],
 	);
 
 	return (

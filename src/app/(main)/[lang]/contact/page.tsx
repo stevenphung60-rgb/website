@@ -3,8 +3,10 @@ import { Suspense } from "react";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateContactMetadata } from "src/lib/seo/metadata";
+import { getHeroContactInfo } from "src/server/herocontact/get-herocontact-info.query";
 import ContactPageLoading from "./contact-page-loading";
 import ContactSectionDatabase from "./contact-section-database";
+import HeroContactBanner from "./hero-contact-banner";
 
 interface ContactPageProps {
 	params: Promise<{ lang: Locale }>;
@@ -12,8 +14,6 @@ interface ContactPageProps {
 
 /**
  * Generate metadata for contact page
- * @param params - Route parameters including locale
- * @returns Metadata object
  */
 export async function generateMetadata({
 	params,
@@ -34,16 +34,38 @@ export default function SuspendedContactPage({ params }: ContactPageProps) {
 
 /**
  * Contact page that displays database content
- * Always uses database data instead of static content
- * @param params - Route parameters including the language locale
  */
 async function ContactPage({ params }: ContactPageProps) {
 	const { lang: locale } = await params;
 
+	const heroContactInfo = await getHeroContactInfo();
+
+	const heroContactTitle =
+		locale === "vi"
+			? heroContactInfo.title.vi
+			: heroContactInfo.title.en;
+
+	const heroContactDescription =
+		locale === "vi"
+			? heroContactInfo.description.vi
+			: heroContactInfo.description.en;
+
 	return (
 		<>
 			<ScrollToTopHandler />
-			<ContactSectionDatabase locale={locale} />
+
+			<HeroContactBanner
+				locale={locale}
+				title={heroContactTitle}
+				description={heroContactDescription}
+				gallery={heroContactInfo.gallery}
+			/>
+
+			<ContactSectionDatabase
+				locale={locale}
+				heroContactTitle={heroContactTitle}
+				heroContactDescription={heroContactDescription}
+			/>
 		</>
 	);
 }

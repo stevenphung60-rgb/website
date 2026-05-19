@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import ContactDialog from "src/app/(main)/[lang]/contact/contact-dialog";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateProductsMetadata } from "src/lib/seo/metadata";
@@ -9,13 +8,11 @@ import ProductsSectionDatabase from "./products-section-database";
 
 interface ProductsPageProps {
 	params: Promise<{ lang: Locale }>;
+	searchParams?: Promise<{
+		category?: string | string[];
+	}>;
 }
 
-/**
- * Generate metadata for products page
- * @param params - Route parameters including locale
- * @returns Metadata object
- */
 export async function generateMetadata({
 	params,
 }: {
@@ -25,29 +22,36 @@ export async function generateMetadata({
 	return generateProductsMetadata(locale);
 }
 
-export default function SuspendedProductsPage({ params }: ProductsPageProps) {
+export default function SuspendedProductsPage({
+	params,
+	searchParams,
+}: ProductsPageProps) {
 	return (
 		<Suspense fallback={<ProductsPageLoading />}>
-			<ProductsPage params={params} />
+			<ProductsPage params={params} searchParams={searchParams} />
 		</Suspense>
 	);
 }
 
-/**
- * Products page that displays database content
- * Always uses database data instead of static content
- * @param params - Route parameters including the language locale
- */
-async function ProductsPage({ params }: ProductsPageProps) {
+async function ProductsPage({ params, searchParams }: ProductsPageProps) {
 	const { lang: locale } = await params;
+	const resolvedSearchParams = await searchParams;
+
+	const categoryParam = resolvedSearchParams?.category;
+	const initialCategory = Array.isArray(categoryParam)
+		? categoryParam[0] || null
+		: categoryParam || null;
 
 	return (
 		<>
 			<ScrollToTopHandler />
-			<ProductsSectionDatabase locale={locale} viewAll />
-			<div className="text-center mb-12">
-				<ContactDialog locale={locale} />
-			</div>
+
+			<ProductsSectionDatabase
+				locale={locale}
+				showHeader={false}
+				viewAll
+				initialCategory={initialCategory}
+			/>
 		</>
 	);
 }

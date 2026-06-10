@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateAboutMetadata } from "src/lib/seo/metadata";
+import { getHeroAboutInfo } from "src/server/heroabout";
 
 import AboutBanner from "./about-banner";
 import AboutBusinessPhilosophySection from "./about-business-philosophy-section";
@@ -26,17 +27,18 @@ export default async function AboutPage({
 	params: Promise<{ lang: Locale }>;
 }>) {
 	const { lang: locale } = await params;
+	const heroAboutInfo = await getHeroAboutInfo();
 
 	return (
 		<>
 			<ScrollToTopHandler />
 
 			<main className="w-full overflow-hidden bg-[#F7F1E6] text-[#342312]">
-					<AboutBanner locale={locale} />
-					<AboutYoutubeSection locale={locale} />
-					<AboutCompanyHistorySection locale={locale} />
-					<AboutBusinessPhilosophySection locale={locale} />
-					<AboutCoreValuesSection locale={locale} />
+				<AboutBanner locale={locale} heroAboutInfo={heroAboutInfo} />
+				<AboutYoutubeSection locale={locale} />
+				<AboutCompanyHistorySection locale={locale} />
+				<AboutBusinessPhilosophySection locale={locale} />
+				<AboutCoreValuesSection locale={locale} />
 
 				<AboutRevealSection variant="fade-up">
 					<AboutProductionCapabilitySection locale={locale} />

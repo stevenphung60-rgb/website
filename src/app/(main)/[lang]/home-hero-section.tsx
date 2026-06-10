@@ -54,7 +54,7 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 			setCurrentIndex((currentIndex) =>
 				currentIndex >= heroImages.length - 1 ? 0 : currentIndex + 1,
 			);
-		}, 6000);
+		}, 4000);
 
 		return () => window.clearInterval(timer);
 	}, [heroImages.length]);

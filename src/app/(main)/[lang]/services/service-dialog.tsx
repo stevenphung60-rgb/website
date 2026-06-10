@@ -67,7 +67,7 @@ export default async function ServiceDialog({
 					</div>
 
 					<div className="py-8 sm:py-10 lg:py-0">
-						<CardTitle className="max-w-2xl text-[30px] font-black uppercase leading-[1.02] tracking-[-0.04em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] sm:text-[42px] lg:text-[48px] xl:text-[56px]">
+						<CardTitle className="max-w-2xl text-[30px] font-black uppercase leading-[1.02] tracking-[0.03em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] sm:text-[42px] lg:text-[48px] xl:text-[56px]">
 							{serviceName}
 						</CardTitle>
 					</div>

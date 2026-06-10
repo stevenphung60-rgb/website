@@ -50,7 +50,7 @@ export default async function RelatedServiceCard({
 				</div>
 
 				<div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 lg:p-7">
-					<h3 className="max-w-[92%] text-[28px] font-black uppercase leading-[1.02] tracking-[-0.04em] text-white sm:text-[34px] lg:text-[38px]">
+					<h3 className="max-w-[92%] text-[28px] font-black uppercase leading-[1.02] tracking-[0.03em] text-white sm:text-[34px] lg:text-[38px]">
 						{serviceName}
 					</h3>
 

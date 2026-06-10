@@ -1,10 +1,38 @@
+"use client";
+
 import { Building2, Factory } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import type { Locale } from "src/lib/i18n/config";
-import { getHeroAboutInfo } from "src/server/heroabout";
+
+interface AboutBannerGalleryItem {
+	url: string;
+	order: number;
+}
+
+interface AboutBannerInfo {
+	title: {
+		vi?: string;
+		en?: string;
+	};
+	description: {
+		vi?: string;
+		en?: string;
+	};
+	officeaddress: {
+		vi?: string;
+		en?: string;
+	};
+	factoryaddress: {
+		vi?: string;
+		en?: string;
+	};
+	gallery: AboutBannerGalleryItem[];
+}
 
 interface AboutBannerProps {
 	locale: Locale;
+	heroAboutInfo: AboutBannerInfo;
 }
 
 const uiText = {
@@ -22,8 +50,11 @@ const uiText = {
 	},
 };
 
-export default async function AboutBanner({ locale }: AboutBannerProps) {
-	const heroAboutInfo = await getHeroAboutInfo();
+export default function AboutBanner({
+	locale,
+	heroAboutInfo,
+}: AboutBannerProps) {
+	const [currentIndex, setCurrentIndex] = useState(0);
 
 	const lang = locale === "en" ? "en" : "vi";
 	const text = uiText[lang];
@@ -34,8 +65,28 @@ export default async function AboutBanner({ locale }: AboutBannerProps) {
 	const officeAddress = heroAboutInfo.officeaddress[lang] || "";
 	const factoryAddress = heroAboutInfo.factoryaddress[lang] || "";
 
-	const bannerImage =
-		[...heroAboutInfo.gallery].sort((a, b) => a.order - b.order)[0]?.url || "";
+	const bannerImages = useMemo(
+		() =>
+			[...heroAboutInfo.gallery]
+				.sort((a, b) => a.order - b.order)
+				.map((image) => image.url)
+				.filter(Boolean),
+		[heroAboutInfo.gallery],
+	);
+
+	useEffect(() => {
+		if (bannerImages.length <= 1) return;
+
+		const timer = window.setInterval(() => {
+			setCurrentIndex((currentIndex) =>
+				currentIndex >= bannerImages.length - 1 ? 0 : currentIndex + 1,
+			);
+		}, 3000);
+
+		return () => {
+			window.clearInterval(timer);
+		};
+	}, [bannerImages.length]);
 
 	const locations = [
 		{
@@ -54,17 +105,6 @@ export default async function AboutBanner({ locale }: AboutBannerProps) {
 		<section className="relative w-full overflow-hidden bg-[#342312]">
 			<style>
 				{`
-					@keyframes aboutBannerImage {
-						from {
-							opacity: 0;
-							transform: scale(1.04);
-						}
-						to {
-							opacity: 1;
-							transform: scale(1);
-						}
-					}
-
 					@keyframes aboutBannerFadeUp {
 						from {
 							opacity: 0;
@@ -101,18 +141,22 @@ export default async function AboutBanner({ locale }: AboutBannerProps) {
 			</style>
 
 			<div className="relative min-h-[620px] overflow-hidden lg:min-h-[640px]">
-				{bannerImage ? (
+				{bannerImages.map((image, index) => (
 					<Image
-						src={bannerImage}
+						key={`${image}-${index}`}
+						src={image}
 						alt={title || text.imageAlt}
 						fill
-						priority
-						className="object-cover object-center"
-						style={{
-							animation: "aboutBannerImage 1200ms ease-out both",
-						}}
+						priority={index === 0}
+						sizes="100vw"
+						className={[
+							"object-cover object-center transition-all duration-[1400ms] ease-out",
+							index === currentIndex
+								? "scale-100 opacity-100"
+								: "scale-[1.04] opacity-0",
+						].join(" ")}
 					/>
-				) : null}
+				))}
 
 				<div className="absolute inset-0 bg-[#342312]/10" />
 				<div className="absolute inset-0 bg-gradient-to-r from-[#342312]/82 via-[#342312]/46 to-[#342312]/18 lg:from-[#342312]/78 lg:via-[#342312]/34 lg:to-transparent" />

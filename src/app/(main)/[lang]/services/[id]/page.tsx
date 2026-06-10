@@ -43,7 +43,7 @@ export default async function ServiceDetailPage({
 	const relatedServiceIds = serviceIds.filter((serviceId) => serviceId !== id);
 
 	return (
-		<main className="w-full overflow-x-hidden bg-[#FAF7F0]">
+		<main className="relative w-full overflow-x-hidden overflow-y-hidden bg-[#FAF7F0]">
 			<ScrollToTopHandler />
 
 			<section className="absolute left-0 top-0 z-20 w-full py-5 sm:py-6">
@@ -102,7 +102,7 @@ export default async function ServiceDetailPage({
 							</div>
 
 							<h1
-								className="animate-hero-content max-w-6xl break-words text-[38px] font-black uppercase leading-[1.1] tracking-[-0.035em] text-white sm:text-[58px] sm:leading-[1.08] lg:text-[72px] lg:leading-[1.06] xl:text-[82px] 2xl:text-[90px]"
+								className="animate-hero-content max-w-6xl break-words text-[34px] font-black uppercase leading-[1.1] tracking-[0.03em] text-white sm:text-[48px] sm:leading-[1.08] md:text-[58px] lg:text-[68px] lg:leading-[1.06] xl:text-[68px] 2xl:text-[68px]"
 								style={{ animationDelay: "0.4s" }}
 							>
 								{serviceName}

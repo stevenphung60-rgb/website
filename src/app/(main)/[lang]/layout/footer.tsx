@@ -143,7 +143,7 @@ export default async function Footer({ locale }: { locale: Locale }) {
 
 				<div className="relative flex items-center justify-start overflow-hidden bg-[#F7F1E6] px-5 py-8 text-left sm:px-8 sm:py-9 lg:px-20 lg:py-10 xl:px-24">
 					<div className="relative w-full max-w-3xl">
-						<p className="mb-3 text-[16px] font-bold uppercase tracking-[0.3em] text-[#A87E3C]">
+						<p className="mb-3 text-[16px] font-bold uppercase tracking-[0.03em] text-[#A87E3C]">
 							{consultantEyebrow}
 						</p>
 

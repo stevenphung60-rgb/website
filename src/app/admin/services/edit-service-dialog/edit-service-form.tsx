@@ -1,3 +1,5 @@
+import { AdminFormSection } from "src/components/admin/admin-form-section";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import {
 	Form,
@@ -9,12 +11,6 @@ import {
 import { Button } from "src/components/ui/button";
 import { DialogClose } from "src/components/ui/dialog";
 import { Textarea } from "src/components/ui/textarea";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import type { Service } from "src/server/services";
 import { ServiceStatus } from "src/server/services";
 import { updateService } from "./";
@@ -24,142 +20,134 @@ interface EditServiceFormProps {
 }
 
 /**
- * Server component for service editing form
- * Composes static content with client components for interactivity
- * @param service - The service to edit
+ * Edit service form
+ * @param props - Edit service form props
+ * @returns Service edit form for admin users
  */
 export function EditServiceForm({ service }: EditServiceFormProps) {
 	return (
 		<Form action={updateService}>
-			{/* Hidden service ID */}
 			<input type="hidden" name="serviceId" value={service.id} />
 
-			{/* Form Fields */}
 			<div className="space-y-6">
-				{/* Service Name - Multilingual */}
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Service Name</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="serviceNameEn"
-									name="serviceNameEn"
-									placeholder="Enter service name in English"
-								>
-									<FormInput defaultValue={service.name.en} />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="serviceNameVi"
-									name="serviceNameVi"
-									placeholder="Nhập tên dịch vụ bằng tiếng Việt"
-								>
-									<FormInput defaultValue={service.name.vi} />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
+				<AdminFormSection
+					title="Thông tin cơ bản"
+					description="Cập nhật tên dịch vụ và trạng thái hiển thị. Tiếng Việt là nội dung chính trên website."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="serviceNameVi"
+							name="serviceNameVi"
+							placeholder="Ví dụ: Thi công hệ thống ống gió"
+							required
+						>
+							<FormLabel>Tên dịch vụ tiếng Việt</FormLabel>
+							<FormInput defaultValue={service.name.vi} />
+							<FieldError />
+						</FormField>
 
-				{/* Service Description - Multilingual */}
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Service Description</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="serviceDescriptionEn"
-									name="serviceDescriptionEn"
-									placeholder="Enter service description in English"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} defaultValue={service.description.en} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="serviceDescriptionVi"
-									name="serviceDescriptionVi"
-									placeholder="Nhập mô tả dịch vụ bằng tiếng Việt"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} defaultValue={service.description.vi} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
-			</div>
-
-			{/* Service Status */}
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<div className="text-sm font-medium text-foreground">Service Status</div>
-					<p className="text-xs text-muted-foreground">
-						Choose whether to publish the service immediately or save as draft
-					</p>
-				</div>
-
-				<FormField fieldId="serviceStatus" name="serviceStatus" required>
-					<div className="flex space-x-1 p-1 bg-muted rounded-lg">
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="serviceStatus"
-								value={ServiceStatus.Draft}
-								className="sr-only peer"
-								defaultChecked={service.status === ServiceStatus.Draft}
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-slate-100 peer-checked:text-slate-700 peer-checked:shadow-sm text-muted-foreground hover:text-foreground peer-checked:border peer-checked:border-slate-200">
-								Draft
-							</div>
-						</label>
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="serviceStatus"
-								value={ServiceStatus.Active}
-								className="sr-only peer"
-								defaultChecked={service.status === ServiceStatus.Active}
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-green-100 peer-checked:text-green-600 peer-checked:shadow-sm text-green-600 hover:text-green-700 peer-checked:border peer-checked:border-green-200">
-								Active
-							</div>
-						</label>
+						<FormField
+							fieldId="serviceNameEn"
+							name="serviceNameEn"
+							placeholder="Ví dụ: Air duct system installation"
+						>
+							<FormLabel>Tên dịch vụ tiếng Anh</FormLabel>
+							<FormInput defaultValue={service.name.en} />
+							<FieldError />
+						</FormField>
 					</div>
-					<FieldError />
-				</FormField>
-			</div>
 
-			{/* Error Display */}
-			<FormErrorDisplay />
+					<FormField fieldId="serviceStatus" name="serviceStatus" required>
+						<FormLabel>Trạng thái hiển thị</FormLabel>
 
-			{/* Form Actions */}
-			<div className="flex justify-end space-x-2 pt-4">
-				<DialogClose asChild>
-					<FormResetButton>Cancel</FormResetButton>
-				</DialogClose>
+						<div className="grid grid-cols-1 gap-3 rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-2 sm:grid-cols-2">
+							<label className="block">
+								<input
+									type="radio"
+									name="serviceStatus"
+									value={ServiceStatus.Draft}
+									className="peer sr-only"
+									defaultChecked={service.status === ServiceStatus.Draft}
+								/>
 
-				<Button type="submit">
-					<FormSubmitMessage>Update Service</FormSubmitMessage>
-					<FormPendingMessage>Updating...</FormPendingMessage>
-				</Button>
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-yellow-300 peer-checked:bg-yellow-50 peer-checked:text-yellow-700">
+									<p className="font-semibold">Bản nháp</p>
+									<p className="mt-1 text-xs italic text-current/70">
+										Lưu nội dung nhưng chưa hiển thị ngoài website.
+									</p>
+								</div>
+							</label>
+
+							<label className="block">
+								<input
+									type="radio"
+									name="serviceStatus"
+									value={ServiceStatus.Active}
+									className="peer sr-only"
+									defaultChecked={service.status === ServiceStatus.Active}
+								/>
+
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-green-300 peer-checked:bg-green-50 peer-checked:text-green-700">
+									<p className="font-semibold">Đang hiển thị</p>
+									<p className="mt-1 text-xs italic text-current/70">
+										Dịch vụ sẽ được hiển thị trên website public.
+									</p>
+								</div>
+							</label>
+						</div>
+
+						<FieldError />
+					</FormField>
+				</AdminFormSection>
+
+				<AdminFormSection
+					title="Mô tả dịch vụ"
+					description="Cập nhật mô tả dịch vụ hiển thị trên website. Có thể để tiếng Anh giống tiếng Việt nếu chưa có bản dịch."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="serviceDescriptionVi"
+							name="serviceDescriptionVi"
+							placeholder="Nhập mô tả dịch vụ bằng tiếng Việt"
+							required
+						>
+							<FormLabel>Mô tả tiếng Việt</FormLabel>
+
+							<FormInput asChild defaultValue={service.description.vi}>
+								<Textarea rows={6} />
+							</FormInput>
+
+							<FieldError />
+						</FormField>
+
+						<FormField
+							fieldId="serviceDescriptionEn"
+							name="serviceDescriptionEn"
+							placeholder="Enter service description in English"
+						>
+							<FormLabel>Mô tả tiếng Anh</FormLabel>
+
+							<FormInput asChild defaultValue={service.description.en}>
+								<Textarea rows={6} />
+							</FormInput>
+
+							<FieldError />
+						</FormField>
+					</div>
+				</AdminFormSection>
+
+				<FormErrorDisplay />
+
+				<AdminStickyActions note="Sau khi lưu, dịch vụ sẽ được cập nhật trên website nếu trạng thái là Đang hiển thị.">
+					<DialogClose asChild>
+						<FormResetButton>Đóng</FormResetButton>
+					</DialogClose>
+
+					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
+						<FormSubmitMessage>Lưu thay đổi</FormSubmitMessage>
+						<FormPendingMessage>Đang lưu...</FormPendingMessage>
+					</Button>
+				</AdminStickyActions>
 			</div>
 		</Form>
 	);

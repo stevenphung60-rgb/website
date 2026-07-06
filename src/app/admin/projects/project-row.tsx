@@ -1,14 +1,13 @@
 import {
-	Building,
-	Calendar,
 	Edit,
 	Eye,
 	FolderOpen,
-	MapPin,
-	MoreVertical,
+	ImageIcon,
+	MoreHorizontal,
 	Trash2,
 } from "lucide-react";
 import Image from "next/image";
+import { AdminStatusBadge } from "src/components/admin/admin-status-badge";
 import {
 	CancelButton,
 	ConfirmButton,
@@ -19,7 +18,6 @@ import {
 	FormSubmitMessage,
 	SubmitButton,
 } from "src/components/form-state";
-import { Badge } from "src/components/ui/badge";
 import { Button } from "src/components/ui/button";
 import {
 	DialogContent,
@@ -35,11 +33,7 @@ import {
 	DropdownMenuTrigger,
 } from "src/components/ui/dropdown-menu";
 import { getProjectCategoryById } from "src/server/projectcategories";
-import {
-	getProjectById,
-	ProjectCompletionStatus,
-	ProjectVisibilityStatus,
-} from "src/server/projects";
+import { getProjectById } from "src/server/projects";
 import { deleteProjectAction } from "./delete-project.actions";
 import {
 	ProjectEditTrigger,
@@ -56,9 +50,9 @@ interface ProjectRowProps {
 }
 
 /**
- * Individual project row component that fetches and displays a single project
- * Features a card-based design with project-specific information and interactions
- * @param projectId - The ID of the project to display
+ * Display a single project row in the admin project list
+ * @param props - Project row props
+ * @returns Project row with preview, edit, image management, and delete actions
  */
 export async function ProjectRow({ projectId }: ProjectRowProps) {
 	const project = await getProjectById(projectId);
@@ -71,161 +65,132 @@ export async function ProjectRow({ projectId }: ProjectRowProps) {
 		? await getProjectCategoryById(project.categoryId)
 		: null;
 
-	const mainImage = project.gallery.find((img) => img.isMain) || project.gallery[0];
+	const mainImage = project.gallery.find((image) => image.isMain) || project.gallery[0];
+
+	const projectName = project.name.vi || project.name.en || "Chưa có tên dự án";
+	const projectNameVi = project.name.vi || "Chưa có tên tiếng Việt";
+	const projectNameEn = project.name.en || "Chưa có tên tiếng Anh";
+	const projectLocation = project.location.vi || project.location.en || "Chưa nhập địa điểm";
+	const projectYear = project.year.vi || project.year.en || "Chưa nhập năm";
+	const projectDescription =
+		project.description.vi || project.description.en || "Chưa có mô tả dự án";
+	const categoryName = projectCategory
+		? projectCategory.name.vi || projectCategory.name.en
+		: "Chưa phân loại";
 
 	return (
-		<div className="p-6 transition-colors hover:bg-muted/50">
-			<div className="flex items-center space-x-4">
-				{/* Project Image */}
-				<div className="size-40 flex-shrink-0 overflow-hidden rounded-lg">
-					{mainImage ? (
-						<Image
-							src={mainImage.url}
-							alt={project.name.en}
-							width={160}
-							height={160}
-							className="size-full object-cover"
-						/>
-					) : (
-						<div className="flex size-full items-center justify-center bg-muted">
-							<Building className="size-8 text-muted-foreground" />
-						</div>
-					)}
-				</div>
-
-				{/* Project Info */}
-				<div className="min-w-0 flex-1">
-					<div className="mb-1 flex items-center space-x-3">
-						<h3 className="truncate text-lg font-semibold text-foreground">
-							{project.name.en}
-						</h3>
-
-						<div className="flex items-center space-x-2">
-							<Badge
-								variant={
-									project.visibilityStatus === ProjectVisibilityStatus.Active
-										? "default"
-										: "secondary"
-								}
-								className="text-xs"
-							>
-								{project.visibilityStatus === ProjectVisibilityStatus.Active
-									? "Active"
-									: "Draft"}
-							</Badge>
-
-							<Badge
-								variant={
-									project.completionStatus === ProjectCompletionStatus.Completed
-										? "default"
-										: "outline"
-								}
-								className="text-xs"
-							>
-								{project.completionStatus === ProjectCompletionStatus.Completed
-									? "Completed"
-									: project.completionStatus === ProjectCompletionStatus.InProgress
-										? "In Progress"
-										: "Planning"}
-							</Badge>
-						</div>
-					</div>
-
-					<p className="mb-2 truncate text-sm text-muted-foreground">
-						{project.name.vi}
-					</p>
-
-					<div className="mb-2 flex items-center space-x-4 text-sm text-muted-foreground">
-						<div className="flex items-center">
-							<MapPin className="mr-1 size-4" />
-							{project.location.en}
-						</div>
-
-						<div className="flex items-center">
-							<Calendar className="mr-1 size-4" />
-							{project.year.en}
-						</div>
-
-						{projectCategory && (
-							<Badge variant="outline" className="text-xs">
-								{projectCategory.name.en}
-							</Badge>
-						)}
-					</div>
-
-					<div className="mb-3 min-w-0 max-w-full text-sm text-muted-foreground">
-						<p className="mb-1 truncate whitespace-nowrap overflow-hidden">
-							<strong>EN:</strong> {project.description.en}
-						</p>
-
-						<p className="truncate whitespace-nowrap overflow-hidden">
-							<strong>VI:</strong> {project.description.vi}
-						</p>
-
-						{project.specs.length > 0 && (
-							<div className="mt-2">
-								<p className="mb-1 text-xs font-medium text-foreground">
-									Specifications:
-								</p>
-
-								<div className="flex flex-wrap gap-1">
-									{project.specs.slice(0, 3).map((spec, index) => (
-										<span
-											key={`spec-${index}-${spec.en}-${spec.vi}`}
-											className="rounded bg-muted px-2 py-1 text-xs"
-										>
-											{spec.en}
-										</span>
-									))}
-
-									{project.specs.length > 3 && (
-										<span className="text-xs text-muted-foreground">
-											+{project.specs.length - 3} more
-										</span>
-									)}
-								</div>
+		<div className="bg-white px-4 py-4 transition-colors hover:bg-[#FAF7F1] sm:px-5">
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-[5rem_minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_8rem_8rem_5rem] lg:items-center lg:gap-4">
+				<div className="flex items-start gap-4 lg:block">
+					<div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] lg:size-16">
+						{mainImage ? (
+							<Image
+								src={mainImage.url}
+								alt={projectName}
+								fill
+								className="object-cover"
+								sizes="80px"
+							/>
+						) : (
+							<div className="flex size-full items-center justify-center">
+								<FolderOpen className="size-7 text-[#342312]/45" />
 							</div>
 						)}
 					</div>
+
+					<div className="min-w-0 lg:hidden">
+						<h3 className="break-words text-base font-semibold text-[#342312]">
+							{projectNameVi}
+						</h3>
+
+						<p className="mt-1 break-words text-sm text-[#342312]/65">
+							{projectNameEn}
+						</p>
+
+						<p className="mt-2 line-clamp-2 break-words text-sm leading-6 text-[#342312]/70">
+							{projectDescription}
+						</p>
+
+						<div className="mt-3 flex flex-wrap items-center gap-2">
+							<AdminStatusBadge status={project.visibilityStatus} />
+							<AdminStatusBadge status={project.completionStatus} />
+
+							<span className="rounded-full border border-[#E7D0AF] bg-white px-2.5 py-1 text-xs font-semibold text-[#342312]/70">
+								{project.gallery.length} ảnh
+							</span>
+						</div>
+					</div>
 				</div>
 
-				{/* Actions */}
-				<div className="flex self-stretch items-start">
+				<div className="hidden min-w-0 lg:block">
+					<h3 className="truncate text-sm font-semibold text-[#342312]">
+						{projectNameVi}
+					</h3>
+
+					<p className="mt-1 truncate text-sm text-[#342312]/65">
+						{projectNameEn}
+					</p>
+
+					<p className="mt-1 truncate text-xs text-[#342312]/50">
+						Loại dự án: {categoryName}
+					</p>
+				</div>
+
+				<div className="min-w-0">
+					<p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#342312]/55 lg:hidden">
+						Địa điểm
+					</p>
+
+					<p className="truncate text-sm text-[#342312]/75">{projectLocation}</p>
+				</div>
+
+				<div className="min-w-0">
+					<p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#342312]/55 lg:hidden">
+						Năm
+					</p>
+
+					<p className="truncate text-sm text-[#342312]/75">{projectYear}</p>
+				</div>
+
+				<div className="hidden lg:block">
+					<AdminStatusBadge status={project.visibilityStatus} />
+				</div>
+
+				<div className="hidden lg:block">
+					<AdminStatusBadge status={project.completionStatus} />
+				</div>
+
+				<div className="flex items-center justify-end">
 					<Form action={deleteProjectAction} confirmBeforeSubmit>
 						<input type="hidden" name="projectId" value={project.id} />
 
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 p-0"
-								>
-									<MoreVertical className="size-4" />
+								<Button variant="ghost" size="sm" className="text-[#342312]">
+									<MoreHorizontal className="size-4" />
 								</Button>
 							</DropdownMenuTrigger>
 
-							<DropdownMenuContent align="end">
+							<DropdownMenuContent align="end" className="w-52 bg-white">
 								<ProjectPreviewTrigger className="flex w-full items-center gap-2">
 									<Eye className="size-4" />
-									View Details
+									Xem nhanh
 								</ProjectPreviewTrigger>
 
 								<ProjectEditTrigger className="flex w-full items-center gap-2">
 									<Edit className="size-4" />
-									Edit Project Info
+									Sửa thông tin
 								</ProjectEditTrigger>
 
 								<ProjectImageTrigger className="flex w-full items-center gap-2">
-									<FolderOpen className="size-4" />
-									Edit Images
+									<ImageIcon className="size-4" />
+									Quản lý ảnh
 								</ProjectImageTrigger>
 
-								<SubmitButton asChild>
-									<DropdownMenuItem className="text-destructive focus:text-destructive">
-										<Trash2 className="mr-2 size-4" />
-										Delete Project
+								<SubmitButton asChild className="flex w-full items-center gap-2">
+									<DropdownMenuItem className="flex items-center gap-2 text-destructive focus:text-destructive">
+										<Trash2 className="size-4" />
+										Xóa dự án
 									</DropdownMenuItem>
 								</SubmitButton>
 							</DropdownMenuContent>
@@ -235,64 +200,53 @@ export async function ProjectRow({ projectId }: ProjectRowProps) {
 							<DialogContent className="bg-white sm:max-w-2xl">
 								<DialogHeader className="space-y-3">
 									<div className="flex items-start gap-3">
-										<div className="flex-shrink-0 rounded-full bg-destructive/10 p-2">
+										<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
 											<Trash2 className="size-5 text-destructive" />
 										</div>
 
 										<div className="space-y-1">
-											<DialogTitle>Delete Project</DialogTitle>
+											<DialogTitle>Xóa dự án</DialogTitle>
+
 											<DialogDescription>
-												This action cannot be undone. The project will be
-												permanently removed.
+												Thao tác này không thể hoàn tác. Dự án, hình ảnh và thông số liên quan sẽ bị xóa khỏi hệ thống.
 											</DialogDescription>
 										</div>
 									</div>
 								</DialogHeader>
 
 								<div className="space-y-3">
-									<div className="rounded-lg border bg-muted/50 p-4">
-										<div className="mb-2">
-											<p className="font-medium text-foreground">
-												{project.name.en}
-											</p>
-											<p className="text-sm text-muted-foreground">
-												{project.name.vi}
-											</p>
+									<div className="rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-4">
+										<p className="font-medium text-[#342312]">{projectNameVi}</p>
+
+										<p className="mt-1 text-sm text-[#342312]/65">
+											{projectNameEn}
+										</p>
+
+										<div className="mt-3 grid grid-cols-1 gap-2 text-sm text-[#342312]/70 sm:grid-cols-2">
+											<p>Địa điểm: {projectLocation}</p>
+											<p>Năm: {projectYear}</p>
+											<p>Loại dự án: {categoryName}</p>
+											<p>Số ảnh: {project.gallery.length}</p>
 										</div>
 
-										<div className="mb-3 text-sm leading-relaxed text-muted-foreground">
-											<p className="mb-1">
-												<strong>EN:</strong> {project.description.en}
-											</p>
-											<p>
-												<strong>VI:</strong> {project.description.vi}
-											</p>
-										</div>
+										<p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-[#342312]/70">
+											{projectDescription}
+										</p>
 
-										<div className="flex items-center gap-4 text-xs text-muted-foreground">
-											<span className="flex items-center gap-1">
-												<span className="size-2 rounded-full bg-destructive" />
-												{project.gallery.length} image
-												{project.gallery.length !== 1 ? "s" : ""} will be
-												deleted
-											</span>
-
-											<span className="flex items-center gap-1">
-												<span className="size-2 rounded-full bg-destructive" />
-												{project.specs.length} specification
-												{project.specs.length !== 1 ? "s" : ""} will be deleted
-											</span>
-										</div>
+										<p className="mt-3 text-xs text-[#342312]/65">
+											{project.gallery.length} ảnh và {project.specs.length} thông số kỹ thuật sẽ bị xóa cùng dự án này.
+										</p>
 									</div>
 
 									<FormErrorDisplay />
 								</div>
 
 								<DialogFooter className="gap-2">
-									<CancelButton>Cancel</CancelButton>
+									<CancelButton>Hủy</CancelButton>
+
 									<ConfirmButton variant="destructive">
-										<FormSubmitMessage>Delete Project</FormSubmitMessage>
-										<FormPendingMessage>Deleting...</FormPendingMessage>
+										<FormSubmitMessage>Xóa dự án</FormSubmitMessage>
+										<FormPendingMessage>Đang xóa...</FormPendingMessage>
 									</ConfirmButton>
 								</DialogFooter>
 							</DialogContent>

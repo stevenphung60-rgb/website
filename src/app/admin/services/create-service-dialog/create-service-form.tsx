@@ -1,4 +1,6 @@
 import { Upload } from "lucide-react";
+import { AdminFormSection } from "src/components/admin/admin-form-section";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import {
 	Form,
@@ -17,202 +19,186 @@ import {
 } from "src/components/image-upload";
 import { Button } from "src/components/ui/button";
 import { Textarea } from "src/components/ui/textarea";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import { ServiceStatus } from "src/server/services";
 import { createService } from "./create-service-dialog.actions";
 import { HiddenSelectedImageInput } from "./hidden-selected-image-input";
 import { ServiceImageRenderer } from "./service-image-renderer";
 
 /**
- * Server component for service creation form
- * Composes static content with client components for interactivity
+ * Create service form
+ * @returns Service creation form for admin users
  */
 export function CreateServiceForm() {
 	return (
 		<Form action={createService}>
-			{/* Form Fields */}
 			<div className="space-y-6">
-				{/* Service Name - Multilingual */}
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Service Name</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="serviceNameEn"
-									name="serviceNameEn"
-									placeholder="Enter service name in English"
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="serviceNameVi"
-									name="serviceNameVi"
-									placeholder="Nhập tên dịch vụ bằng tiếng Việt"
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
+				<AdminFormSection
+					title="Thông tin cơ bản"
+					description="Nhập tên dịch vụ và trạng thái hiển thị. Tiếng Việt là nội dung chính trên website."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="serviceNameVi"
+							name="serviceNameVi"
+							placeholder="Ví dụ: Thi công hệ thống ống gió"
+							required
+						>
+							<FormLabel>Tên dịch vụ tiếng Việt</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
 
-				{/* Service Description - Multilingual */}
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Service Description</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="serviceDescriptionEn"
-									name="serviceDescriptionEn"
-									placeholder="Enter service description in English"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="serviceDescriptionVi"
-									name="serviceDescriptionVi"
-									placeholder="Nhập mô tả dịch vụ bằng tiếng Việt"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
-			</div>
+						<FormField
+							fieldId="serviceNameEn"
+							name="serviceNameEn"
+							placeholder="Ví dụ: Air duct system installation"
+						>
+							<FormLabel>Tên dịch vụ tiếng Anh</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
+					</div>
 
-			{/* Image Upload Section */}
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<div className="text-sm font-medium text-foreground">Service Images</div>
-					<p className="text-xs text-muted-foreground">
-						Upload multiple images and click on any image to set it as the main service image
-					</p>
-				</div>
+					<FormField fieldId="serviceStatus" name="serviceStatus" required>
+						<FormLabel>Trạng thái hiển thị</FormLabel>
 
-				<ImageUploadRoot maxFiles={10} maxFileSize={5 * 1024 * 1024} name="serviceImages">
-					{/* Drop Zone with integrated trigger */}
-					<ImageUploadArea
-						className="p-8 w-full flex items-center justify-center"
-						clickable={false}
-					>
-						<div className="text-center text-muted-foreground space-y-4">
-							<div className="flex flex-col items-center space-y-2">
-								<div className="size-16 rounded-full bg-muted flex items-center justify-center">
-									<Upload className="size-8 text-muted-foreground" />
-								</div>
-								<div className="space-y-1">
-									<h3 className="text-sm font-medium text-foreground">Upload Service Images</h3>
-									<p className="text-xs text-muted-foreground">
-										Drag and drop your images here, or click the button below to select files
+						<div className="grid grid-cols-1 gap-3 rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-2 sm:grid-cols-2">
+							<label className="block">
+								<input
+									type="radio"
+									name="serviceStatus"
+									value={ServiceStatus.Draft}
+									className="peer sr-only"
+									defaultChecked
+								/>
+
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-yellow-300 peer-checked:bg-yellow-50 peer-checked:text-yellow-700">
+									<p className="font-semibold">Bản nháp</p>
+									<p className="mt-1 text-xs italic text-current/70">
+										Lưu nội dung nhưng chưa hiển thị ngoài website.
 									</p>
 								</div>
-							</div>
+							</label>
 
-							<ImageUploadTrigger asChild>
-								<Button
-									type="button"
-									variant="outline"
-									className="bg-white border-border hover:bg-muted"
-								>
-									<Upload className="mr-2 size-4" />
-									Select Images
-								</Button>
-							</ImageUploadTrigger>
+							<label className="block">
+								<input
+									type="radio"
+									name="serviceStatus"
+									value={ServiceStatus.Active}
+									className="peer sr-only"
+								/>
+
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-green-300 peer-checked:bg-green-50 peer-checked:text-green-700">
+									<p className="font-semibold">Đang hiển thị</p>
+									<p className="mt-1 text-xs italic text-current/70">
+										Dịch vụ sẽ được hiển thị trên website public.
+									</p>
+								</div>
+							</label>
 						</div>
-					</ImageUploadArea>
-					{/* Upload Progress */}
-					<ImageUploadProgress />
-					{/* Upload Errors */}
-					<ImageUploadError />
-					{/* Image Review with Custom Component */}
-					<ImageUploadReview
-						ImageComponent={ServiceImageRenderer}
-						className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"
-					/>
 
-					{/* Hidden Selected Image Input - need to be in the ImageUploadRoot so that it can use the files context */}
-					<HiddenSelectedImageInput />
-				</ImageUploadRoot>
-			</div>
+						<FieldError />
+					</FormField>
+				</AdminFormSection>
 
-			{/* Service Status */}
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<div className="text-sm font-medium text-foreground">Service Status</div>
-					<p className="text-xs text-muted-foreground">
-						Choose whether to publish the service immediately or save as draft
-					</p>
-				</div>
+				<AdminFormSection
+					title="Mô tả dịch vụ"
+					description="Mô tả ngắn gọn nội dung dịch vụ. Có thể nhập tiếng Anh sau nếu chưa có bản dịch."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="serviceDescriptionVi"
+							name="serviceDescriptionVi"
+							placeholder="Nhập mô tả dịch vụ bằng tiếng Việt"
+							required
+						>
+							<FormLabel>Mô tả tiếng Việt</FormLabel>
 
-				<FormField fieldId="serviceStatus" name="serviceStatus" required>
-					<div className="flex space-x-1 p-1 bg-muted rounded-lg">
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="serviceStatus"
-								value={ServiceStatus.Draft}
-								className="sr-only peer"
-								defaultChecked
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-slate-100 peer-checked:text-slate-700 peer-checked:shadow-sm text-muted-foreground hover:text-foreground peer-checked:border peer-checked:border-slate-200">
-								Draft
-							</div>
-						</label>
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="serviceStatus"
-								value={ServiceStatus.Active}
-								className="sr-only peer"
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-green-100 peer-checked:text-green-600 peer-checked:shadow-sm text-green-600 hover:text-green-700 peer-checked:border peer-checked:border-green-200">
-								Active
-							</div>
-						</label>
+							<FormInput asChild>
+								<Textarea rows={6} />
+							</FormInput>
+
+							<FieldError />
+						</FormField>
+
+						<FormField
+							fieldId="serviceDescriptionEn"
+							name="serviceDescriptionEn"
+							placeholder="Enter service description in English"
+						>
+							<FormLabel>Mô tả tiếng Anh</FormLabel>
+
+							<FormInput asChild>
+								<Textarea rows={6} />
+							</FormInput>
+
+							<FieldError />
+						</FormField>
 					</div>
-					<FieldError />
-				</FormField>
-			</div>
+				</AdminFormSection>
 
-			{/* Error Display */}
-			<FormErrorDisplay />
+				<AdminFormSection
+					title="Hình ảnh dịch vụ"
+					description="Tải ít nhất 1 ảnh. Chọn một ảnh làm ảnh đại diện để hiển thị trên danh sách dịch vụ."
+				>
+					<ImageUploadRoot maxFiles={10} maxFileSize={5 * 1024 * 1024} name="serviceImages">
+						<ImageUploadArea
+							className="flex w-full items-center justify-center rounded-xl border-2 border-dashed border-[#E7D0AF] bg-[#FAF7F1] p-8"
+							clickable={false}
+						>
+							<div className="space-y-4 text-center text-[#342312]/70">
+								<div className="flex flex-col items-center gap-3">
+									<div className="flex size-16 items-center justify-center rounded-full bg-white">
+										<Upload className="size-8 text-[#342312]" />
+									</div>
 
-			{/* Form Actions */}
-			<div className="flex justify-end space-x-2 pt-4">
-				<FormResetButton>Cancel</FormResetButton>
+									<div className="space-y-1">
+										<h3 className="text-sm font-semibold text-[#342312]">
+											Tải ảnh dịch vụ
+										</h3>
 
-				<Button type="submit">
-					<FormSubmitMessage>Create Service</FormSubmitMessage>
-					<FormPendingMessage>Creating...</FormPendingMessage>
-				</Button>
+										<p className="text-xs italic leading-5 text-[#342312]/65">
+											Kéo thả ảnh vào đây hoặc bấm nút bên dưới để chọn ảnh.
+											Hỗ trợ tối đa 10 ảnh, mỗi ảnh tối đa 5MB.
+										</p>
+									</div>
+								</div>
+
+								<ImageUploadTrigger asChild>
+									<Button
+										type="button"
+										variant="outline"
+										className="border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]"
+									>
+										<Upload className="mr-2 size-4" />
+										Chọn ảnh
+									</Button>
+								</ImageUploadTrigger>
+							</div>
+						</ImageUploadArea>
+
+						<ImageUploadProgress />
+						<ImageUploadError />
+
+						<ImageUploadReview
+							ImageComponent={ServiceImageRenderer}
+							className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
+						/>
+
+						<HiddenSelectedImageInput />
+					</ImageUploadRoot>
+				</AdminFormSection>
+
+				<FormErrorDisplay />
+
+				<AdminStickyActions note="Sau khi lưu, dịch vụ sẽ xuất hiện ngoài website nếu trạng thái là Đang hiển thị.">
+					<FormResetButton>Hủy</FormResetButton>
+
+					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
+						<FormSubmitMessage>Tạo dịch vụ</FormSubmitMessage>
+						<FormPendingMessage>Đang tạo...</FormPendingMessage>
+					</Button>
+				</AdminStickyActions>
 			</div>
 		</Form>
 	);

@@ -1,14 +1,8 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import { Button } from "src/components/ui/button";
-import { Input } from "src/components/ui/input";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import type { MultilingualText } from "src/lib/types/common.type";
 import { useEditProjectSpecs } from "./edit-project-specs.state";
 
@@ -17,61 +11,128 @@ interface EditProjectSpecsWithStateProps {
 }
 
 /**
- * Client component for managing project specifications with state
- * Allows adding, removing, and editing specs in both languages
- * @param initialSpecs - Initial specifications to populate the form
+ * Edit project specifications with local state
+ * @param props - Edit project specifications props
+ * @returns Project specifications input list
  */
-export function EditProjectSpecsWithState({ initialSpecs }: EditProjectSpecsWithStateProps) {
+export function EditProjectSpecsWithState({
+	initialSpecs,
+}: EditProjectSpecsWithStateProps) {
 	const { specs, addSpec, removeSpec, updateSpec } = useEditProjectSpecs(initialSpecs);
+
+	const specsForSubmit = specs
+		.map((spec) => ({
+			vi: spec.vi.trim(),
+			en: spec.en.trim(),
+		}))
+		.filter((spec) => spec.vi || spec.en);
 
 	return (
 		<div className="space-y-4">
-			{/* Existing Specs */}
-			{specs.map((spec, index) => (
-				<div key={spec.id} className="border rounded-lg p-4 space-y-4">
-					<div className="flex items-center justify-between">
-						<h4 className="text-sm font-medium">Specification {index + 1}</h4>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => removeSpec(spec.id)}
-							className="h-8 w-8 p-0"
-						>
-							<Trash2 className="size-4" />
-						</Button>
+			<input type="hidden" name="projectSpecs" value={JSON.stringify(specsForSubmit)} />
+
+			<div className="rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-4">
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div className="min-w-0">
+						<p className="text-sm font-semibold text-[#342312]">
+							Danh sách thông số
+						</p>
+
+						<p className="mt-1 text-xs italic leading-5 text-[#342312]/65">
+							Ví dụ: diện tích thi công, hạng mục thực hiện, vật liệu sử dụng hoặc quy mô dự án.
+						</p>
 					</div>
 
-					<VisualTabs defaultValue="en" className="w-full">
-						<VisualTabsList className="grid w-full grid-cols-2">
-							<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-							<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-						</VisualTabsList>
-						<VisualTabsContent value="en">
-							<Input
-								name={`specEn_${index}`}
-								placeholder="Enter specification in English"
-								value={spec.en}
-								onChange={(e) => updateSpec(spec.id, "en", e.target.value)}
-							/>
-						</VisualTabsContent>
-						<VisualTabsContent value="vi">
-							<Input
-								name={`specVi_${index}`}
-								placeholder="Nhập đặc điểm kỹ thuật bằng tiếng Việt"
-								value={spec.vi}
-								onChange={(e) => updateSpec(spec.id, "vi", e.target.value)}
-							/>
-						</VisualTabsContent>
-					</VisualTabs>
+					<Button
+						type="button"
+						variant="outline"
+						onClick={addSpec}
+						className="shrink-0 border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]"
+					>
+						<Plus className="mr-2 size-4" />
+						Thêm thông số
+					</Button>
 				</div>
-			))}
+			</div>
 
-			{/* Add New Spec Button */}
-			<Button type="button" variant="outline" onClick={addSpec} className="w-full">
-				<Plus className="mr-2 size-4" />
-				Add Specification
-			</Button>
+			{specs.length > 0 ? (
+				<div className="space-y-4">
+					{specs.map((spec, index) => (
+						<div
+							key={spec.id}
+							className="rounded-xl border border-[#E7D0AF] bg-white p-4"
+						>
+							<div className="mb-4 flex items-center justify-between gap-3">
+								<div>
+									<p className="text-sm font-semibold text-[#342312]">
+										Thông số {index + 1}
+									</p>
+
+									<p className="mt-1 text-xs italic text-[#342312]/60">
+										Nhập tiếng Việt trước. Tiếng Anh có thể bổ sung sau.
+									</p>
+								</div>
+
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => removeSpec(spec.id)}
+									className="shrink-0 border-destructive/30 text-destructive hover:text-destructive"
+								>
+									<Trash2 className="size-4" />
+								</Button>
+							</div>
+
+							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+								<FormField
+									fieldId={`projectSpecVi-${spec.id}`}
+									name={`projectSpecVi-${spec.id}`}
+									placeholder="Ví dụ: Thi công hệ thống ống gió nhà xưởng"
+								>
+									<FormLabel>Thông số tiếng Việt</FormLabel>
+
+									<FormInput
+										value={spec.vi}
+										onChange={(event) =>
+											updateSpec(spec.id, "vi", event.target.value)
+										}
+									/>
+
+									<FieldError />
+								</FormField>
+
+								<FormField
+									fieldId={`projectSpecEn-${spec.id}`}
+									name={`projectSpecEn-${spec.id}`}
+									placeholder="Example: Factory air duct installation"
+								>
+									<FormLabel>Thông số tiếng Anh</FormLabel>
+
+									<FormInput
+										value={spec.en}
+										onChange={(event) =>
+											updateSpec(spec.id, "en", event.target.value)
+										}
+									/>
+
+									<FieldError />
+								</FormField>
+							</div>
+						</div>
+					))}
+				</div>
+			) : (
+				<div className="rounded-xl border border-dashed border-[#E7D0AF] bg-white px-4 py-8 text-center">
+					<p className="text-sm font-medium text-[#342312]">
+						Chưa có thông số kỹ thuật
+					</p>
+
+					<p className="mt-1 text-xs italic leading-5 text-[#342312]/65">
+						Phần này không bắt buộc. Bấm “Thêm thông số” nếu muốn bổ sung thông tin nổi bật cho dự án.
+					</p>
+				</div>
+			)}
 		</div>
 	);
 }

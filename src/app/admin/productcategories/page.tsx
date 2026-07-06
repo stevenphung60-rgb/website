@@ -1,10 +1,14 @@
 import { Tags } from "lucide-react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { AdminEmptyState } from "src/components/admin/admin-empty-state";
+import { AdminPageHeader } from "src/components/admin/admin-page-header";
 import { Card, CardContent } from "src/components/ui/card";
-import { getProductCategoryCount, getProductCategoryIds } from "src/server/productcategories";
+import {
+	getProductCategoryCount,
+	getProductCategoryIds,
+} from "src/server/productcategories";
 import CreateProductCategoryDialog from "./create-productcategory-dialog/create-productcategory-dialog";
-import { EmptyStateWithDialog } from "./empty-state-with-dialog";
 import { ProductCategoriesList } from "./productcategories-list";
 
 export const metadata: Metadata = {
@@ -12,6 +16,10 @@ export const metadata: Metadata = {
 	description: "Manage product categories in the admin panel",
 };
 
+/**
+ * Product categories management page
+ * @returns Product categories admin page
+ */
 export default async function ProductCategoriesPage() {
 	await connection();
 
@@ -20,53 +28,49 @@ export default async function ProductCategoriesPage() {
 		getProductCategoryCount(),
 	]);
 
+	const hasCategories = productCategoryIds.length > 0;
+
 	return (
-		<div className="container mx-auto px-4 py-8">
-			{/* Header */}
-			<div className="flex items-center justify-between mb-6">
-				<div className="flex items-center space-x-4">
-					<div className="p-2 rounded-lg bg-primary/10">
-						<Tags className="size-6 text-primary" />
-					</div>
-					<div>
-						<h1 className="text-2xl font-serif font-bold text-foreground">
-							Product Categories
-						</h1>
-						<p className="text-muted-foreground">
-							Manage your product categories
-						</p>
-					</div>
-				</div>
+		<div className="w-full">
+			<AdminPageHeader
+				title="Loại sản phẩm"
+				eyebrow="Quản trị nội dung"
+				description="Quản lý loại sản phẩm hiển thị trên website."
+				icon={Tags}
+				actions={<CreateProductCategoryDialog />}
+			/>
 
-				<CreateProductCategoryDialog />
-			</div>
-
-			{/* Stats */}
-			<div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
-				<Card className="border-l-4 border-l-blue-500">
-					<CardContent className="px-6">
-						<div className="flex items-center justify-between">
+			<div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+				<Card className="border-[#E7D0AF] bg-white">
+					<CardContent className="px-5 py-5">
+						<div className="flex items-center justify-between gap-4">
 							<div>
-								<p className="text-4xl font-bold text-blue-600">
+								<p className="text-sm font-medium text-[#342312]/65">
+									Tổng loại sản phẩm
+								</p>
+
+								<p className="mt-2 text-3xl font-bold text-[#342312]">
 									{totalCount}
 								</p>
-								<p className="text-sm font-medium text-muted-foreground mt-1">
-									Total Categories
-								</p>
 							</div>
-							<div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
-								<Tags className="size-8 text-blue-600" />
+
+							<div className="flex size-12 items-center justify-center rounded-xl bg-[#342312]/10">
+								<Tags className="size-6 text-[#342312]" />
 							</div>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 
-			{/* List */}
-			{productCategoryIds.length === 0 ? (
-				<EmptyStateWithDialog />
-			) : (
+			{hasCategories ? (
 				<ProductCategoriesList productCategoryIds={productCategoryIds} />
+			) : (
+				<AdminEmptyState
+					icon={<Tags className="size-7" />}
+					title="Chưa có loại sản phẩm nào"
+					description="Thêm loại sản phẩm đầu tiên để phân nhóm sản phẩm trên website."
+					action={<CreateProductCategoryDialog />}
+				/>
 			)}
 		</div>
 	);

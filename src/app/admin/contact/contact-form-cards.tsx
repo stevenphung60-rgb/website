@@ -27,15 +27,28 @@ import {
 } from "./contact-context";
 import type { ContactSingleImage, LocalizedText } from "./contact.type";
 
-type LocalizedTextareaFieldProps = {
+interface LocalizedTextareaFieldProps {
 	fieldName: string;
 	label: string;
 	value: LocalizedText;
 	updateEn: (value: string) => void;
 	updateVi: (value: string) => void;
 	rows?: number;
-};
+}
 
+interface SingleImageUploadFieldProps {
+	fieldName: string;
+	label: string;
+	image: ContactSingleImage;
+	setImage: (image: ContactSingleImage) => void;
+	removeImage: () => void;
+}
+
+/**
+ * Localized textarea fields for Vietnamese and English content
+ * @param props - Localized textarea field props
+ * @returns Vietnamese and English textarea inputs
+ */
 function LocalizedTextareaField({
 	fieldName,
 	label,
@@ -45,32 +58,13 @@ function LocalizedTextareaField({
 	rows = 3,
 }: LocalizedTextareaFieldProps) {
 	return (
-		<div className="grid gap-6 md:grid-cols-2">
-			<FormField
-				fieldId={`${fieldName}En`}
-				label={`${label} (English)`}
-				value={value.en}
-			>
-				<FormLabel>{label} (EN)</FormLabel>
-
-				<FormInput asChild>
-					<Textarea
-						name={`${fieldName}En`}
-						rows={rows}
-						value={value.en}
-						onChange={(event) => updateEn(event.target.value)}
-					/>
-				</FormInput>
-
-				<FormHelpText />
-			</FormField>
-
+		<div className="grid gap-5 lg:grid-cols-2">
 			<FormField
 				fieldId={`${fieldName}Vi`}
-				label={`${label} (Vietnamese)`}
+				label={`${label} tiếng Việt`}
 				value={value.vi}
 			>
-				<FormLabel>{label} (VI)</FormLabel>
+				<FormLabel>{label} tiếng Việt</FormLabel>
 
 				<FormInput asChild>
 					<Textarea
@@ -83,23 +77,41 @@ function LocalizedTextareaField({
 
 				<FormHelpText />
 			</FormField>
+
+			<FormField
+				fieldId={`${fieldName}En`}
+				label={`${label} tiếng Anh`}
+				value={value.en}
+			>
+				<FormLabel>{label} tiếng Anh</FormLabel>
+
+				<FormInput asChild>
+					<Textarea
+						name={`${fieldName}En`}
+						rows={rows}
+						value={value.en}
+						onChange={(event) => updateEn(event.target.value)}
+					/>
+				</FormInput>
+
+				<FormHelpText />
+			</FormField>
 		</div>
 	);
 }
 
+/**
+ * Single image upload field for contact admin
+ * @param props - Single image upload field props
+ * @returns Image upload field with preview and remove action
+ */
 function SingleImageUploadField({
 	fieldName,
 	label,
 	image,
 	setImage,
 	removeImage,
-}: {
-	fieldName: string;
-	label: string;
-	image: ContactSingleImage;
-	setImage: (image: ContactSingleImage) => void;
-	removeImage: () => void;
-}) {
+}: SingleImageUploadFieldProps) {
 	async function handleUpload(file: File) {
 		const formData = new FormData();
 		formData.append("image", file);
@@ -117,37 +129,69 @@ function SingleImageUploadField({
 	}
 
 	return (
-		<div className="space-y-4">
-			<label className="text-sm font-medium">{label}</label>
+		<div className="space-y-3">
+			<label className="text-sm font-medium text-[#342312]">{label}</label>
 
 			<input type="hidden" name={fieldName} value={JSON.stringify(image)} />
 
 			{image.url ? (
-				<div className="relative w-full overflow-hidden rounded-lg border bg-muted">
-					<img
-						src={image.url}
-						alt={label}
-						className="h-[220px] w-full object-cover"
-					/>
-
-					<button
-						type="button"
-						onClick={removeImage}
-						className="absolute right-3 top-3 rounded-full bg-background px-3 py-1 text-sm font-medium shadow"
-					>
-						Remove
-					</button>
-				</div>
-			) : (
-				<label className="flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/40 p-8 text-center transition-colors hover:bg-muted">
-					<div className="mb-4 flex size-14 items-center justify-center rounded-full bg-background">
-						<Upload className="size-7 text-muted-foreground" />
+				<div className="overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white shadow-sm">
+					<div className="flex h-[260px] items-center justify-center bg-[#FAF7F1] p-4">
+						<img
+							src={image.url}
+							alt={label}
+							className="max-h-full max-w-full rounded-lg object-contain"
+						/>
 					</div>
 
-					<p className="text-base font-semibold">{label}</p>
+					<div className="flex flex-col gap-3 border-t border-[#E7D0AF]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+						<div className="min-w-0">
+							<p className="text-sm font-semibold text-[#342312]">{label}</p>
 
-					<p className="mt-1 text-sm text-muted-foreground">
-						Click here to upload an image
+							<p className="mt-1 break-all text-xs italic text-[#342312]/60">
+								Ảnh hiện tại: {image.url}
+							</p>
+						</div>
+
+						<div className="flex shrink-0 gap-2">
+							<label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[#E7D0AF] bg-white px-3 text-sm font-semibold text-[#342312] transition hover:bg-[#FAF7F1]">
+								Đổi ảnh
+
+								<input
+									type="file"
+									accept="image/jpeg,image/png,image/webp,image/svg+xml"
+									className="hidden"
+									onChange={(event) => {
+										const file = event.target.files?.[0];
+
+										if (!file) return;
+
+										handleUpload(file);
+										event.target.value = "";
+									}}
+								/>
+							</label>
+
+							<button
+								type="button"
+								onClick={removeImage}
+								className="inline-flex h-9 items-center justify-center rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground transition hover:opacity-90"
+							>
+								Xóa ảnh
+							</button>
+						</div>
+					</div>
+				</div>
+			) : (
+				<label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#E7D0AF] bg-[#FAF7F1] p-8 text-center transition-colors hover:bg-white">
+					<div className="mb-4 flex size-14 items-center justify-center rounded-full bg-white">
+						<Upload className="size-7 text-[#342312]" />
+					</div>
+
+					<p className="text-base font-semibold text-[#342312]">{label}</p>
+
+					<p className="mt-1 text-sm italic text-[#342312]/65">
+						Bấm để tải ảnh lên
 					</p>
 
 					<input
@@ -169,6 +213,10 @@ function SingleImageUploadField({
 	);
 }
 
+/**
+ * Contact details form card
+ * @returns Contact details, consultant CTA, and footer content fields
+ */
 export function ContactDetailsFormCard() {
 	const { phone1, updatePhone1 } = usePhone1();
 	const { phone2, updatePhone2 } = usePhone2();
@@ -203,31 +251,30 @@ export function ContactDetailsFormCard() {
 	} = useFooterContent();
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center space-x-2">
+		<Card className="border-[#E7D0AF] bg-white shadow-sm">
+			<CardHeader className="border-b border-[#E7D0AF]/70">
+				<CardTitle className="flex items-center gap-2 font-serif text-xl text-[#342312]">
 					<Phone className="size-5" />
-					<span>Contact Details</span>
+					<span>Thông tin liên hệ</span>
 				</CardTitle>
 
-				<CardDescription>
-					Phone, email, consultant CTA, and footer content shown on the public
-					website.
+				<CardDescription className="text-[#342312]/65">
+					Quản lý số điện thoại, email, khối tư vấn và nội dung footer.
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="grid gap-8">
-				<div className="grid gap-6 lg:grid-cols-2">
+			<CardContent className="grid gap-8 px-5 py-6">
+				<div className="grid gap-5 lg:grid-cols-2">
 					<FormField
 						fieldId="phone1"
-						label="Primary Phone"
+						label="Số điện thoại chính"
 						value={phone1}
 						placeholder="0123 456 789"
-						helpText="Main contact number displayed prominently"
+						helpText="Số điện thoại chính hiển thị trên website."
 						pattern="[0-9+\-\s()]+"
-						title="Phone number must contain only numbers, spaces, hyphens, parentheses, and plus signs"
+						title="Số điện thoại chỉ được chứa số, khoảng trắng, dấu gạch ngang, ngoặc và dấu cộng"
 					>
-						<FormLabel>Primary Phone</FormLabel>
+						<FormLabel>Số điện thoại chính *</FormLabel>
 
 						<FormInput
 							name="phone1"
@@ -240,14 +287,14 @@ export function ContactDetailsFormCard() {
 
 					<FormField
 						fieldId="phone2"
-						label="Secondary Phone"
+						label="Số điện thoại phụ"
 						value={phone2}
 						placeholder="0987 654 321"
-						helpText="Alternative contact number"
+						helpText="Số điện thoại phụ nếu có."
 						pattern="[0-9+\-\s()]+"
-						title="Phone number must contain only numbers, spaces, hyphens, parentheses, and plus signs"
+						title="Số điện thoại chỉ được chứa số, khoảng trắng, dấu gạch ngang, ngoặc và dấu cộng"
 					>
-						<FormLabel>Secondary Phone</FormLabel>
+						<FormLabel>Số điện thoại phụ</FormLabel>
 
 						<FormInput
 							name="phone2"
@@ -260,13 +307,13 @@ export function ContactDetailsFormCard() {
 
 					<FormField
 						fieldId="email1"
-						label="Primary Email"
+						label="Email chính"
 						value={email1}
 						type="email"
 						placeholder="info@nghiephung.com"
-						helpText="Main email address for inquiries"
+						helpText="Email chính nhận liên hệ từ khách hàng."
 					>
-						<FormLabel>Primary Email</FormLabel>
+						<FormLabel>Email chính *</FormLabel>
 
 						<FormInput
 							name="email1"
@@ -280,13 +327,13 @@ export function ContactDetailsFormCard() {
 
 					<FormField
 						fieldId="email2"
-						label="Secondary Email"
+						label="Email phụ"
 						value={email2}
 						type="email"
 						placeholder="sales@nghiephung.com"
-						helpText="Alternative email address"
+						helpText="Email phụ nếu có."
 					>
-						<FormLabel>Secondary Email</FormLabel>
+						<FormLabel>Email phụ</FormLabel>
 
 						<FormInput
 							name="email2"
@@ -299,15 +346,17 @@ export function ContactDetailsFormCard() {
 					</FormField>
 				</div>
 
-				<div className="grid gap-6 border-t pt-8">
+				<div className="grid gap-5 border-t border-[#E7D0AF]/70 pt-8">
 					<div className="flex items-center gap-2">
-						<ImageIcon className="size-5" />
-						<h3 className="text-lg font-semibold">Consultant CTA</h3>
+						<ImageIcon className="size-5 text-[#342312]" />
+						<h3 className="text-lg font-semibold text-[#342312]">
+							Khối tư vấn
+						</h3>
 					</div>
 
 					<LocalizedTextareaField
 						fieldName="consultanttitle"
-						label="Consultant Title"
+						label="Tiêu đề tư vấn"
 						value={consultanttitle}
 						updateEn={updateConsultanttitleEn}
 						updateVi={updateConsultanttitleVi}
@@ -316,7 +365,7 @@ export function ContactDetailsFormCard() {
 
 					<LocalizedTextareaField
 						fieldName="consultantsubtitle"
-						label="Consultant Subtitle"
+						label="Tiêu đề phụ"
 						value={consultantsubtitle}
 						updateEn={updateConsultantsubtitleEn}
 						updateVi={updateConsultantsubtitleVi}
@@ -325,7 +374,7 @@ export function ContactDetailsFormCard() {
 
 					<LocalizedTextareaField
 						fieldName="consultantdescription"
-						label="Consultant Description"
+						label="Mô tả tư vấn"
 						value={consultantdescription}
 						updateEn={updateConsultantdescriptionEn}
 						updateVi={updateConsultantdescriptionVi}
@@ -334,22 +383,24 @@ export function ContactDetailsFormCard() {
 
 					<SingleImageUploadField
 						fieldName="consultantimage"
-						label="Consultant Image"
+						label="Ảnh khối tư vấn"
 						image={consultantimage}
 						setImage={setConsultantimage}
 						removeImage={removeConsultantimage}
 					/>
 				</div>
 
-				<div className="grid gap-6 border-t pt-8">
+				<div className="grid gap-5 border-t border-[#E7D0AF]/70 pt-8">
 					<div className="flex items-center gap-2">
-						<ImageIcon className="size-5" />
-						<h3 className="text-lg font-semibold">Footer Content</h3>
+						<ImageIcon className="size-5 text-[#342312]" />
+						<h3 className="text-lg font-semibold text-[#342312]">
+							Footer website
+						</h3>
 					</div>
 
 					<SingleImageUploadField
 						fieldName="footerlogo"
-						label="Footer Logo"
+						label="Logo footer"
 						image={footerlogo}
 						setImage={setFooterlogo}
 						removeImage={removeFooterlogo}
@@ -357,7 +408,7 @@ export function ContactDetailsFormCard() {
 
 					<LocalizedTextareaField
 						fieldName="footercompanyname"
-						label="Footer Company Name"
+						label="Tên công ty footer"
 						value={footercompanyname}
 						updateEn={updateFootercompanynameEn}
 						updateVi={updateFootercompanynameVi}
@@ -366,7 +417,7 @@ export function ContactDetailsFormCard() {
 
 					<LocalizedTextareaField
 						fieldName="footercompanydescription"
-						label="Footer Company Description"
+						label="Mô tả footer"
 						value={footercompanydescription}
 						updateEn={updateFootercompanydescriptionEn}
 						updateVi={updateFootercompanydescriptionVi}
@@ -378,61 +429,38 @@ export function ContactDetailsFormCard() {
 	);
 }
 
+/**
+ * Working hours form card
+ * @returns Working hours fields
+ */
 export function WorkingHoursFormCard() {
 	const { workingHours, updateWorkingHoursEn, updateWorkingHoursVi } =
 		useWorkingHours();
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center space-x-2">
+		<Card className="border-[#E7D0AF] bg-white shadow-sm">
+			<CardHeader className="border-b border-[#E7D0AF]/70">
+				<CardTitle className="flex items-center gap-2 font-serif text-xl text-[#342312]">
 					<Clock className="size-5" />
-					<span>Working Hours</span>
+					<span>Giờ làm việc</span>
 				</CardTitle>
 
-				<CardDescription>
-					Enter your business hours in both English and Vietnamese. This text
-					will be displayed in the contact section and footer.
+				<CardDescription className="text-[#342312]/65">
+					Quản lý giờ làm việc hiển thị ở trang liên hệ và footer.
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="grid gap-6">
-				<FormField
-					fieldId="workingHoursEn"
-					label="Working Hours (English)"
-					value={workingHours.en}
-					placeholder={`Monday - Friday: 8:00 AM - 5:30 PM
-Saturday: 8:00 AM - 12:00 PM
-Sunday: Closed`}
-					helpText="Working hours text displayed in English. Use multiple lines for different time periods."
-				>
-					<FormLabel>Working Hours (English)</FormLabel>
-
-					<Textarea
-						id="workingHoursEn"
-						name="workingHoursEn"
-						value={workingHours.en}
-						placeholder={`Monday - Friday: 8:00 AM - 5:30 PM
-Saturday: 8:00 AM - 12:00 PM
-Sunday: Closed`}
-						rows={5}
-						onChange={(event) => updateWorkingHoursEn(event.target.value)}
-						className="min-h-[150px] w-full resize-y"
-					/>
-
-					<FormHelpText />
-				</FormField>
-
+			<CardContent className="grid gap-5 px-5 py-6 lg:grid-cols-2">
 				<FormField
 					fieldId="workingHoursVi"
-					label="Working Hours (Vietnamese)"
+					label="Giờ làm việc tiếng Việt"
 					value={workingHours.vi}
 					placeholder={`Thứ 2 - Thứ 6: 08:00 - 17:30
 Thứ 7: 08:00 - 12:00
 Chủ nhật: Nghỉ`}
-					helpText="Working hours text displayed in Vietnamese. Use multiple lines for different time periods."
+					helpText="Giờ làm việc hiển thị trên website tiếng Việt."
 				>
-					<FormLabel>Working Hours (Vietnamese)</FormLabel>
+					<FormLabel>Giờ làm việc tiếng Việt *</FormLabel>
 
 					<Textarea
 						id="workingHoursVi"
@@ -443,6 +471,32 @@ Thứ 7: 08:00 - 12:00
 Chủ nhật: Nghỉ`}
 						rows={5}
 						onChange={(event) => updateWorkingHoursVi(event.target.value)}
+						className="min-h-[150px] w-full resize-y"
+					/>
+
+					<FormHelpText />
+				</FormField>
+
+				<FormField
+					fieldId="workingHoursEn"
+					label="Giờ làm việc tiếng Anh"
+					value={workingHours.en}
+					placeholder={`Monday - Friday: 8:00 AM - 5:30 PM
+Saturday: 8:00 AM - 12:00 PM
+Sunday: Closed`}
+					helpText="Giờ làm việc hiển thị trên website tiếng Anh."
+				>
+					<FormLabel>Giờ làm việc tiếng Anh *</FormLabel>
+
+					<Textarea
+						id="workingHoursEn"
+						name="workingHoursEn"
+						value={workingHours.en}
+						placeholder={`Monday - Friday: 8:00 AM - 5:30 PM
+Saturday: 8:00 AM - 12:00 PM
+Sunday: Closed`}
+						rows={5}
+						onChange={(event) => updateWorkingHoursEn(event.target.value)}
 						className="min-h-[150px] w-full resize-y"
 					/>
 

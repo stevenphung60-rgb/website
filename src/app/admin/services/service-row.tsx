@@ -1,5 +1,6 @@
 import { Edit, Eye, ImageIcon, MoreHorizontal, Trash2, Wrench } from "lucide-react";
 import Image from "next/image";
+import { AdminStatusBadge } from "src/components/admin/admin-status-badge";
 import {
 	CancelButton,
 	ConfirmButton,
@@ -10,7 +11,6 @@ import {
 	FormSubmitMessage,
 	SubmitButton,
 } from "src/components/form-state";
-import { Badge } from "src/components/ui/badge";
 import { Button } from "src/components/ui/button";
 import {
 	DialogContent,
@@ -42,9 +42,9 @@ interface ServiceRowProps {
 }
 
 /**
- * Individual service row component that fetches and displays a single service
- * Features a modern card-based design with improved layout and interactions
- * @param serviceId - The ID of the service to display
+ * Display a single service row in the admin service list
+ * @param props - Service row props
+ * @returns Service row with preview, edit, image management, and delete actions
  */
 export async function ServiceRow({ serviceId }: ServiceRowProps) {
 	const service = await getServiceById(serviceId);
@@ -53,158 +53,169 @@ export async function ServiceRow({ serviceId }: ServiceRowProps) {
 		throw new Error(`Service with id ${serviceId} not found`);
 	}
 
-	const mainImage = service.gallery.find((img) => img.isMain) || service.gallery[0];
+	const mainImage = service.gallery.find((image) => image.isMain) || service.gallery[0];
+	const serviceName = service.name.vi || service.name.en || "Chưa có tên dịch vụ";
+	const serviceNameEn = service.name.en || "Chưa có tên tiếng Anh";
+	const serviceNameVi = service.name.vi || "Chưa có tên tiếng Việt";
+	const serviceDescription =
+		service.description.vi || service.description.en || "Chưa có mô tả dịch vụ";
 
 	return (
-		<div className="group relative bg-card border border-border rounded-xl p-6 hover:shadow-md transition-all duration-200 hover:border-primary/20">
-			{/* Service Header */}
-			<div className="flex items-start justify-between mb-4">
-				<div className="flex items-start space-x-4 flex-1 min-w-0">
-					{/* Service Image */}
-					<div className="relative size-20 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+		<div className="bg-white px-4 py-4 transition-colors hover:bg-[#FAF7F1] sm:px-5">
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-[5rem_minmax(0,1.5fr)_minmax(0,1fr)_8rem_5rem] lg:items-center lg:gap-4">
+				<div className="flex items-start gap-4 lg:block">
+					<div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] lg:size-16">
 						{mainImage ? (
 							<Image
 								src={mainImage.url}
-								alt={service.name.en}
+								alt={serviceName}
 								fill
 								className="object-cover"
 								sizes="80px"
 							/>
 						) : (
-							<div className="size-full flex items-center justify-center">
-								<Wrench className="size-8 text-muted-foreground" />
+							<div className="flex size-full items-center justify-center">
+								<Wrench className="size-7 text-[#342312]/45" />
 							</div>
 						)}
 					</div>
 
-					{/* Service Info */}
-					<div className="flex-1 min-w-0">
-						<div className="mb-2">
-							<h3 className="text-lg font-semibold text-foreground truncate">{service.name.en}</h3>
-							<p className="text-sm text-muted-foreground truncate">{service.name.vi}</p>
-						</div>
-						<div className="text-sm text-muted-foreground mb-3 min-w-0 max-w-full">
-							<p className="truncate mb-1 whitespace-nowrap overflow-hidden">
-								<strong>EN:</strong> {service.description.en}
-							</p>
-							<p className="truncate whitespace-nowrap overflow-hidden">
-								<strong>VI:</strong> {service.description.vi}
-							</p>
-						</div>
-						<div className="flex items-center gap-4 text-xs text-muted-foreground">
-							<span className="flex items-center gap-1">
-								<span className="size-2 rounded-full bg-primary"></span>
-								Created{" "}
-								{new Date(service.createdAt).toLocaleString(undefined, {
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-									hour: "2-digit",
-									minute: "2-digit",
-								})}
-							</span>
-							<span className="flex items-center gap-1">
-								<span className="size-2 rounded-full bg-secondary"></span>
-								Updated{" "}
-								{new Date(service.updatedAt).toLocaleString(undefined, {
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-									hour: "2-digit",
-									minute: "2-digit",
-								})}
-							</span>
-							<span className="flex items-center gap-1">
-								<span className="size-2 rounded-full bg-success"></span>
-								{service.gallery.length} image{service.gallery.length !== 1 ? "s" : ""}
+					<div className="min-w-0 lg:hidden">
+						<h3 className="break-words text-base font-semibold text-[#342312]">
+							{serviceNameVi}
+						</h3>
+
+						<p className="mt-1 break-words text-sm text-[#342312]/65">
+							{serviceNameEn}
+						</p>
+
+						<p className="mt-2 line-clamp-2 break-words text-sm leading-6 text-[#342312]/70">
+							{serviceDescription}
+						</p>
+
+						<div className="mt-3 flex flex-wrap items-center gap-2">
+							<AdminStatusBadge status={service.status} />
+
+							<span className="rounded-full border border-[#E7D0AF] bg-white px-2.5 py-1 text-xs font-semibold text-[#342312]/70">
+								{service.gallery.length} ảnh
 							</span>
 						</div>
 					</div>
 				</div>
 
-				{/* Status and Actions */}
-				<div className="flex items-center gap-3 ml-4">
-					<Badge
-						variant={service.status === "active" ? "default" : "secondary"}
-						className="flex-shrink-0"
-					>
-						{service.status}
-					</Badge>
+				<div className="hidden min-w-0 lg:block">
+					<h3 className="truncate text-sm font-semibold text-[#342312]">
+						{serviceNameVi}
+					</h3>
+
+					<p className="mt-1 truncate text-sm text-[#342312]/65">
+						{serviceNameEn}
+					</p>
+
+					<p className="mt-1 truncate text-xs text-[#342312]/50">
+						Cập nhật:{" "}
+						{new Date(service.updatedAt).toLocaleDateString("vi-VN", {
+							year: "numeric",
+							month: "2-digit",
+							day: "2-digit",
+						})}
+					</p>
+				</div>
+
+				<div className="min-w-0">
+					<p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#342312]/55 lg:hidden">
+						Mô tả
+					</p>
+
+					<p className="line-clamp-2 break-words text-sm leading-6 text-[#342312]/75 lg:truncate">
+						{serviceDescription}
+					</p>
+				</div>
+
+				<div className="hidden lg:block">
+					<AdminStatusBadge status={service.status} />
+				</div>
+
+				<div className="flex items-center justify-end">
 					<Form action={deleteServiceAction} confirmBeforeSubmit>
 						<input type="hidden" name="serviceId" value={service.id} />
+
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="ghost" size="sm">
+								<Button variant="ghost" size="sm" className="text-[#342312]">
 									<MoreHorizontal className="size-4" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-48">
-								<ServicePreviewTrigger className="flex items-center gap-2 w-full">
+
+							<DropdownMenuContent align="end" className="w-52 bg-white">
+								<ServicePreviewTrigger className="flex w-full items-center gap-2">
 									<Eye className="size-4" />
-									View Details
+									Xem nhanh
 								</ServicePreviewTrigger>
-								<ServiceEditTrigger className="flex items-center gap-2 w-full">
+
+								<ServiceEditTrigger className="flex w-full items-center gap-2">
 									<Edit className="size-4" />
-									Edit Service
+									Sửa thông tin
 								</ServiceEditTrigger>
-								<ServiceImageTrigger className="flex items-center gap-2 w-full">
+
+								<ServiceImageTrigger className="flex w-full items-center gap-2">
 									<ImageIcon className="size-4" />
-									Manage Images
+									Quản lý ảnh
 								</ServiceImageTrigger>
-								<SubmitButton asChild className="flex items-center gap-2 w-full">
+
+								<SubmitButton asChild className="flex w-full items-center gap-2">
 									<DropdownMenuItem className="flex items-center gap-2 text-destructive focus:text-destructive">
 										<Trash2 className="size-4" />
-										Delete Service
+										Xóa dịch vụ
 									</DropdownMenuItem>
 								</SubmitButton>
 							</DropdownMenuContent>
 						</DropdownMenu>
-						{/* Delete Confirm Dialog */}
+
 						<ConfirmDialog>
-							<DialogContent className="sm:max-w-2xl bg-white">
+							<DialogContent className="bg-white sm:max-w-2xl">
 								<DialogHeader className="space-y-3">
 									<div className="flex items-start gap-3">
-										<div className="p-2 rounded-full bg-destructive/10 flex-shrink-0">
+										<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
 											<Trash2 className="size-5 text-destructive" />
 										</div>
+
 										<div className="space-y-1">
-											<DialogTitle>Delete Service</DialogTitle>
+											<DialogTitle>Xóa dịch vụ</DialogTitle>
+
 											<DialogDescription>
-												This action cannot be undone. The service will be permanently removed.
+												Thao tác này không thể hoàn tác. Dịch vụ và hình ảnh liên quan sẽ bị xóa khỏi hệ thống.
 											</DialogDescription>
 										</div>
 									</div>
 								</DialogHeader>
+
 								<div className="space-y-3">
-									<div className="p-4 bg-muted/50 rounded-lg border">
-										<div className="mb-2">
-											<p className="font-medium text-foreground">{service.name.en}</p>
-											<p className="text-sm text-muted-foreground">{service.name.vi}</p>
-										</div>
-										<div className="text-sm text-muted-foreground leading-relaxed mb-3">
-											<p className="mb-1">
-												<strong>EN:</strong> {service.description.en}
-											</p>
-											<p>
-												<strong>VI:</strong> {service.description.vi}
-											</p>
-										</div>
-										<div className="flex items-center gap-4 text-xs text-muted-foreground">
-											<span className="flex items-center gap-1">
-												<span className="size-2 rounded-full bg-destructive"></span>
-												{service.gallery.length} image{service.gallery.length !== 1 ? "s" : ""} will
-												be deleted
-											</span>
-										</div>
+									<div className="rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-4">
+										<p className="font-medium text-[#342312]">{serviceNameVi}</p>
+
+										<p className="mt-1 text-sm text-[#342312]/65">
+											{serviceNameEn}
+										</p>
+
+										<p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-[#342312]/70">
+											{serviceDescription}
+										</p>
+
+										<p className="mt-3 text-xs text-[#342312]/65">
+											{service.gallery.length} ảnh sẽ bị xóa cùng dịch vụ này.
+										</p>
 									</div>
+
 									<FormErrorDisplay />
 								</div>
 
 								<DialogFooter className="gap-2">
-									<CancelButton>Cancel</CancelButton>
+									<CancelButton>Hủy</CancelButton>
+
 									<ConfirmButton variant="destructive">
-										<FormSubmitMessage>Delete Service</FormSubmitMessage>
-										<FormPendingMessage>Deleting...</FormPendingMessage>
+										<FormSubmitMessage>Xóa dịch vụ</FormSubmitMessage>
+										<FormPendingMessage>Đang xóa...</FormPendingMessage>
 									</ConfirmButton>
 								</DialogFooter>
 							</DialogContent>
@@ -212,33 +223,7 @@ export async function ServiceRow({ serviceId }: ServiceRowProps) {
 					</Form>
 				</div>
 			</div>
-			{/* Service Gallery Preview */}
-			{service.gallery.length > 1 && (
-				<div className="flex gap-2 overflow-x-auto pb-2">
-					{service.gallery.slice(0, 4).map((image, index) => (
-						<div
-							key={image.key}
-							className="relative size-12 rounded-md bg-muted overflow-hidden flex-shrink-0"
-						>
-							<Image
-								src={image.url}
-								alt={`${service.name} ${index + 1}`}
-								fill
-								className="object-cover"
-								sizes="48px"
-							/>
-						</div>
-					))}
-					{service.gallery.length > 4 && (
-						<div className="size-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-							<span className="text-xs font-medium text-muted-foreground">
-								+{service.gallery.length - 4}
-							</span>
-						</div>
-					)}
-				</div>
-			)}
-			{/* Dialog wrappers for preview and edit */}
+
 			<ServiceRowDialog type="preview">
 				<ServicePreviewDialogContent serviceId={service.id} />
 			</ServiceRowDialog>
@@ -247,7 +232,6 @@ export async function ServiceRow({ serviceId }: ServiceRowProps) {
 				<ServiceEditDialogContent service={service} />
 			</ServiceRowDialog>
 
-			{/* Image Management Dialog */}
 			<ServiceRowDialog type="image">
 				<ServiceImageDialogContent service={service} />
 			</ServiceRowDialog>

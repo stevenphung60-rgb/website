@@ -1,4 +1,6 @@
 import { Upload } from "lucide-react";
+import { AdminFormSection } from "src/components/admin/admin-form-section";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import {
 	Form,
@@ -17,230 +19,223 @@ import {
 } from "src/components/image-upload";
 import { Button } from "src/components/ui/button";
 import { Textarea } from "src/components/ui/textarea";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import { getProductCategories } from "src/server/productcategories";
 import { ProductStatus } from "src/server/products";
 import { createProduct } from "./create-product-dialog.actions";
 import { HiddenSelectedImageInput } from "./hidden-selected-image-input";
 import { ProductImageRenderer } from "./product-image-renderer";
 
+/**
+ * Create product form
+ * @returns Product creation form for admin users
+ */
 export async function CreateProductForm() {
 	const productCategories = await getProductCategories();
 
 	return (
 		<Form action={createProduct}>
 			<div className="space-y-6">
-				<FormField
-					fieldId="productCode"
-					name="productCode"
-					placeholder="Enter product code"
-					required
+				<AdminFormSection
+					title="Thông tin cơ bản"
+					description="Nhập tên, mã sản phẩm, danh mục và trạng thái hiển thị. Tiếng Việt là nội dung chính trên website."
 				>
-					<FormLabel>Product Code</FormLabel>
-					<FormInput />
-					<FieldError />
-				</FormField>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="productNameVi"
+							name="productNameVi"
+							placeholder="Ví dụ: Ống gió vuông"
+							required
+						>
+							<FormLabel>Tên sản phẩm tiếng Việt *</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
 
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Product Name</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
+						<FormField
+							fieldId="productNameEn"
+							name="productNameEn"
+							placeholder="Ví dụ: Rectangular air duct"
+						>
+							<FormLabel>Tên sản phẩm tiếng Anh</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
+					</div>
 
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="productNameEn"
-									name="productNameEn"
-									placeholder="Enter product name in English"
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="productCode"
+							name="productCode"
+							placeholder="Ví dụ: NH-ODV-001"
+							required
+						>
+							<FormLabel>Mã sản phẩm *</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
 
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="productNameVi"
-									name="productNameVi"
-									placeholder="Nhập tên sản phẩm bằng tiếng Việt"
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
+						<FormField fieldId="productCategoryId" name="productCategoryId">
+							<FormLabel>Danh mục sản phẩm</FormLabel>
 
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Product Description</FormLabel>
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
+							<select
+								id="productCategoryId"
+								name="productCategoryId"
+								className="flex h-10 w-full rounded-lg border border-[#E7D0AF] bg-white px-3 py-2 text-sm text-[#342312] shadow-sm outline-none transition focus:border-[#342312] focus:ring-2 focus:ring-[#342312]/10"
+							>
+								<option value="">Chưa phân loại</option>
 
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="productDescriptionEn"
-									name="productDescriptionEn"
-									placeholder="Enter product description in English"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
+								{productCategories.map((category) => (
+									<option key={category.id} value={category.id}>
+										{category.name.vi || category.name.en}
+										{category.name.en ? ` - ${category.name.en}` : ""}
+									</option>
+								))}
+							</select>
 
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="productDescriptionVi"
-									name="productDescriptionVi"
-									placeholder="Nhập mô tả sản phẩm bằng tiếng Việt"
-								>
-									<FormInput asChild>
-										<Textarea rows={4} />
-									</FormInput>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
+							<FieldError />
+						</FormField>
+					</div>
 
-				<FormField fieldId="productCategoryId" name="productCategoryId">
-					<FormLabel>
-						Product Category <span className="text-muted-foreground font-normal">(optional)</span>
-					</FormLabel>
+					<FormField fieldId="productStatus" name="productStatus" required>
+						<FormLabel>Trạng thái hiển thị *</FormLabel>
 
-					<select
-						id="productCategoryId"
-						name="productCategoryId"
-						className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-					>
-						<option value="">Select category</option>
+						<div className="grid grid-cols-1 gap-3 rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-2 sm:grid-cols-2">
+							<label className="block">
+								<input
+									type="radio"
+									name="productStatus"
+									value={ProductStatus.Draft}
+									className="peer sr-only"
+									defaultChecked
+								/>
 
-						{productCategories.map((category) => (
-							<option key={category.id} value={category.id}>
-								{category.name.en} - {category.name.vi}
-							</option>
-						))}
-					</select>
-
-					<FieldError />
-				</FormField>
-			</div>
-
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<div className="text-sm font-medium text-foreground">Product Images</div>
-					<p className="text-xs text-muted-foreground">
-						Upload multiple images and click on any image to set it as the main product image
-					</p>
-				</div>
-
-				<ImageUploadRoot maxFiles={10} maxFileSize={5 * 1024 * 1024} name="productImages">
-					<ImageUploadArea
-						className="p-8 w-full flex items-center justify-center"
-						clickable={false}
-					>
-						<div className="text-center text-muted-foreground space-y-4">
-							<div className="flex flex-col items-center space-y-2">
-								<div className="size-16 rounded-full bg-muted flex items-center justify-center">
-									<Upload className="size-8 text-muted-foreground" />
-								</div>
-
-								<div className="space-y-1">
-									<h3 className="text-sm font-medium text-foreground">Upload Product Images</h3>
-									<p className="text-xs text-muted-foreground">
-										Drag and drop your images here, or click the button below to select files
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-yellow-300 peer-checked:bg-yellow-50 peer-checked:text-yellow-700">
+									<p className="font-semibold">Bản nháp</p>
+									<p className="mt-1 text-xs text-current/70">
+										Lưu nội dung nhưng chưa hiển thị ngoài website.
 									</p>
 								</div>
-							</div>
+							</label>
 
-							<ImageUploadTrigger asChild>
-								<Button
-									type="button"
-									variant="outline"
-									className="bg-white border-border hover:bg-muted"
-								>
-									<Upload className="mr-2 size-4" />
-									Select Images
-								</Button>
-							</ImageUploadTrigger>
+							<label className="block">
+								<input
+									type="radio"
+									name="productStatus"
+									value={ProductStatus.Active}
+									className="peer sr-only"
+								/>
+
+								<div className="cursor-pointer rounded-lg border border-transparent bg-white px-4 py-3 text-sm transition peer-checked:border-green-300 peer-checked:bg-green-50 peer-checked:text-green-700">
+									<p className="font-semibold">Đang hiển thị</p>
+									<p className="mt-1 text-xs text-current/70">
+										Sản phẩm sẽ được hiển thị trên website public.
+									</p>
+								</div>
+							</label>
 						</div>
-					</ImageUploadArea>
 
-					<ImageUploadProgress />
-					<ImageUploadError />
+						<FieldError />
+					</FormField>
+				</AdminFormSection>
 
-					<ImageUploadReview
-						ImageComponent={ProductImageRenderer}
-						className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"
-					/>
+				<AdminFormSection
+					title="Mô tả sản phẩm"
+					description="Mô tả ngắn gọn, dễ hiểu. Có thể nhập tiếng Anh sau nếu chưa có bản dịch."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="productDescriptionVi"
+							name="productDescriptionVi"
+							placeholder="Nhập mô tả sản phẩm bằng tiếng Việt"
+							required
+						>
+							<FormLabel>Mô tả tiếng Việt *</FormLabel>
 
-					<HiddenSelectedImageInput />
-				</ImageUploadRoot>
-			</div>
+							<FormInput asChild>
+								<Textarea rows={6} />
+							</FormInput>
 
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<div className="text-sm font-medium text-foreground">Product Status</div>
-					<p className="text-xs text-muted-foreground">
-						Choose whether to publish the product immediately or save as draft
-					</p>
-				</div>
+							<FieldError />
+						</FormField>
 
-				<FormField fieldId="productStatus" name="productStatus" required>
-					<div className="flex space-x-1 p-1 bg-muted rounded-lg">
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="productStatus"
-								value={ProductStatus.Draft}
-								className="sr-only peer"
-								defaultChecked
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-slate-100 peer-checked:text-slate-700 peer-checked:shadow-sm text-muted-foreground hover:text-foreground peer-checked:border peer-checked:border-slate-200">
-								Draft
-							</div>
-						</label>
+						<FormField
+							fieldId="productDescriptionEn"
+							name="productDescriptionEn"
+							placeholder="Enter product description in English"
+						>
+							<FormLabel>Mô tả tiếng Anh</FormLabel>
 
-						<label className="flex-1">
-							<input
-								type="radio"
-								name="productStatus"
-								value={ProductStatus.Active}
-								className="sr-only peer"
-							/>
-							<div className="flex items-center justify-center py-2 px-4 text-sm font-medium rounded-md cursor-pointer transition-all peer-checked:bg-green-100 peer-checked:text-green-600 peer-checked:shadow-sm text-green-600 hover:text-green-700 peer-checked:border peer-checked:border-green-200">
-								Active
-							</div>
-						</label>
+							<FormInput asChild>
+								<Textarea rows={6} />
+							</FormInput>
+
+							<FieldError />
+						</FormField>
 					</div>
-					<FieldError />
-				</FormField>
-			</div>
+				</AdminFormSection>
 
-			<FormErrorDisplay />
+				<AdminFormSection
+					title="Hình ảnh sản phẩm"
+					description="Tải ít nhất 1 ảnh. Chọn một ảnh làm ảnh đại diện để hiển thị trên danh sách sản phẩm."
+				>
+					<ImageUploadRoot maxFiles={10} maxFileSize={5 * 1024 * 1024} name="productImages">
+						<ImageUploadArea
+							className="flex w-full items-center justify-center rounded-xl border-2 border-dashed border-[#E7D0AF] bg-[#FAF7F1] p-8"
+							clickable={false}
+						>
+							<div className="space-y-4 text-center text-[#342312]/70">
+								<div className="flex flex-col items-center gap-3">
+									<div className="flex size-16 items-center justify-center rounded-full bg-white">
+										<Upload className="size-8 text-[#342312]" />
+									</div>
 
-			<div className="flex justify-end space-x-2 pt-4">
-				<FormResetButton>Cancel</FormResetButton>
+									<div className="space-y-1">
+										<h3 className="text-sm font-semibold text-[#342312]">
+											Tải ảnh sản phẩm
+										</h3>
 
-				<Button type="submit">
-					<FormSubmitMessage>Create Product</FormSubmitMessage>
-					<FormPendingMessage>Creating...</FormPendingMessage>
-				</Button>
+										<p className="text-xs leading-5 text-[#342312]/65">
+											Kéo thả ảnh vào đây hoặc bấm nút bên dưới để chọn ảnh.
+											Hỗ trợ tối đa 10 ảnh, mỗi ảnh tối đa 5MB.
+										</p>
+									</div>
+								</div>
+
+								<ImageUploadTrigger asChild>
+									<Button
+										type="button"
+										variant="outline"
+										className="border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]"
+									>
+										<Upload className="mr-2 size-4" />
+										Chọn ảnh
+									</Button>
+								</ImageUploadTrigger>
+							</div>
+						</ImageUploadArea>
+
+						<ImageUploadProgress />
+						<ImageUploadError />
+
+						<ImageUploadReview
+							ImageComponent={ProductImageRenderer}
+							className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
+						/>
+
+						<HiddenSelectedImageInput />
+					</ImageUploadRoot>
+				</AdminFormSection>
+
+				<FormErrorDisplay />
+
+				<AdminStickyActions note="Sau khi lưu, sản phẩm sẽ xuất hiện ngoài website nếu trạng thái là Đang hiển thị.">
+					<FormResetButton>Hủy</FormResetButton>
+
+					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
+						<FormSubmitMessage>Tạo sản phẩm</FormSubmitMessage>
+						<FormPendingMessage>Đang tạo...</FormPendingMessage>
+					</Button>
+				</AdminStickyActions>
 			</div>
 		</Form>
 	);

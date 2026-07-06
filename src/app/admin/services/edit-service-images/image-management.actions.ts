@@ -2,329 +2,359 @@
 
 import { chunk } from "lodash";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
 import type { S3UploadResult } from "src/lib/s3";
 import { deleteFromS3, uploadToS3 } from "src/lib/s3";
 import type { ServiceDocument, ServiceImage } from "src/server/services";
-import { getServiceById } from "src/server/services";
-import type { ExistingImage } from "./image-management-dialog.type";
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Generate a unique S3 key for service images
- * @param serviceId - The ID of the service
- * @param fileName - The original file name
- * @param index - The index of the image (for multiple images)
- * @returns A unique S3 key
- */
-function generateServiceS3Key(serviceId: string, fileName: string, index: number = 0): string {
-	const timestamp = Date.now();
-	const fileExtension = fileName.split(".").pop();
-	const uniqueKey = `${timestamp}-${index}`;
-
-	return `services/${serviceId}/${uniqueKey}.${fileExtension}`;
+interface DeletedImageInput {
+	id: string;
+	name?: string;
 }
 
-/**
- * Upload a batch of images to S3
- * @param images - Array of files to upload
- * @param serviceId - The service ID
- * @param startIndex - Starting index for this batch
- * @returns Promise that resolves to array of ServiceImage objects
- */
-async function uploadImageBatch(
-	images: File[],
-	serviceId: string,
-	startIndex: number,
-): Promise<ServiceImage[]> {
-	const uploadPromises = images.map(async (file, i) => {
-		const globalIndex = startIndex + i;
-		const s3Key = generateServiceS3Key(serviceId, file.name, globalIndex);
-		const uploadResult: S3UploadResult = await uploadToS3(file, s3Key);
-
-		return {
-			key: uploadResult.key,
-			url: uploadResult.url,
-			isMain: false, // Will be set later based on main image selection
-			uploadedAt: new Date(),
-		};
-	});
-
-	return Promise.all(uploadPromises);
-}
-
-/**
- * Delete multiple images from S3
- * @param imageKeys - Array of S3 keys to delete
- * @returns Promise that resolves when all deletions are complete
- */
-async function deleteImagesFromS3(imageKeys: string[]): Promise<void> {
-	await Promise.all(imageKeys.map((key) => deleteFromS3(key)));
-}
-
-/**
- * Fetch existing service images from database
- * @param serviceId - The service ID
- * @returns Promise that resolves to existing ServiceImage array or null if service not found
- */
-async function fetchExistingServiceImages(serviceId: string): Promise<ServiceImage[] | null> {
-	try {
-		const service = await getServiceById(serviceId);
-		return service?.gallery || [];
-	} catch {
-		return null;
-	}
-}
-
-/**
- * Set the main image for a collection of images using index-based approach
- * @param images - Array of ServiceImage objects
- * @param mainImageIndex - Index of the image to set as main
- */
-function setMainImage(images: ServiceImage[], mainImageIndex: string): void {
-	if (!mainImageIndex || images.length === 0) {
-		// If no main image specified, set first image as main
-		images[0].isMain = true;
-		return;
-	}
-
-	// Reset all images to not main
-	images.forEach((img) => {
-		img.isMain = false;
-	});
-
-	// Parse the main image index
-	const targetIndex = parseInt(mainImageIndex, 10);
-
-	// Set the main image at the specified index
-	if (targetIndex >= 0 && targetIndex < images.length) {
-		images[targetIndex].isMain = true;
-	} else {
-		// If index is invalid, set first image as main
-		images[0].isMain = true;
-	}
-}
-
-/**
- * Update service images in the database
- * @param serviceId - The service ID
- * @param images - Array of ServiceImage objects to save
- * @returns Promise that resolves to the update result
- */
-async function updateServiceInDatabase(
-	serviceId: string,
-	images: ServiceImage[],
-): Promise<boolean> {
-	const db = await getDatabase();
-	const result = await db.collection<ServiceDocument>("services").updateOne(
-		{ id: serviceId },
-		{
-			$set: {
-				gallery: images,
-				updatedAt: new Date(),
-			},
-		},
-	);
-
-	return result.matchedCount > 0;
-}
-
-// ============================================================================
-// MAIN SERVER ACTIONS
-// ============================================================================
-
-/**
- * Server action to update service images with new uploads, deletions, and main image changes
- * @param formData - Form data containing service ID, new images, deleted images, and main image index
- * @returns Promise that resolves to the update result
- */
-export async function updateServiceImages(formData: FormData): Promise<FormResult> {
-	try {
-		// Extract and validate input data
-		const inputData = extractUpdateImageInputData(formData);
-		if (!inputData.success || !inputData.data) {
-			return inputData;
-		}
-
-		const { serviceId, newImagesFiles, deletedImages, mainImageIndex } = inputData.data;
-
-		// Fetch existing images from database
-		const existingImages = await fetchExistingServiceImages(serviceId);
-		if (existingImages === null) {
-			return {
-				success: false,
-				error: "Service not found",
-			};
-		}
-
-		// Upload new images to S3 in batches
-		const uploadedNewImages = await uploadNewImagesInBatches(newImagesFiles, serviceId);
-		if (!uploadedNewImages.success || !uploadedNewImages.data) {
-			return uploadedNewImages;
-		}
-
-		// Delete removed images from S3
-		if (deletedImages.length > 0) {
-			const deleteResult = await deleteRemovedImages(deletedImages);
-			if (!deleteResult.success) {
-				return deleteResult;
-			}
-		}
-
-		// Filter out deleted images from existing images
-		const deletedImageIds = deletedImages.map((img) => img.id);
-		const remainingExistingImages = existingImages.filter(
-			(img) => !deletedImageIds.includes(img.key),
-		);
-
-		// Combine remaining existing images with new images
-		const allImages = [...remainingExistingImages, ...uploadedNewImages.data];
-
-		// Set the main image
-		setMainImage(allImages, mainImageIndex);
-
-		// Update service in database
-		const updateResult = await updateServiceInDatabase(serviceId, allImages);
-		if (!updateResult) {
-			return {
-				success: false,
-				error: "Service not found",
-			};
-		}
-
-		// Revalidate services cache
-		revalidateTag(CACHE_TAGS.SERVICES);
-		revalidatePath("/admin/services");
-
-		return {
-			success: true,
-			refresh: true,
-		};
-	} catch {
-		return {
-			success: false,
-			error: "An unexpected error occurred while updating service images",
-		};
-	}
-}
-
-// ============================================================================
-// INPUT PROCESSING FUNCTIONS
-// ============================================================================
-
-interface UpdateImageInputData {
+interface UpdateServiceImagesInput {
 	serviceId: string;
-	newImagesFiles: File[];
-	deletedImages: ExistingImage[];
+	newImages: File[];
+	deletedImages: DeletedImageInput[];
 	mainImageIndex: string;
 }
 
-/**
- * Extract and validate input data from FormData
- * @param formData - Form data from the request
- * @returns Validation result with extracted data or error
- */
-function extractUpdateImageInputData(
-	formData: FormData,
-): FormResult & { data?: UpdateImageInputData } {
-	const serviceId = formData.get("serviceId") as string;
-	const rawNewImagesFiles = formData.getAll("newImages") as File[];
-	const deletedImagesJson = formData.get("deletedImages") as string;
-	const mainImageIndex = formData.get("mainImageIndex") as string;
+interface UploadedServiceImageWithIndex extends ServiceImage {
+	index: number;
+}
 
-	if (!serviceId) {
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const BATCH_SIZE = 10;
+
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const updateImagesSchema = z.object({
+	serviceId: z.string().trim().min(1, "Không tìm thấy ID dịch vụ"),
+	mainImageIndex: z.string().optional().default(""),
+});
+
+const deletedImagesSchema = z.array(
+	z.object({
+		id: z.string().trim().min(1),
+		name: z.string().optional(),
+	}),
+);
+
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return (formData.get(key) as string | null) || "";
+}
+
+/**
+ * Generate service image storage key
+ * @param serviceId - Service ID
+ * @param fileName - Uploaded file name
+ * @param index - File index
+ * @returns Storage key for service image
+ */
+function generateServiceS3Key(serviceId: string, fileName: string, index: number): string {
+	const timestamp = Date.now();
+	const fileExtension = fileName.split(".").pop() || "jpg";
+
+	return `services/${serviceId}/${timestamp}-${index}.${fileExtension}`;
+}
+
+/**
+ * Get new image files from submitted form data
+ * @param formData - Submitted form data
+ * @returns Valid file objects from form data
+ */
+function getNewImageFiles(formData: FormData): File[] {
+	return (formData.getAll("newImages") as File[]).filter(
+		(file) => file.size > 0 && file.name.trim() !== "",
+	);
+}
+
+/**
+ * Parse deleted image data from hidden form input
+ * @param value - Deleted images JSON string
+ * @returns Parsed deleted image records
+ */
+function parseDeletedImages(value: string): DeletedImageInput[] {
+	if (!value) {
+		return [];
+	}
+
+	try {
+		const parsed = JSON.parse(value);
+		const result = deletedImagesSchema.safeParse(parsed);
+
+		if (!result.success) {
+			return [];
+		}
+
+		return result.data;
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Validate new image files
+ * @param images - Uploaded image files
+ * @returns Error message when invalid, otherwise null
+ */
+function validateNewImages(images: File[]): string | null {
+	for (const image of images) {
+		if (!allowedImageTypes.includes(image.type)) {
+			return "Ảnh dịch vụ chỉ hỗ trợ JPG, PNG, WEBP hoặc GIF";
+		}
+
+		if (image.size > MAX_FILE_SIZE) {
+			return "Mỗi ảnh dịch vụ không được vượt quá 10MB";
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Extract and validate service image update input
+ * @param formData - Submitted form data
+ * @returns Parsed input or error result
+ */
+function extractUpdateServiceImagesInput(
+	formData: FormData,
+): FormResult & { data?: UpdateServiceImagesInput } {
+	const parsedFields = updateImagesSchema.safeParse({
+		serviceId: getFormString(formData, "serviceId"),
+		mainImageIndex: getFormString(formData, "mainImageIndex"),
+	});
+
+	if (!parsedFields.success) {
 		return {
 			success: false,
-			error: "Service ID is required",
+			error: parsedFields.error.errors.map((item) => item.message).join(", "),
 		};
 	}
 
-	// Filter out empty files - check if file has content (size > 0 and name is not empty)
-	const newImagesFiles = rawNewImagesFiles.filter(
-		(file) => file.size > 0 && file.name.trim() !== "",
-	);
+	const newImages = getNewImageFiles(formData);
+	const imageError = validateNewImages(newImages);
 
-	const deletedImages: ExistingImage[] = deletedImagesJson ? JSON.parse(deletedImagesJson) : [];
+	if (imageError) {
+		return {
+			success: false,
+			error: imageError,
+		};
+	}
 
 	return {
 		success: true,
 		refresh: true,
 		data: {
-			serviceId,
-			newImagesFiles,
-			deletedImages,
-			mainImageIndex,
+			serviceId: parsedFields.data.serviceId,
+			newImages,
+			deletedImages: parseDeletedImages(getFormString(formData, "deletedImages")),
+			mainImageIndex: parsedFields.data.mainImageIndex,
 		},
 	};
 }
 
-// ============================================================================
-// IMAGE PROCESSING FUNCTIONS
-// ============================================================================
-
 /**
- * Upload new images to S3 in batches
- * @param newImagesFiles - Array of new image files
- * @param serviceId - The service ID
- * @returns Promise that resolves to upload result
+ * Upload service images in batches
+ * @param serviceId - Service ID
+ * @param images - Image files to upload
+ * @returns Uploaded service image records
  */
-async function uploadNewImagesInBatches(
-	newImagesFiles: File[],
-	serviceId: string,
-): Promise<FormResult & { data?: ServiceImage[] }> {
-	if (newImagesFiles.length === 0) {
-		return {
-			success: true,
-			refresh: true,
-			data: [],
-		};
+async function uploadServiceImages(serviceId: string, images: File[]): Promise<ServiceImage[]> {
+	if (images.length === 0) {
+		return [];
 	}
 
-	const batchSize = 10;
-	const imageBatches = chunk(newImagesFiles, batchSize);
-	const uploadedNewImages: ServiceImage[] = [];
+	const imageBatches = chunk(images, BATCH_SIZE);
+	const uploadedImages: ServiceImage[] = [];
 
 	for (const [batchIndex, batchImages] of imageBatches.entries()) {
-		const startIndex = batchIndex * batchSize;
+		const startIndex = batchIndex * BATCH_SIZE;
 
-		try {
-			const batchResults = await uploadImageBatch(batchImages, serviceId, startIndex);
-			uploadedNewImages.push(...batchResults);
-		} catch {
+		const uploadPromises = batchImages.map(async (file, index): Promise<UploadedServiceImageWithIndex> => {
+			const globalIndex = startIndex + index;
+			const s3Key = generateServiceS3Key(serviceId, file.name, globalIndex);
+			const uploadResult: S3UploadResult = await uploadToS3(file, s3Key);
+
 			return {
-				success: false,
-				error: "Failed to upload new images",
+				key: uploadResult.key,
+				url: uploadResult.url,
+				isMain: false,
+				uploadedAt: new Date(),
+				index: globalIndex,
 			};
-		}
+		});
+
+		const batchResults = await Promise.all(uploadPromises);
+		const sortedBatchResults = batchResults
+			.sort((a, b) => a.index - b.index)
+			.map(({ index, ...image }) => image);
+
+		uploadedImages.push(...sortedBatchResults);
 	}
 
-	return {
-		success: true,
-		refresh: true,
-		data: uploadedNewImages,
-	};
+	return uploadedImages;
 }
 
 /**
- * Delete removed images from S3
- * @param deletedImages - Array of images to delete
- * @returns Promise that resolves to deletion result
+ * Delete service images from storage
+ * @param imageKeys - Image storage keys
+ * @returns Promise that resolves after deletion attempts
  */
-async function deleteRemovedImages(deletedImages: ExistingImage[]): Promise<FormResult> {
-	const keysToDelete = deletedImages.map((img) => img.id);
+async function deleteImagesFromStorage(imageKeys: string[]): Promise<void> {
+	if (imageKeys.length === 0) {
+		return;
+	}
+
+	const imageKeyChunks = chunk(imageKeys, 5);
+
+	for (const imageKeyChunk of imageKeyChunks) {
+		await Promise.all(
+			imageKeyChunk.map(async (key) => {
+				try {
+					await deleteFromS3(key);
+				} catch (error) {
+					console.error(`Error deleting service image ${key}:`, error);
+				}
+			}),
+		);
+	}
+}
+
+/**
+ * Cleanup newly uploaded images when database update fails
+ * @param images - Uploaded service images
+ * @returns Promise that resolves after cleanup attempts
+ */
+async function cleanupUploadedImages(images: ServiceImage[]): Promise<void> {
+	await deleteImagesFromStorage(images.map((image) => image.key));
+}
+
+/**
+ * Set main image by index
+ * @param images - Service image list
+ * @param mainImageIndex - Main image index from form data
+ */
+function setMainImage(images: ServiceImage[], mainImageIndex: string): void {
+	if (images.length === 0) {
+		return;
+	}
+
+	const parsedIndex = Number.parseInt(mainImageIndex, 10);
+	const safeIndex =
+		Number.isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= images.length
+			? 0
+			: parsedIndex;
+
+	images.forEach((image, index) => {
+		image.isMain = index === safeIndex;
+	});
+}
+
+/**
+ * Revalidate service pages after image changes
+ * @param serviceId - Service ID
+ */
+function revalidateServiceImages(serviceId: string): void {
+	revalidateTag(CACHE_TAGS.SERVICES, "max");
+	revalidatePath("/admin/services");
+	revalidatePath("/vi/services");
+	revalidatePath("/en/services");
+	revalidatePath(`/vi/services/${serviceId}`);
+	revalidatePath(`/en/services/${serviceId}`);
+}
+
+/**
+ * Update service images with new uploads, deletions, and main image selection
+ * @param formData - Form data containing service ID, new images, deleted images, and main image index
+ * @returns Form result for the admin UI
+ */
+export async function updateServiceImages(formData: FormData): Promise<FormResult> {
+	const inputResult = extractUpdateServiceImagesInput(formData);
+
+	if (!inputResult.success || !inputResult.data) {
+		return inputResult;
+	}
+
+	const { serviceId, newImages, deletedImages, mainImageIndex } = inputResult.data;
+	const db = await getDatabase();
+	const servicesCollection = db.collection<ServiceDocument>("services");
+	let uploadedNewImages: ServiceImage[] = [];
 
 	try {
-		await deleteImagesFromS3(keysToDelete);
-		return { success: true, refresh: true };
-	} catch {
+		const existingService = await servicesCollection.findOne({ id: serviceId });
+
+		if (!existingService) {
+			return {
+				success: false,
+				error: "Không tìm thấy dịch vụ cần cập nhật ảnh",
+			};
+		}
+
+		const deletedImageKeys = deletedImages.map((image) => image.id);
+		const remainingExistingImages = (existingService.gallery || []).filter(
+			(image) => !deletedImageKeys.includes(image.key),
+		);
+
+		uploadedNewImages = await uploadServiceImages(serviceId, newImages);
+		const updatedImages: ServiceImage[] = [...remainingExistingImages, ...uploadedNewImages];
+
+		if (updatedImages.length === 0) {
+			await cleanupUploadedImages(uploadedNewImages);
+
+			return {
+				success: false,
+				error: "Dịch vụ cần ít nhất 1 ảnh. Vui lòng giữ lại hoặc tải thêm ảnh mới.",
+			};
+		}
+
+		setMainImage(updatedImages, mainImageIndex);
+
+		const updateResult = await servicesCollection.updateOne(
+			{ id: serviceId },
+			{
+				$set: {
+					gallery: updatedImages,
+					updatedAt: new Date(),
+				},
+			},
+		);
+
+		if (updateResult.matchedCount === 0) {
+			await cleanupUploadedImages(uploadedNewImages);
+
+			return {
+				success: false,
+				error: "Không tìm thấy dịch vụ cần cập nhật ảnh",
+			};
+		}
+
+		await deleteImagesFromStorage(deletedImageKeys);
+		revalidateServiceImages(serviceId);
+
+		return {
+			success: true,
+			refresh: true,
+		};
+	} catch (error) {
+		if (uploadedNewImages.length > 0) {
+			await cleanupUploadedImages(uploadedNewImages);
+		}
+
+		console.error("Error updating service images:", error);
+
 		return {
 			success: false,
-			error: "Failed to delete removed images",
+			error: "Có lỗi xảy ra khi cập nhật ảnh dịch vụ. Vui lòng thử lại.",
 		};
 	}
 }

@@ -3,87 +3,128 @@
 import { Plus, Trash2 } from "lucide-react";
 import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import { Button } from "src/components/ui/button";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import { useCreateProjectSpecs } from "./create-project-dialog.state";
 
 /**
- * Client component for managing multilingual project specifications
- * Allows adding and removing specification items with English/Vietnamese support
+ * Project specifications field for create project form
+ * @returns Project specifications input list
  */
 export function ProjectSpecsField() {
 	const { specs, addSpec, removeSpec, updateSpec } = useCreateProjectSpecs();
 
+	const specsForSubmit = specs
+		.map((spec) => ({
+			vi: spec.vi.trim(),
+			en: spec.en.trim(),
+		}))
+		.filter((spec) => spec.vi || spec.en);
+
 	return (
 		<div className="space-y-4">
-			<div className="text-sm font-medium text-foreground">Project Specifications</div>
-			<p className="text-xs text-muted-foreground">
-				Add project specifications in both English and Vietnamese. Each specification will be
-				displayed as a separate item.
-			</p>
+			<input type="hidden" name="projectSpecs" value={JSON.stringify(specsForSubmit)} />
 
-			<div className="space-y-4">
-				{specs.map((spec, index) => (
-					<div key={spec.id} className="space-y-3">
-						<div className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">Specification {index + 1}</span>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={() => removeSpec(spec.id)}
-								className="text-destructive hover:text-destructive"
-							>
-								<Trash2 className="size-4" />
-							</Button>
-						</div>
+			<div className="rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-4">
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div className="min-w-0">
+						<p className="text-sm font-semibold text-[#342312]">
+							Danh sách thông số
+						</p>
 
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId={`projectSpecEn-${spec.id}`}
-									name={`projectSpecEn-${spec.id}`}
-									placeholder="Enter specification in English"
+						<p className="mt-1 text-xs italic leading-5 text-[#342312]/65">
+							Ví dụ: diện tích thi công, hạng mục thực hiện, vật liệu sử dụng hoặc quy mô dự án.
+						</p>
+					</div>
+
+					<Button
+						type="button"
+						variant="outline"
+						onClick={addSpec}
+						className="shrink-0 border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]"
+					>
+						<Plus className="mr-2 size-4" />
+						Thêm thông số
+					</Button>
+				</div>
+			</div>
+
+			{specs.length > 0 ? (
+				<div className="space-y-4">
+					{specs.map((spec, index) => (
+						<div
+							key={spec.id}
+							className="rounded-xl border border-[#E7D0AF] bg-white p-4"
+						>
+							<div className="mb-4 flex items-center justify-between gap-3">
+								<div>
+									<p className="text-sm font-semibold text-[#342312]">
+										Thông số {index + 1}
+									</p>
+
+									<p className="mt-1 text-xs italic text-[#342312]/60">
+										Nhập tiếng Việt trước. Tiếng Anh có thể bổ sung sau.
+									</p>
+								</div>
+
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => removeSpec(spec.id)}
+									className="shrink-0 border-destructive/30 text-destructive hover:text-destructive"
 								>
-									<FormLabel>Specification (English)</FormLabel>
-									<FormInput
-										value={spec.en}
-										onChange={(e) => updateSpec(spec.id, "en", e.target.value)}
-									/>
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-							<VisualTabsContent value="vi">
+									<Trash2 className="size-4" />
+								</Button>
+							</div>
+
+							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 								<FormField
 									fieldId={`projectSpecVi-${spec.id}`}
 									name={`projectSpecVi-${spec.id}`}
-									placeholder="Nhập thông số kỹ thuật bằng tiếng Việt"
+									placeholder="Ví dụ: Thi công hệ thống ống gió nhà xưởng"
 								>
-									<FormLabel>Thông số kỹ thuật (Tiếng Việt)</FormLabel>
+									<FormLabel>Thông số tiếng Việt</FormLabel>
+
 									<FormInput
 										value={spec.vi}
-										onChange={(e) => updateSpec(spec.id, "vi", e.target.value)}
+										onChange={(event) =>
+											updateSpec(spec.id, "vi", event.target.value)
+										}
 									/>
+
 									<FieldError />
 								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</div>
-				))}
-			</div>
 
-			<Button type="button" variant="outline" onClick={addSpec} className="w-full">
-				<Plus className="mr-2 size-4" />
-				Add Specification
-			</Button>
+								<FormField
+									fieldId={`projectSpecEn-${spec.id}`}
+									name={`projectSpecEn-${spec.id}`}
+									placeholder="Example: Factory air duct installation"
+								>
+									<FormLabel>Thông số tiếng Anh</FormLabel>
+
+									<FormInput
+										value={spec.en}
+										onChange={(event) =>
+											updateSpec(spec.id, "en", event.target.value)
+										}
+									/>
+
+									<FieldError />
+								</FormField>
+							</div>
+						</div>
+					))}
+				</div>
+			) : (
+				<div className="rounded-xl border border-dashed border-[#E7D0AF] bg-white px-4 py-8 text-center">
+					<p className="text-sm font-medium text-[#342312]">
+						Chưa có thông số kỹ thuật
+					</p>
+
+					<p className="mt-1 text-xs italic leading-5 text-[#342312]/65">
+						Phần này không bắt buộc. Bấm “Thêm thông số” nếu muốn bổ sung thông tin nổi bật cho dự án.
+					</p>
+				</div>
+			)}
 		</div>
 	);
 }

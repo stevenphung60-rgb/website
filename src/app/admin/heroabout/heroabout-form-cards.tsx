@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import {
 	FormField,
 	FormHelpText,
@@ -25,6 +25,10 @@ import type { HeroAboutInfo } from "./heroabout.type";
 
 type LocalizedHeroAboutField = Exclude<keyof HeroAboutInfo, "gallery">;
 
+/**
+ * Hero about details form card
+ * @returns About page content fields
+ */
 export function HeroAboutDetailsFormCard() {
 	const heroAboutInfo = useHeroAboutInfo();
 	const { setHeroAboutInfo } = useHeroAboutActions();
@@ -46,24 +50,25 @@ export function HeroAboutDetailsFormCard() {
 
 	const renderLocalizedField = (
 		field: LocalizedHeroAboutField,
-		label: string,
+		labelVi: string,
+		labelEn: string,
 		rows = 3,
 	) => {
 		return (
-			<div key={field} className="grid gap-6 md:grid-cols-2">
+			<div key={field} className="grid gap-5 lg:grid-cols-2">
 				<FormField
-					fieldId={`${field}En`}
-					label={`${label} (English)`}
-					value={heroAboutInfo[field].en}
+					fieldId={`${field}Vi`}
+					label={labelVi}
+					value={heroAboutInfo[field].vi}
 				>
-					<FormLabel>{label} (EN)</FormLabel>
+					<FormLabel>{labelVi}</FormLabel>
 
 					<FormInput asChild>
 						<Textarea
-							name={`${field}En`}
+							name={`${field}Vi`}
 							rows={rows}
-							value={heroAboutInfo[field].en}
-							onChange={(e) => updateField(field, "en", e.target.value)}
+							value={heroAboutInfo[field].vi}
+							onChange={(event) => updateField(field, "vi", event.target.value)}
 						/>
 					</FormInput>
 
@@ -71,18 +76,18 @@ export function HeroAboutDetailsFormCard() {
 				</FormField>
 
 				<FormField
-					fieldId={`${field}Vi`}
-					label={`${label} (Vietnamese)`}
-					value={heroAboutInfo[field].vi}
+					fieldId={`${field}En`}
+					label={labelEn}
+					value={heroAboutInfo[field].en}
 				>
-					<FormLabel>{label} (VI)</FormLabel>
+					<FormLabel>{labelEn}</FormLabel>
 
 					<FormInput asChild>
 						<Textarea
-							name={`${field}Vi`}
+							name={`${field}En`}
 							rows={rows}
-							value={heroAboutInfo[field].vi}
-							onChange={(e) => updateField(field, "vi", e.target.value)}
+							value={heroAboutInfo[field].en}
+							onChange={(event) => updateField(field, "en", event.target.value)}
 						/>
 					</FormInput>
 
@@ -114,48 +119,81 @@ export function HeroAboutDetailsFormCard() {
 	}
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>HeroAbout Details</CardTitle>
+		<Card className="border-[#E7D0AF] bg-white shadow-sm">
+			<CardHeader className="border-b border-[#E7D0AF]/70">
+				<CardTitle className="font-serif text-xl text-[#342312]">
+					Nội dung giới thiệu
+				</CardTitle>
 
-				<CardDescription>
-					Title, description and content shown in hero about section
+				<CardDescription className="text-[#342312]/65">
+					Quản lý nội dung trang giới thiệu hiển thị trên website.
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="grid gap-8">
-				{renderLocalizedField("title", "Title", 2)}
-				{renderLocalizedField("description", "Description", 3)}
-				{renderLocalizedField("factoryaddress", "Factory Address", 3)}
-				{renderLocalizedField("officeaddress", "Office Address", 3)}
+			<CardContent className="grid gap-8 px-5 py-6">
+				<div className="grid gap-6">
+					<h3 className="text-lg font-semibold text-[#342312]">
+						Thông tin đầu trang
+					</h3>
 
-				<div className="space-y-4">
-					<label className="text-sm font-medium">HeroAbout GALLERY</label>
+					{renderLocalizedField(
+						"title",
+						"Tiêu đề tiếng Việt",
+						"Tiêu đề tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"description",
+						"Mô tả tiếng Việt",
+						"Mô tả tiếng Anh",
+						3,
+					)}
+
+					{renderLocalizedField(
+						"factoryaddress",
+						"Địa chỉ nhà máy tiếng Việt",
+						"Địa chỉ nhà máy tiếng Anh",
+						3,
+					)}
+
+					{renderLocalizedField(
+						"officeaddress",
+						"Địa chỉ văn phòng tiếng Việt",
+						"Địa chỉ văn phòng tiếng Anh",
+						3,
+					)}
+				</div>
+
+				<div className="grid gap-4 border-t border-[#E7D0AF]/70 pt-8">
+					<label className="text-sm font-medium text-[#342312]">
+						Gallery giới thiệu
+					</label>
 
 					<label
-						className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#342312] bg-white p-8 text-center hover:bg-[#faf7f3]"
-						onDragOver={(e) => {
-							e.preventDefault();
+						className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#E7D0AF] bg-[#FAF7F1] p-8 text-center transition-colors hover:bg-white"
+						onDragOver={(event) => {
+							event.preventDefault();
 						}}
-						onDrop={(e) => {
-							e.preventDefault();
+						onDrop={(event) => {
+							event.preventDefault();
 
-							const files = e.dataTransfer.files;
+							const files = event.dataTransfer.files;
 							if (!files || files.length === 0) return;
 
 							handleUpload(files);
 						}}
 					>
-						<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5efe8]">
-							<Upload className="h-8 w-8 text-[#342312]" />
+						<div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white">
+							<Upload className="size-8 text-[#342312]" />
 						</div>
 
-						<p className="text-lg font-semibold text-[#342312]">
-							Upload Images
+						<p className="text-base font-semibold text-[#342312]">
+							Tải ảnh lên
 						</p>
 
-						<p className="text-sm text-muted-foreground">
-							Click here or drag and drop your images
+						<p className="mt-1 text-sm italic text-[#342312]/65">
+							Bấm để chọn ảnh hoặc kéo thả ảnh vào khu vực này.
 						</p>
 
 						<input
@@ -163,121 +201,294 @@ export function HeroAboutDetailsFormCard() {
 							accept="image/*"
 							multiple
 							className="hidden"
-							onChange={(e) => {
-								const files = e.target.files;
+							onChange={(event) => {
+								const files = event.target.files;
 								if (!files || files.length === 0) return;
 
 								handleUpload(files);
-								e.target.value = "";
+								event.target.value = "";
 							}}
 						/>
 					</label>
 
-					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-						{gallery.map((img) => (
-							<div
-								key={img.url}
-								className="relative h-28 overflow-hidden rounded-lg border-2 border-[#342312]"
-							>
-								<img
-									src={img.url}
-									alt="HeroAbout gallery"
-									className="h-full w-full object-cover"
-								/>
-
-								<button
-									type="button"
-									onClick={() => removeGalleryImage(img.url)}
-									className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#342312] text-sm text-white"
+					{gallery.length > 0 ? (
+						<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+							{gallery.map((image) => (
+								<div
+									key={image.url}
+									className="overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white shadow-sm"
 								>
-									×
-								</button>
-							</div>
-						))}
-					</div>
+									<div className="relative flex h-32 items-center justify-center bg-[#FAF7F1] p-2">
+										<img
+											src={image.url}
+											alt="Gallery giới thiệu"
+											className="max-h-full max-w-full rounded-lg object-contain"
+										/>
+
+										<button
+											type="button"
+											onClick={() => removeGalleryImage(image.url)}
+											className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow transition hover:opacity-90"
+											aria-label="Xóa ảnh"
+										>
+											<X className="size-4" />
+										</button>
+									</div>
+								</div>
+							))}
+						</div>
+					) : (
+						<div className="rounded-xl border border-dashed border-[#E7D0AF] bg-white px-4 py-6 text-center">
+							<p className="text-sm font-medium text-[#342312]">Chưa có ảnh</p>
+
+							<p className="mt-1 text-xs italic leading-5 text-[#342312]/65">
+								Tải ít nhất một ảnh nếu khu vực giới thiệu cần hiển thị gallery.
+							</p>
+						</div>
+					)}
 
 					<input type="hidden" name="gallery" value={JSON.stringify(gallery)} />
 				</div>
 
-				<div className="grid gap-6 border-t pt-6">
-					<h3 className="text-lg font-semibold">
-						Contact & Video Information
+				<div className="grid gap-6 border-t border-[#E7D0AF]/70 pt-8">
+					<h3 className="text-lg font-semibold text-[#342312]">
+						Thông tin video
 					</h3>
 
-					{renderLocalizedField("youtubelink", "Youtube Link", 2)}
-					{renderLocalizedField("videotitle", "Video Title", 2)}
-					{renderLocalizedField("videodescription", "Video Description", 4)}
+					{renderLocalizedField(
+						"youtubelink",
+						"Link YouTube tiếng Việt",
+						"Link YouTube tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"videotitle",
+						"Tiêu đề video tiếng Việt",
+						"Tiêu đề video tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"videodescription",
+						"Mô tả video tiếng Việt",
+						"Mô tả video tiếng Anh",
+						4,
+					)}
 				</div>
 
-				<div className="grid gap-6 border-t pt-6">
-					<h3 className="text-lg font-semibold">History Information</h3>
+				<div className="grid gap-6 border-t border-[#E7D0AF]/70 pt-8">
+					<h3 className="text-lg font-semibold text-[#342312]">
+						Lịch sử phát triển
+					</h3>
 
-					{renderLocalizedField("historytitle", "History Section Title", 2)}
-					{renderLocalizedField("historydescription", "History Description", 4)}
-					{renderLocalizedField("historytime1", "History Time 1", 2)}
-					{renderLocalizedField("historytitle1", "History Title 1", 2)}
-					{renderLocalizedField("historydetail1", "History Detail 1", 4)}
-					{renderLocalizedField("historytime2", "History Time 2", 2)}
-					{renderLocalizedField("historytitle2", "History Title 2", 2)}
-					{renderLocalizedField("historydetail2", "History Detail 2", 4)}
-					{renderLocalizedField("historytime3", "History Time 3", 2)}
-					{renderLocalizedField("historytitle3", "History Title 3", 2)}
-					{renderLocalizedField("historydetail3", "History Detail 3", 4)}
+					{renderLocalizedField(
+						"historytitle",
+						"Tiêu đề lịch sử tiếng Việt",
+						"Tiêu đề lịch sử tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historydescription",
+						"Mô tả lịch sử tiếng Việt",
+						"Mô tả lịch sử tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"historytime1",
+						"Mốc thời gian 01 tiếng Việt",
+						"Mốc thời gian 01 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historytitle1",
+						"Tiêu đề mốc 01 tiếng Việt",
+						"Tiêu đề mốc 01 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historydetail1",
+						"Chi tiết mốc 01 tiếng Việt",
+						"Chi tiết mốc 01 tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"historytime2",
+						"Mốc thời gian 02 tiếng Việt",
+						"Mốc thời gian 02 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historytitle2",
+						"Tiêu đề mốc 02 tiếng Việt",
+						"Tiêu đề mốc 02 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historydetail2",
+						"Chi tiết mốc 02 tiếng Việt",
+						"Chi tiết mốc 02 tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"historytime3",
+						"Mốc thời gian 03 tiếng Việt",
+						"Mốc thời gian 03 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historytitle3",
+						"Tiêu đề mốc 03 tiếng Việt",
+						"Tiêu đề mốc 03 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"historydetail3",
+						"Chi tiết mốc 03 tiếng Việt",
+						"Chi tiết mốc 03 tiếng Anh",
+						4,
+					)}
 				</div>
 
-				<div className="grid gap-6 border-t pt-6">
-					<h3 className="text-lg font-semibold">Value Statement</h3>
+				<div className="grid gap-6 border-t border-[#E7D0AF]/70 pt-8">
+					<h3 className="text-lg font-semibold text-[#342312]">
+						Giá trị cốt lõi
+					</h3>
 
 					{renderLocalizedField(
 						"valuestatementtitle",
-						"Value Statement Section Title",
+						"Tiêu đề khối giá trị tiếng Việt",
+						"Tiêu đề khối giá trị tiếng Anh",
 						2,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementtitle1",
-						"Value Statement Title 1",
+						"Tiêu đề giá trị 01 tiếng Việt",
+						"Tiêu đề giá trị 01 tiếng Anh",
 						2,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementdetail1",
-						"Value Statement Detail 1",
+						"Chi tiết giá trị 01 tiếng Việt",
+						"Chi tiết giá trị 01 tiếng Anh",
 						4,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementtitle2",
-						"Value Statement Title 2",
+						"Tiêu đề giá trị 02 tiếng Việt",
+						"Tiêu đề giá trị 02 tiếng Anh",
 						2,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementdetail2",
-						"Value Statement Detail 2",
+						"Chi tiết giá trị 02 tiếng Việt",
+						"Chi tiết giá trị 02 tiếng Anh",
 						4,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementtitle3",
-						"Value Statement Title 3",
+						"Tiêu đề giá trị 03 tiếng Việt",
+						"Tiêu đề giá trị 03 tiếng Anh",
 						2,
 					)}
+
 					{renderLocalizedField(
 						"valuestatementdetail3",
-						"Value Statement Detail 3",
+						"Chi tiết giá trị 03 tiếng Việt",
+						"Chi tiết giá trị 03 tiếng Anh",
 						4,
 					)}
 				</div>
 
-				<div className="grid gap-6 border-t pt-6">
-					<h3 className="text-lg font-semibold">Capacity Information</h3>
+				<div className="grid gap-6 border-t border-[#E7D0AF]/70 pt-8">
+					<h3 className="text-lg font-semibold text-[#342312]">
+						Năng lực sản xuất
+					</h3>
 
-					{renderLocalizedField("capacitytitle", "Capacity Section Title", 2)}
-					{renderLocalizedField("capacitydescription", "Capacity Description", 4)}
-					{renderLocalizedField("capacitytitle1", "Capacity Title 1", 2)}
-					{renderLocalizedField("capacitydetail1", "Capacity Detail 1", 4)}
-					{renderLocalizedField("capacitytitle2", "Capacity Title 2", 2)}
-					{renderLocalizedField("capacitydetail2", "Capacity Detail 2", 4)}
-					{renderLocalizedField("capacitytitle3", "Capacity Title 3", 2)}
-					{renderLocalizedField("capacitydetail3", "Capacity Detail 3", 4)}
-					{renderLocalizedField("capacitytitle4", "Capacity Title 4", 2)}
-					{renderLocalizedField("capacitydetail4", "Capacity Detail 4", 4)}
+					{renderLocalizedField(
+						"capacitytitle",
+						"Tiêu đề năng lực tiếng Việt",
+						"Tiêu đề năng lực tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"capacitydescription",
+						"Mô tả năng lực tiếng Việt",
+						"Mô tả năng lực tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"capacitytitle1",
+						"Tiêu đề năng lực 01 tiếng Việt",
+						"Tiêu đề năng lực 01 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"capacitydetail1",
+						"Chi tiết năng lực 01 tiếng Việt",
+						"Chi tiết năng lực 01 tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"capacitytitle2",
+						"Tiêu đề năng lực 02 tiếng Việt",
+						"Tiêu đề năng lực 02 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"capacitydetail2",
+						"Chi tiết năng lực 02 tiếng Việt",
+						"Chi tiết năng lực 02 tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"capacitytitle3",
+						"Tiêu đề năng lực 03 tiếng Việt",
+						"Tiêu đề năng lực 03 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"capacitydetail3",
+						"Chi tiết năng lực 03 tiếng Việt",
+						"Chi tiết năng lực 03 tiếng Anh",
+						4,
+					)}
+
+					{renderLocalizedField(
+						"capacitytitle4",
+						"Tiêu đề năng lực 04 tiếng Việt",
+						"Tiêu đề năng lực 04 tiếng Anh",
+						2,
+					)}
+
+					{renderLocalizedField(
+						"capacitydetail4",
+						"Chi tiết năng lực 04 tiếng Việt",
+						"Chi tiết năng lực 04 tiếng Anh",
+						4,
+					)}
 				</div>
 			</CardContent>
 		</Card>

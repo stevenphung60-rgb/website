@@ -1,6 +1,8 @@
-import { Save } from "lucide-react";
+import { Phone, Save } from "lucide-react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { AdminPageHeader } from "src/components/admin/admin-page-header";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import {
 	Form,
 	FormErrorDisplay,
@@ -19,10 +21,13 @@ import { SocialMediaFormCard } from "./social-media/social-media-form-card";
 
 export const metadata: Metadata = {
 	title: "Contact Management - Admin - Nghiệp Hưng",
-	description:
-		"Update contact information, consultant CTA, footer content, working hours, and social media links in the admin panel",
+	description: "Update contact information in the admin panel",
 };
 
+/**
+ * Contact management page
+ * @returns Contact admin page
+ */
 export default async function ContactPage() {
 	await connection();
 
@@ -30,28 +35,16 @@ export default async function ContactPage() {
 
 	return (
 		<ContactProvider contactInfo={contactInfo}>
-			<div className="w-full max-w-none px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex min-w-0 items-center space-x-4">
-						<div className="shrink-0 rounded-lg bg-primary/10 p-2">
-							<Save className="size-6 text-primary" />
-						</div>
-
-						<div className="min-w-0">
-							<h1 className="break-words font-serif text-2xl font-bold text-foreground">
-								Contact
-							</h1>
-
-							<p className="break-words text-muted-foreground">
-								Update contact, consultant CTA, footer content, working hours,
-								and social media links
-							</p>
-						</div>
-					</div>
-				</div>
+			<div className="w-full">
+				<AdminPageHeader
+					title="Liên hệ"
+					eyebrow="Quản trị nội dung"
+					description="Quản lý thông tin liên hệ hiển thị trên website."
+					icon={Phone}
+				/>
 
 				<Form action={updateContactInformation}>
-					<div className="grid w-full grid-cols-1 gap-8">
+					<div className="grid w-full grid-cols-1 gap-6">
 						<ContactDetailsFormCard />
 
 						<WorkingHoursFormCard />
@@ -61,19 +54,22 @@ export default async function ContactPage() {
 
 					<FormErrorDisplay />
 
-					<div className="flex justify-end pt-6">
-						<Button type="submit">
+					<AdminStickyActions note="Sau khi lưu, thông tin liên hệ sẽ được cập nhật trên website.">
+						<Button
+							type="submit"
+							className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]"
+						>
 							<FormSubmitMessage>
 								<Save className="mr-2 size-4" />
-								Save Changes
+								Lưu thay đổi
 							</FormSubmitMessage>
 
 							<FormPendingMessage>
 								<Save className="mr-2 size-4" />
-								Saving...
+								Đang lưu...
 							</FormPendingMessage>
 						</Button>
-					</div>
+					</AdminStickyActions>
 				</Form>
 			</div>
 		</ContactProvider>

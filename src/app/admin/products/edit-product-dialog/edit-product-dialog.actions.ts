@@ -4,97 +4,125 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
-import type { Product, ProductDocument } from "src/server/products";
+import type { ProductDocument } from "src/server/products";
 import { ProductStatus } from "src/server/products";
+import { z } from "zod";
+
+interface UpdateProductInput {
+	productId: string;
+	productCode: string;
+	productNameVi: string;
+	productNameEn: string;
+	productDescriptionVi: string;
+	productDescriptionEn: string;
+	productStatus: ProductStatus;
+	productCategoryId?: string;
+}
+
+const updateProductSchema = z.object({
+	productId: z.string().trim().min(1, "Không tìm thấy ID sản phẩm"),
+	productCode: z.string().trim().min(1, "Mã sản phẩm là bắt buộc"),
+	productNameVi: z.string().trim().min(1, "Tên sản phẩm tiếng Việt là bắt buộc"),
+	productNameEn: z.string().trim().optional().default(""),
+	productDescriptionVi: z.string().trim().min(1, "Mô tả tiếng Việt là bắt buộc"),
+	productDescriptionEn: z.string().trim().optional().default(""),
+	productStatus: z.nativeEnum(ProductStatus, {
+		errorMap: () => ({ message: "Trạng thái sản phẩm không hợp lệ" }),
+	}),
+	productCategoryId: z.string().trim().optional().default(""),
+});
 
 /**
- * Server action to update an existing product (without image handling)
- * @param formData - Form data containing product information
- * @returns Promise that resolves to the update result
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return (formData.get(key) as string | null) || "";
+}
+
+/**
+ * Parse and validate product update form data
+ * @param formData - Submitted form data
+ * @returns Validated product update input
+ */
+function parseProductInput(formData: FormData): UpdateProductInput {
+	return updateProductSchema.parse({
+		productId: getFormString(formData, "productId"),
+		productCode: getFormString(formData, "productCode"),
+		productNameVi: getFormString(formData, "productNameVi"),
+		productNameEn: getFormString(formData, "productNameEn"),
+		productDescriptionVi: getFormString(formData, "productDescriptionVi"),
+		productDescriptionEn: getFormString(formData, "productDescriptionEn"),
+		productStatus: getFormString(formData, "productStatus"),
+		productCategoryId: getFormString(formData, "productCategoryId"),
+	});
+}
+
+/**
+ * Update an existing product from admin form data
+ * @param formData - Submitted product form data
+ * @returns Form result for the admin UI
  */
 export async function updateProduct(formData: FormData): Promise<FormResult> {
 	try {
-		// Extract form data
-		const productId = formData.get("productId") as string;
-		const productCode = formData.get("productCode") as string;
-		const productNameEn = formData.get("productNameEn") as string;
-		const productNameVi = formData.get("productNameVi") as string;
-		const productDescriptionEn = formData.get("productDescriptionEn") as string;
-		const productDescriptionVi = formData.get("productDescriptionVi") as string;
-		const productStatus = formData.get("productStatus") as string;
-		const productCategoryId = (formData.get("productCategoryId") as string) || "";
-
-		// Validation phase
-		if (!productId) {
-			return {
-				success: false,
-				error: "Product ID is required",
-			};
-		}
-
-		// Validate required fields and collect missing field names
-		const missingFields: string[] = [];
-
-		if (!productCode) {
-			missingFields.push("Product Code");
-		}
-		if (!productNameEn) {
-			missingFields.push("Product Name (English)");
-		}
-		if (!productNameVi) {
-			missingFields.push("Product Name (Vietnamese)");
-		}
-		if (!productDescriptionEn) {
-			missingFields.push("Product Description (English)");
-		}
-		if (!productDescriptionVi) {
-			missingFields.push("Product Description (Vietnamese)");
-		}
-		if (!productStatus) {
-			missingFields.push("Product Status");
-		}
-
-		if (missingFields.length > 0) {
-			return {
-				success: false,
-				error: `Please fill in the following required fields: ${missingFields.join(", ")}`,
-			};
-		}
-
-		if (!Object.values(ProductStatus).includes(productStatus as ProductStatus)) {
-			throw new Error("Invalid product status");
-		}
-
-		const updatedProduct: Partial<Product> = {
-			code: productCode,
-			name: {
-				en: productNameEn,
-				vi: productNameVi,
-			},
-			description: {
-				en: productDescriptionEn,
-				vi: productDescriptionVi,
-			},
-			status: productStatus as ProductStatus,
-			updatedAt: new Date(),
-		};
-
+		const productInput = parseProductInput(formData);
 		const db = await getDatabase();
-		const result = await db.collection<ProductDocument>("products").updateOne(
-			{ id: productId },
+		const productsCollection = db.collection<ProductDocument>("products");
+
+		const existingProduct = await productsCollection.findOne({
+			id: productInput.productId,
+		});
+
+		if (!existingProduct) {
+			return {
+				success: false,
+				error: "Không tìm thấy sản phẩm cần cập nhật",
+			};
+		}
+
+		const duplicateProduct = await productsCollection.findOne({
+			code: productInput.productCode,
+			id: { $ne: productInput.productId },
+		});
+
+		if (duplicateProduct) {
+			return {
+				success: false,
+				error: "Mã sản phẩm đã tồn tại. Vui lòng nhập mã sản phẩm khác.",
+			};
+		}
+
+		const result = await productsCollection.updateOne(
+			{ id: productInput.productId },
 			{
 				$set: {
-					...updatedProduct,
-					...(productCategoryId ? { categoryId: productCategoryId } : {}),
+					code: productInput.productCode,
+					name: {
+						vi: productInput.productNameVi,
+						en: productInput.productNameEn || productInput.productNameVi,
+					},
+					description: {
+						vi: productInput.productDescriptionVi,
+						en:
+							productInput.productDescriptionEn ||
+							productInput.productDescriptionVi,
+					},
+					status: productInput.productStatus,
+					updatedAt: new Date(),
+					...(productInput.productCategoryId
+						? { categoryId: productInput.productCategoryId }
+						: {}),
 				},
-				...(productCategoryId ? {} : { $unset: { categoryId: "" } }),
+				...(productInput.productCategoryId ? {} : { $unset: { categoryId: "" } }),
 			},
 		);
 
 		if (result.matchedCount === 0) {
 			return {
 				success: false,
-				error: "Product not found",
+				error: "Không tìm thấy sản phẩm cần cập nhật",
 			};
 		}
 
@@ -105,10 +133,19 @@ export async function updateProduct(formData: FormData): Promise<FormResult> {
 			success: true,
 			refresh: true,
 		};
-	} catch {
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return {
+				success: false,
+				error: error.errors.map((item) => item.message).join(", "),
+			};
+		}
+
+		console.error("Error updating product:", error);
+
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating the product",
+			error: "Có lỗi xảy ra khi cập nhật sản phẩm. Vui lòng thử lại.",
 		};
 	}
 }

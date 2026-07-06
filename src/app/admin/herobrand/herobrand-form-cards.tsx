@@ -18,15 +18,18 @@ import { uploadHeroBrandLogoImage } from "./herobrand.actions";
 import { useCompanyName, useLogo } from "./herobrand-context";
 import type { HeroBrandLogo } from "./herobrand.type";
 
-function LogoUploadField({
-	logo,
-	setLogo,
-	removeLogo,
-}: {
+interface LogoUploadFieldProps {
 	logo: HeroBrandLogo;
 	setLogo: (logo: HeroBrandLogo) => void;
 	removeLogo: () => void;
-}) {
+}
+
+/**
+ * Logo upload field for brand admin
+ * @param props - Logo upload field props
+ * @returns Logo upload field with preview and actions
+ */
+function LogoUploadField({ logo, setLogo, removeLogo }: LogoUploadFieldProps) {
 	async function handleUpload(file: File) {
 		const formData = new FormData();
 		formData.append("image", file);
@@ -44,32 +47,52 @@ function LogoUploadField({
 	}
 
 	return (
-		<div className="space-y-4">
-			<label className="text-sm font-medium">Logo</label>
+		<div className="space-y-3">
+			<label className="text-sm font-medium text-[#342312]">Logo công ty</label>
 
 			<input type="hidden" name="logo" value={JSON.stringify(logo)} />
 
 			{logo.url ? (
-				<div className="relative overflow-hidden rounded-lg border bg-muted p-6">
-					<div className="flex min-h-[180px] items-center justify-center rounded-md bg-white p-8">
+				<div className="overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white shadow-sm">
+					<div className="flex h-[260px] items-center justify-center bg-[#FAF7F1] p-6">
 						<img
 							src={logo.url}
-							alt="Hero brand logo"
-							className="max-h-28 w-auto max-w-full object-contain"
+							alt="Logo công ty"
+							className="max-h-full max-w-full rounded-lg object-contain"
 						/>
 					</div>
 
-					<button
-						type="button"
-						onClick={removeLogo}
-						className="absolute right-3 top-3 rounded-full bg-background px-3 py-1 text-sm font-medium shadow"
-					>
-						Remove
-					</button>
+					<div className="flex justify-end gap-2 border-t border-[#E7D0AF]/70 px-4 py-3">
+						<label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[#E7D0AF] bg-white px-3 text-sm font-semibold text-[#342312] transition hover:bg-[#FAF7F1]">
+							Đổi logo
+
+							<input
+								type="file"
+								accept="image/jpeg,image/png,image/webp,image/svg+xml"
+								className="hidden"
+								onChange={(event) => {
+									const file = event.target.files?.[0];
+
+									if (!file) return;
+
+									handleUpload(file);
+									event.target.value = "";
+								}}
+							/>
+						</label>
+
+						<button
+							type="button"
+							onClick={removeLogo}
+							className="inline-flex h-9 items-center justify-center rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground transition hover:opacity-90"
+						>
+							Xóa logo
+						</button>
+					</div>
 				</div>
 			) : (
 				<label
-					className="flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/40 p-8 text-center transition-colors hover:bg-muted"
+					className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#E7D0AF] bg-[#FAF7F1] p-8 text-center transition-colors hover:bg-white"
 					onDragOver={(event) => {
 						event.preventDefault();
 					}}
@@ -83,18 +106,20 @@ function LogoUploadField({
 						handleUpload(file);
 					}}
 				>
-					<div className="mb-4 flex size-14 items-center justify-center rounded-full bg-background">
-						<Upload className="size-7 text-muted-foreground" />
+					<div className="mb-4 flex size-14 items-center justify-center rounded-full bg-white">
+						<Upload className="size-7 text-[#342312]" />
 					</div>
 
-					<p className="text-base font-semibold">Upload Logo</p>
-
-					<p className="mt-1 text-sm text-muted-foreground">
-						Click here or drag and drop your logo
+					<p className="text-base font-semibold text-[#342312]">
+						Tải logo lên
 					</p>
 
-					<p className="mt-1 text-xs text-muted-foreground">
-						Support JPG, PNG, WEBP, SVG
+					<p className="mt-1 text-sm italic text-[#342312]/65">
+						Bấm để chọn logo hoặc kéo thả logo vào khu vực này.
+					</p>
+
+					<p className="mt-1 text-xs italic text-[#342312]/60">
+						Hỗ trợ JPG, PNG, WEBP hoặc SVG.
 					</p>
 
 					<input
@@ -116,63 +141,67 @@ function LogoUploadField({
 	);
 }
 
+/**
+ * Hero brand details form card
+ * @returns Brand logo and company name fields
+ */
 export function HeroBrandDetailsFormCard() {
 	const { logo, setLogo, removeLogo } = useLogo();
 	const { companyName, updateCompanyNameEn, updateCompanyNameVi } =
 		useCompanyName();
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center space-x-2">
+		<Card className="border-[#E7D0AF] bg-white shadow-sm">
+			<CardHeader className="border-b border-[#E7D0AF]/70">
+				<CardTitle className="flex items-center gap-2 font-serif text-xl text-[#342312]">
 					<ImageIcon className="size-5" />
-					<span>Hero Brand</span>
+					<span>Logo & tên công ty</span>
 				</CardTitle>
 
-				<CardDescription>
-					Logo and company name displayed in the website header.
+				<CardDescription className="text-[#342312]/65">
+					Quản lý logo và tên công ty hiển thị ở header website.
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="grid gap-8">
+			<CardContent className="grid gap-8 px-5 py-6">
 				<LogoUploadField
 					logo={logo}
 					setLogo={setLogo}
 					removeLogo={removeLogo}
 				/>
 
-				<div className="grid gap-6 md:grid-cols-2">
+				<div className="grid gap-5 lg:grid-cols-2">
 					<FormField
-						fieldId="companyNameEn"
-						label="Company Name (English)"
-						value={companyName.en}
-						placeholder="Nghiep Hung"
-						helpText="Company name displayed in English header."
+						fieldId="companyNameVi"
+						label="Tên công ty tiếng Việt"
+						value={companyName.vi}
+						placeholder="Nghiệp Hưng"
+						helpText="Tên công ty hiển thị trên giao diện tiếng Việt."
 					>
-						<FormLabel>Company Name (EN)</FormLabel>
+						<FormLabel>Tên công ty tiếng Việt</FormLabel>
 
 						<FormInput
-							name="companyNameEn"
-							value={companyName.en}
-							onChange={(event) => updateCompanyNameEn(event.target.value)}
+							name="companyNameVi"
+							value={companyName.vi}
+							onChange={(event) => updateCompanyNameVi(event.target.value)}
 						/>
 
 						<FormHelpText />
 					</FormField>
 
 					<FormField
-						fieldId="companyNameVi"
-						label="Company Name (Vietnamese)"
-						value={companyName.vi}
-						placeholder="Nghiệp Hưng"
-						helpText="Company name displayed in Vietnamese header."
+						fieldId="companyNameEn"
+						label="Tên công ty tiếng Anh"
+						value={companyName.en}
+						placeholder="Nghiep Hung"
+						helpText="Tên công ty hiển thị trên giao diện tiếng Anh."
 					>
-						<FormLabel>Company Name (VI)</FormLabel>
+						<FormLabel>Tên công ty tiếng Anh</FormLabel>
 
 						<FormInput
-							name="companyNameVi"
-							value={companyName.vi}
-							onChange={(event) => updateCompanyNameVi(event.target.value)}
+							name="companyNameEn"
+							value={companyName.en}
+							onChange={(event) => updateCompanyNameEn(event.target.value)}
 						/>
 
 						<FormHelpText />

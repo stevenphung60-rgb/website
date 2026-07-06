@@ -1,4 +1,11 @@
 import { FormBoundaryProvider } from "src/components/form-state";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "src/components/ui/card";
 import { ProjectRow } from "./project-row";
 import { ProjectRowProvider } from "./project-row-context.state";
 
@@ -7,29 +14,48 @@ interface ProjectsListProps {
 }
 
 /**
- * Component that displays the list of projects when projects exist
- * Uses individual ProjectRow components that fetch their own data
- * @param projectIds - Array of project IDs to display
+ * Display project list in the admin panel
+ * @param props - Projects list props
+ * @returns Project list card
  */
 export function ProjectsList({ projectIds }: ProjectsListProps) {
 	return (
-		<div className="bg-card rounded-lg border">
-			<div className="px-6 py-4 border-b">
-				<div className="flex items-center justify-between">
-					<h2 className="text-lg font-semibold text-foreground">Projects</h2>
-					<div className="text-sm text-muted-foreground">{projectIds.length} total</div>
-				</div>
-			</div>
+		<Card className="border-[#E7D0AF] bg-white shadow-sm">
+			<CardHeader className="border-b border-[#E7D0AF]/70">
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+					<div>
+						<CardTitle className="font-serif text-xl text-[#342312]">
+							Danh sách dự án
+						</CardTitle>
 
-			<div className="divide-y">
-				{projectIds.map((projectId) => (
-					<FormBoundaryProvider key={projectId}>
-						<ProjectRowProvider>
-							<ProjectRow projectId={projectId} />
-						</ProjectRowProvider>
-					</FormBoundaryProvider>
-				))}
-			</div>
-		</div>
+						<CardDescription className="mt-1 text-[#342312]/65">
+							Hiện có {projectIds.length} dự án trong hệ thống.
+						</CardDescription>
+					</div>
+				</div>
+			</CardHeader>
+
+			<CardContent className="p-0">
+				<div className="hidden border-b border-[#E7D0AF]/70 bg-[#FAF7F1] px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#342312]/70 lg:grid lg:grid-cols-[5rem_minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_8rem_8rem_5rem] lg:gap-4">
+					<div>Ảnh</div>
+					<div>Dự án</div>
+					<div>Địa điểm</div>
+					<div>Năm</div>
+					<div>Hiển thị</div>
+					<div>Tiến độ</div>
+					<div className="text-right">Thao tác</div>
+				</div>
+
+				<div className="divide-y divide-[#E7D0AF]/70">
+					{projectIds.map((projectId) => (
+						<FormBoundaryProvider key={projectId}>
+							<ProjectRowProvider>
+								<ProjectRow projectId={projectId} />
+							</ProjectRowProvider>
+						</FormBoundaryProvider>
+					))}
+				</div>
+			</CardContent>
+		</Card>
 	);
 }

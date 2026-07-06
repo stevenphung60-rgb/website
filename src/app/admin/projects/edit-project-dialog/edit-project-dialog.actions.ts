@@ -1,145 +1,237 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
-import type { MultilingualText } from "src/lib/types/common.type";
-import type { Project, ProjectDocument } from "src/server/projects";
-import { ProjectCompletionStatus, ProjectVisibilityStatus } from "src/server/projects";
+import type { ProjectDocument } from "src/server/projects";
+import {
+	ProjectCompletionStatus,
+	ProjectVisibilityStatus,
+} from "src/server/projects";
+
+interface ProjectSpecInput {
+	vi: string;
+	en: string;
+}
+
+interface UpdateProjectInput {
+	projectId: string;
+	projectNameVi: string;
+	projectNameEn: string;
+	projectCategoryId?: string;
+	projectLocationVi: string;
+	projectLocationEn: string;
+	projectYearVi: string;
+	projectYearEn: string;
+	projectDescriptionVi: string;
+	projectDescriptionEn: string;
+	projectVisibilityStatus: ProjectVisibilityStatus;
+	projectCompletionStatus: ProjectCompletionStatus;
+	projectSpecs: ProjectSpecInput[];
+}
+
+const projectSpecSchema = z.object({
+	vi: z.string().trim().optional().default(""),
+	en: z.string().trim().optional().default(""),
+});
+
+const updateProjectSchema = z.object({
+	projectId: z.string().trim().min(1, "Không tìm thấy ID dự án"),
+	projectNameVi: z.string().trim().min(1, "Tên dự án tiếng Việt là bắt buộc"),
+	projectNameEn: z.string().trim().optional().default(""),
+	projectCategoryId: z.string().trim().optional().default(""),
+	projectLocationVi: z.string().trim().min(1, "Địa điểm tiếng Việt là bắt buộc"),
+	projectLocationEn: z.string().trim().optional().default(""),
+	projectYearVi: z.string().trim().min(1, "Năm tiếng Việt là bắt buộc"),
+	projectYearEn: z.string().trim().optional().default(""),
+	projectDescriptionVi: z.string().trim().min(1, "Mô tả tiếng Việt là bắt buộc"),
+	projectDescriptionEn: z.string().trim().optional().default(""),
+	projectVisibilityStatus: z.nativeEnum(ProjectVisibilityStatus, {
+		errorMap: () => ({ message: "Trạng thái hiển thị không hợp lệ" }),
+	}),
+	projectCompletionStatus: z.nativeEnum(ProjectCompletionStatus, {
+		errorMap: () => ({ message: "Tiến độ dự án không hợp lệ" }),
+	}),
+	projectSpecs: z.array(projectSpecSchema).optional().default([]),
+});
 
 /**
- * Server action to update an existing project (without image handling)
- * @param formData - Form data containing project information
- * @returns Promise that resolves to the update result
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return (formData.get(key) as string | null) || "";
+}
+
+/**
+ * Parse project specifications from form data
+ * @param value - Project specifications JSON string
+ * @returns Project specification array
+ */
+function parseProjectSpecs(value: string): ProjectSpecInput[] {
+	if (!value) {
+		return [];
+	}
+
+	try {
+		const parsed = JSON.parse(value);
+		const result = z.array(projectSpecSchema).safeParse(parsed);
+
+		if (!result.success) {
+			return [];
+		}
+
+		return result.data;
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Normalize project specs and fallback missing translations
+ * @param specs - Raw project specs
+ * @returns Valid project specs for database
+ */
+function normalizeProjectSpecs(specs: ProjectSpecInput[]): ProjectSpecInput[] {
+	return specs
+		.map((spec) => {
+			const vi = spec.vi.trim();
+			const en = spec.en.trim();
+
+			return {
+				vi: vi || en,
+				en: en || vi,
+			};
+		})
+		.filter((spec) => spec.vi || spec.en);
+}
+
+/**
+ * Parse and validate project update form data
+ * @param formData - Submitted form data
+ * @returns Validated project update input
+ */
+function parseProjectInput(formData: FormData): UpdateProjectInput {
+	const parsed = updateProjectSchema.parse({
+		projectId: getFormString(formData, "projectId"),
+		projectNameVi: getFormString(formData, "projectNameVi"),
+		projectNameEn: getFormString(formData, "projectNameEn"),
+		projectCategoryId: getFormString(formData, "projectCategoryId"),
+		projectLocationVi: getFormString(formData, "projectLocationVi"),
+		projectLocationEn: getFormString(formData, "projectLocationEn"),
+		projectYearVi: getFormString(formData, "projectYearVi"),
+		projectYearEn: getFormString(formData, "projectYearEn"),
+		projectDescriptionVi: getFormString(formData, "projectDescriptionVi"),
+		projectDescriptionEn: getFormString(formData, "projectDescriptionEn"),
+		projectVisibilityStatus: getFormString(formData, "projectVisibilityStatus"),
+		projectCompletionStatus: getFormString(formData, "projectCompletionStatus"),
+		projectSpecs: parseProjectSpecs(getFormString(formData, "projectSpecs")),
+	});
+
+	return {
+		...parsed,
+		projectSpecs: normalizeProjectSpecs(parsed.projectSpecs),
+	};
+}
+
+/**
+ * Revalidate project-related pages after mutation
+ * @param projectId - Updated project ID
+ */
+function revalidateProjectPages(projectId: string): void {
+	revalidateTag(CACHE_TAGS.PROJECTS, "max");
+	revalidatePath("/admin/projects");
+	revalidatePath("/vi/projects");
+	revalidatePath("/en/projects");
+	revalidatePath(`/vi/projects/${projectId}`);
+	revalidatePath(`/en/projects/${projectId}`);
+}
+
+/**
+ * Update an existing project from admin form data
+ * @param formData - Submitted project form data
+ * @returns Form result for the admin UI
  */
 export async function updateProject(formData: FormData): Promise<FormResult> {
 	try {
-		const projectId = formData.get("projectId") as string;
-		const projectNameEn = formData.get("projectNameEn") as string;
-		const projectNameVi = formData.get("projectNameVi") as string;
-		const projectCategoryId = formData.get("projectCategoryId") as string;
-		const projectLocationEn = formData.get("projectLocationEn") as string;
-		const projectLocationVi = formData.get("projectLocationVi") as string;
-		const projectYearEn = formData.get("projectYearEn") as string;
-		const projectYearVi = formData.get("projectYearVi") as string;
-		const projectDescriptionEn = formData.get("projectDescriptionEn") as string;
-		const projectDescriptionVi = formData.get("projectDescriptionVi") as string;
-		const projectVisibilityStatus = formData.get("projectVisibilityStatus") as string;
-		const projectCompletionStatus = formData.get("projectCompletionStatus") as string;
-
-		const specsEn: string[] = [];
-		const specsVi: string[] = [];
-
-		for (const [key, value] of formData.entries()) {
-			if (key.startsWith("specEn_") && typeof value === "string" && value.trim()) {
-				specsEn.push(value.trim());
-			}
-			if (key.startsWith("specVi_") && typeof value === "string" && value.trim()) {
-				specsVi.push(value.trim());
-			}
-		}
-
-		if (!projectId) {
-			return {
-				success: false,
-				error: "Project ID is required",
-			};
-		}
-
-		const missingFields: string[] = [];
-
-		if (!projectNameEn) missingFields.push("Project Name (English)");
-		if (!projectNameVi) missingFields.push("Project Name (Vietnamese)");
-		if (!projectLocationEn) missingFields.push("Project Location (English)");
-		if (!projectLocationVi) missingFields.push("Project Location (Vietnamese)");
-		if (!projectYearEn) missingFields.push("Project Year (English)");
-		if (!projectYearVi) missingFields.push("Project Year (Vietnamese)");
-		if (!projectDescriptionEn) missingFields.push("Project Description (English)");
-		if (!projectDescriptionVi) missingFields.push("Project Description (Vietnamese)");
-		if (!projectVisibilityStatus) missingFields.push("Visibility Status");
-		if (!projectCompletionStatus) missingFields.push("Completion Status");
-
-		if (missingFields.length > 0) {
-			return {
-				success: false,
-				error: `Please fill in the following required fields: ${missingFields.join(", ")}`,
-			};
-		}
-
-		if (
-			!Object.values(ProjectVisibilityStatus).includes(
-				projectVisibilityStatus as ProjectVisibilityStatus,
-			)
-		) {
-			throw new Error("Invalid project visibility status");
-		}
-
-		if (
-			!Object.values(ProjectCompletionStatus).includes(
-				projectCompletionStatus as ProjectCompletionStatus,
-			)
-		) {
-			throw new Error("Invalid project completion status");
-		}
-
-		const specs: MultilingualText[] = [];
-		const maxSpecs = Math.max(specsEn.length, specsVi.length);
-
-		for (let i = 0; i < maxSpecs; i++) {
-			if (specsEn[i] || specsVi[i]) {
-				specs.push({
-					en: specsEn[i] || "",
-					vi: specsVi[i] || "",
-				});
-			}
-		}
-
-		const updatedProject: Partial<Project> = {
-			name: {
-				en: projectNameEn,
-				vi: projectNameVi,
-			},
-			categoryId: projectCategoryId || null,
-			location: {
-				en: projectLocationEn,
-				vi: projectLocationVi,
-			},
-			year: {
-				en: projectYearEn,
-				vi: projectYearVi,
-			},
-			description: {
-				en: projectDescriptionEn,
-				vi: projectDescriptionVi,
-			},
-			specs,
-			visibilityStatus: projectVisibilityStatus as ProjectVisibilityStatus,
-			completionStatus: projectCompletionStatus as ProjectCompletionStatus,
-			updatedAt: new Date(),
-		};
-
+		const projectInput = parseProjectInput(formData);
 		const db = await getDatabase();
-		const result = await db
-			.collection<ProjectDocument>("projects")
-			.updateOne({ id: projectId }, { $set: updatedProject });
+		const projectsCollection = db.collection<ProjectDocument>("projects");
+
+		const existingProject = await projectsCollection.findOne({
+			id: projectInput.projectId,
+		});
+
+		if (!existingProject) {
+			return {
+				success: false,
+				error: "Không tìm thấy dự án cần cập nhật",
+			};
+		}
+
+		const result = await projectsCollection.updateOne(
+			{ id: projectInput.projectId },
+			{
+				$set: {
+					name: {
+						vi: projectInput.projectNameVi,
+						en: projectInput.projectNameEn || projectInput.projectNameVi,
+					},
+					categoryId: projectInput.projectCategoryId || null,
+					location: {
+						vi: projectInput.projectLocationVi,
+						en:
+							projectInput.projectLocationEn ||
+							projectInput.projectLocationVi,
+					},
+					year: {
+						vi: projectInput.projectYearVi,
+						en: projectInput.projectYearEn || projectInput.projectYearVi,
+					},
+					description: {
+						vi: projectInput.projectDescriptionVi,
+						en:
+							projectInput.projectDescriptionEn ||
+							projectInput.projectDescriptionVi,
+					},
+					specs: projectInput.projectSpecs,
+					visibilityStatus: projectInput.projectVisibilityStatus,
+					completionStatus: projectInput.projectCompletionStatus,
+					updatedAt: new Date(),
+				},
+			},
+		);
 
 		if (result.matchedCount === 0) {
 			return {
 				success: false,
-				error: "Project not found",
+				error: "Không tìm thấy dự án cần cập nhật",
 			};
 		}
-		revalidateTag(CACHE_TAGS.PROJECTS, "max");
-		revalidatePath("/admin/projects");
+
+		revalidateProjectPages(projectInput.projectId);
+
 		return {
 			success: true,
 			refresh: true,
 		};
-	} catch {
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			return {
+				success: false,
+				error: error.errors.map((item) => item.message).join(", "),
+			};
+		}
+
+		console.error("Error updating project:", error);
+
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating the project",
+			error: "Có lỗi xảy ra khi cập nhật dự án. Vui lòng thử lại.",
 		};
 	}
 }

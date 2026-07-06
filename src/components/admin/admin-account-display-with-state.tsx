@@ -23,22 +23,33 @@ interface AdminUser {
 
 interface AdminAccountDisplayWithStateProps {
 	user: AdminUser;
+	isCollapsed?: boolean;
 }
 
 /**
- * Client component for displaying current admin account with signout functionality
- * Shows user avatar (using Next.js Image for optimization) or initials fallback
- * Provides dropdown with account info and signout option
+ * Admin account display with sign out action
+ * @param props - Admin account display props
+ * @returns Admin account dropdown
  */
-export function AdminAccountDisplayWithState({ user }: AdminAccountDisplayWithStateProps) {
+export function AdminAccountDisplayWithState({
+	user,
+	isCollapsed = false,
+}: AdminAccountDisplayWithStateProps) {
 	const [isSigningOut, setIsSigningOut] = useState(false);
 	const [imageError, setImageError] = useState(false);
 	const router = useRouter();
 
-	/**
-	 * Handle user signout
-	 * Signs out user and redirects to login page
-	 */
+	const displayName = user.name || user.email.split("@")[0];
+
+	const initials = user.name
+		? user.name
+				.split(" ")
+				.map((namePart) => namePart[0])
+				.join("")
+				.toUpperCase()
+				.slice(0, 2)
+		: user.email[0].toUpperCase();
+
 	const handleSignOut = async () => {
 		try {
 			setIsSigningOut(true);
@@ -51,65 +62,72 @@ export function AdminAccountDisplayWithState({ user }: AdminAccountDisplayWithSt
 		}
 	};
 
-	/**
-	 * Get user display name
-	 * Falls back to email if name is not available
-	 */
-	const displayName = user.name || user.email.split("@")[0];
-
-	/**
-	 * Handle image loading error
-	 * Falls back to initials when image fails to load
-	 */
-	const handleImageError = () => {
-		setImageError(true);
-	};
-
-	/**
-	 * Get user initials for avatar fallback
-	 */
-	const initials = user.name
-		? user.name
-				.split(" ")
-				.map((n) => n[0])
-				.join("")
-				.toUpperCase()
-				.slice(0, 2)
-		: user.email[0].toUpperCase();
+	const avatar = user.image && !imageError ? (
+		<Image
+			src={user.image}
+			alt={displayName}
+			width={32}
+			height={32}
+			className="size-8 rounded-full object-cover"
+			onError={() => setImageError(true)}
+			referrerPolicy="no-referrer"
+		/>
+	) : (
+		<div className="flex size-8 items-center justify-center rounded-full border border-[#A87E3C]/45 bg-[#102A26] text-xs font-semibold text-[#E7D0AF]">
+			{initials}
+		</div>
+	);
 
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" className="flex items-center gap-2">
-					{user.image && !imageError ? (
-						<Image
-							src={user.image}
-							alt={displayName}
-							width={24}
-							height={24}
-							className="size-6 rounded-full object-cover"
-							onError={handleImageError}
-							referrerPolicy="no-referrer"
-						/>
-					) : (
-						<div className="size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-							{initials}
-						</div>
-					)}
-					<span className="hidden sm:inline">{displayName}</span>
+				<Button
+					type="button"
+					variant="ghost"
+					title={displayName}
+					className={[
+						"h-auto rounded-xl border border-[#A87E3C]/25 bg-[#2B190B] text-[#E7D0AF] transition hover:bg-[#342312] hover:text-[#E7D0AF]",
+						isCollapsed
+							? "w-11 justify-center px-0 py-2"
+							: "w-full justify-start gap-2 px-2.5 py-2",
+					].join(" ")}
+				>
+					{avatar}
+
+					{!isCollapsed ? (
+						<span className="min-w-0 truncate text-[14px] font-semibold">
+							{displayName}
+						</span>
+					) : null}
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-56">
+
+			<DropdownMenuContent
+				side="right"
+				align="end"
+				className="w-64 border-[#E7D0AF] bg-white"
+			>
 				<DropdownMenuLabel>
 					<div className="flex flex-col space-y-1">
-						<p className="text-sm font-medium leading-none">{user.name}</p>
-						<p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+						<p className="text-sm font-semibold leading-none text-[#342312]">
+							{user.name || displayName}
+						</p>
+
+						<p className="break-all text-xs leading-5 text-[#342312]/60">
+							{user.email}
+						</p>
 					</div>
 				</DropdownMenuLabel>
+
 				<DropdownMenuSeparator />
-				<DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
+
+				<DropdownMenuItem
+					onClick={handleSignOut}
+					disabled={isSigningOut}
+					className="text-destructive focus:text-destructive"
+				>
 					<LogOut className="mr-2 size-4" />
-					{isSigningOut ? "Signing out..." : "Sign out"}
+					{isSigningOut ? "Đang đăng xuất..." : "Đăng xuất"}
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -4,10 +4,10 @@ import { Buffer } from "buffer";
 import fs from "fs/promises";
 import { revalidatePath, revalidateTag } from "next/cache";
 import path from "path";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { updateHeroBrandInfo } from "src/server/herobrand";
-import { z } from "zod";
 import type {
 	HeroBrandInfoFormData,
 	HeroBrandLogo,
@@ -26,7 +26,7 @@ type UploadHeroBrandImageResult =
 
 const localizedTextSchema = z.object({
 	en: z.string(),
-	vi: z.string(),
+	vi: z.string().min(1, "Tên công ty tiếng Việt là bắt buộc"),
 });
 
 const heroBrandLogoSchema = z.object({
@@ -38,13 +38,37 @@ const heroBrandInfoSchema = z.object({
 	companyName: localizedTextSchema,
 });
 
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return ((formData.get(key) as string | null) || "").trim();
+}
+
+/**
+ * Get localized company name from form data
+ * @param formData - Submitted form data
+ * @param key - Base field key
+ * @returns Localized text with English fallback
+ */
 function getLocalizedText(formData: FormData, key: string): LocalizedText {
+	const vi = getFormString(formData, `${key}Vi`);
+	const en = getFormString(formData, `${key}En`);
+
 	return {
-		en: (formData.get(`${key}En`) as string) || "",
-		vi: (formData.get(`${key}Vi`) as string) || "",
+		vi: vi || en,
+		en: en || vi,
 	};
 }
 
+/**
+ * Parse logo data from hidden form input
+ * @param formData - Submitted form data
+ * @returns Logo data
+ */
 function parseLogo(formData: FormData): HeroBrandLogo {
 	const value = formData.get("logo") as string | null;
 
@@ -63,6 +87,22 @@ function parseLogo(formData: FormData): HeroBrandLogo {
 	}
 }
 
+/**
+ * Revalidate brand-related pages
+ */
+function revalidateHeroBrandPages(): void {
+	revalidateTag(CACHE_TAGS.HEROBRAND, "max");
+	revalidatePath("/admin/herobrand");
+	revalidatePath("/vi");
+	revalidatePath("/en");
+	revalidatePath("/");
+}
+
+/**
+ * Update logo and company name from admin form
+ * @param formData - Submitted hero brand form data
+ * @returns Form result for admin UI
+ */
 export async function updateHeroBrandInformation(
 	formData: FormData,
 ): Promise<FormResult> {
@@ -75,14 +115,14 @@ export async function updateHeroBrandInformation(
 		const validationResult = heroBrandInfoSchema.safeParse(rawData);
 
 		if (!validationResult.success) {
-			const errorMessages = validationResult.error.errors.map((err) => {
-				const pathName = err.path.join(".");
-				return `${pathName}: ${err.message}`;
+			const errorMessages = validationResult.error.errors.map((error) => {
+				const fieldPath = error.path.join(".");
+				return `${fieldPath}: ${error.message}`;
 			});
 
 			return {
 				success: false,
-				error: `Validation failed: ${errorMessages.join(", ")}`,
+				error: `Vui lòng kiểm tra lại: ${errorMessages.join(", ")}`,
 			};
 		}
 
@@ -90,8 +130,7 @@ export async function updateHeroBrandInformation(
 		const result = await updateHeroBrandInfo(validatedData);
 
 		if (result.success) {
-			//revalidateTag(CACHE_TAGS.HEROBRAND);
-			revalidatePath("/admin/herobrand");
+			revalidateHeroBrandPages();
 
 			return {
 				success: true,
@@ -101,18 +140,23 @@ export async function updateHeroBrandInformation(
 
 		return {
 			success: false,
-			error: result.error || "Failed to update hero brand information",
+			error: result.error || "Không thể cập nhật logo và tên công ty",
 		};
 	} catch (error) {
 		console.error("Error updating hero brand information:", error);
 
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating hero brand information",
+			error: "Có lỗi xảy ra khi cập nhật logo và tên công ty. Vui lòng thử lại.",
 		};
 	}
 }
 
+/**
+ * Upload brand logo to local uploads folder
+ * @param formData - Form data containing image file
+ * @returns Uploaded image URL or error
+ */
 export async function uploadHeroBrandLogoImage(
 	formData: FormData,
 ): Promise<UploadHeroBrandImageResult> {
@@ -122,7 +166,7 @@ export async function uploadHeroBrandLogoImage(
 		if (!file || file.size === 0) {
 			return {
 				success: false,
-				error: "No image selected",
+				error: "Vui lòng chọn logo",
 			};
 		}
 
@@ -136,7 +180,16 @@ export async function uploadHeroBrandLogoImage(
 		if (!allowedTypes.includes(file.type)) {
 			return {
 				success: false,
-				error: "Only JPG, PNG, WEBP, or SVG images are allowed",
+				error: "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc SVG",
+			};
+		}
+
+		const maxFileSize = 5 * 1024 * 1024;
+
+		if (file.size > maxFileSize) {
+			return {
+				success: false,
+				error: "Logo không được vượt quá 5MB",
 			};
 		}
 
@@ -162,7 +215,7 @@ export async function uploadHeroBrandLogoImage(
 
 		return {
 			success: false,
-			error: "Failed to upload hero brand logo",
+			error: "Không thể tải logo lên. Vui lòng thử lại.",
 		};
 	}
 }

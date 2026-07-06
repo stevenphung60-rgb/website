@@ -1,10 +1,15 @@
-import { Building, Edit, FolderOpen } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { AdminEmptyState } from "src/components/admin/admin-empty-state";
+import { AdminPageHeader } from "src/components/admin/admin-page-header";
 import { Card, CardContent } from "src/components/ui/card";
-import { getProjectCounts, getProjectIds, ProjectVisibilityStatus } from "src/server/projects";
+import {
+	getProjectCounts,
+	getProjectIds,
+	ProjectVisibilityStatus,
+} from "src/server/projects";
 import { CreateProjectDialog } from "./create-project-dialog";
-import { EmptyStateWithDialog } from "./empty-state-with-dialog";
 import { ProjectsList } from "./projects-list";
 
 export const metadata: Metadata = {
@@ -14,88 +19,95 @@ export const metadata: Metadata = {
 
 /**
  * Projects management page
- * Manages and displays completed projects and portfolio
- * Uses efficient queries to check for projects and display them
+ * @returns Projects admin page
  */
 export default async function ProjectsPage() {
 	await connection();
-	// Fetch project IDs and counts efficiently
+
 	const [projectIds, projectCounts] = await Promise.all([getProjectIds(), getProjectCounts()]);
+	const hasProjects = projectIds.length > 0;
 
 	return (
-		<div className="container mx-auto px-4 py-8">
-			{/* Section Header and Action Bar */}
-			<div className="flex items-center justify-between mb-6">
-				{/* Section Header */}
-				<div className="flex items-center space-x-4">
-					<div className="p-2 rounded-lg bg-primary/10">
-						<FolderOpen className="size-6 text-primary" />
-					</div>
-					<div>
-						<h1 className="text-2xl font-serif font-bold text-foreground">
-							{"Projects Management"}
-						</h1>
-						<p className="text-muted-foreground">{"Manage and display completed projects"}</p>
-					</div>
-				</div>
+		<div className="w-full">
+			<AdminPageHeader
+				title="Dự án"
+				eyebrow="Quản trị nội dung"
+				description="Quản lý dự án hiển thị trên website."
+				icon={FolderOpen}
+				actions={<CreateProjectDialog />}
+			/>
 
-				{/* Add New Button */}
-				<CreateProjectDialog />
-			</div>
-			{/* Stats Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-				<Card className="border-l-4 border-l-blue-500">
-					<CardContent className="px-6">
-						<div className="flex items-center justify-between">
+			<div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+				<Card className="border-[#E7D0AF] bg-white">
+					<CardContent className="px-5 py-5">
+						<div className="flex items-center justify-between gap-4">
 							<div>
-								<p className="text-4xl font-bold text-blue-600">{projectCounts.total}</p>
-								<p className="text-sm font-medium text-muted-foreground mt-1">{"Total Projects"}</p>
+								<p className="text-sm font-medium text-[#342312]/65">
+									Tổng dự án
+								</p>
+
+								<p className="mt-2 text-3xl font-bold text-[#342312]">
+									{projectCounts.total}
+								</p>
 							</div>
-							<div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
-								<FolderOpen className="size-8 text-blue-600" />
+
+							<div className="flex size-12 items-center justify-center rounded-xl bg-[#342312]/10">
+								<FolderOpen className="size-6 text-[#342312]" />
 							</div>
 						</div>
 					</CardContent>
 				</Card>
-				<Card className="border-l-4 border-l-green-500">
-					<CardContent className="px-6">
-						<div className="flex items-center justify-between">
+
+				<Card className="border-green-200 bg-white">
+					<CardContent className="px-5 py-5">
+						<div className="flex items-center justify-between gap-4">
 							<div>
-								<p className="text-4xl font-bold text-green-600">
+								<p className="text-sm font-medium text-[#342312]/65">
+									Đang hiển thị
+								</p>
+
+								<p className="mt-2 text-3xl font-bold text-green-700">
 									{projectCounts.visibility[ProjectVisibilityStatus.Active]}
 								</p>
-								<p className="text-sm font-medium text-muted-foreground mt-1">
-									{"Active Projects"}
-								</p>
 							</div>
-							<div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20">
-								<Building className="size-8 text-green-600" />
+
+							<div className="flex size-12 items-center justify-center rounded-xl bg-green-50">
+								<FolderOpen className="size-6 text-green-700" />
 							</div>
 						</div>
 					</CardContent>
 				</Card>
-				<Card className="border-l-4 border-l-yellow-500">
-					<CardContent className="px-6">
-						<div className="flex items-center justify-between">
+
+				<Card className="border-yellow-200 bg-white">
+					<CardContent className="px-5 py-5">
+						<div className="flex items-center justify-between gap-4">
 							<div>
-								<p className="text-4xl font-bold text-yellow-600">
+								<p className="text-sm font-medium text-[#342312]/65">
+									Bản nháp
+								</p>
+
+								<p className="mt-2 text-3xl font-bold text-yellow-700">
 									{projectCounts.visibility[ProjectVisibilityStatus.Draft]}
 								</p>
-								<p className="text-sm font-medium text-muted-foreground mt-1">{"Draft Projects"}</p>
 							</div>
-							<div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
-								<Edit className="size-8 text-yellow-600" />
+
+							<div className="flex size-12 items-center justify-center rounded-xl bg-yellow-50">
+								<FolderOpen className="size-6 text-yellow-700" />
 							</div>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 
-			{/* Projects List */}
-			{projectIds.length === 0 ? (
-				<EmptyStateWithDialog />
-			) : (
+			{hasProjects ? (
 				<ProjectsList projectIds={projectIds} />
+			) : (
+				<AdminEmptyState
+					icon={<FolderOpen className="size-7" />}
+					title="Chưa có dự án nào"
+					description="Thêm dự án đầu tiên để hiển thị trên website."
+					action={<CreateProjectDialog />}
+				/>
 			)}
 		</div>
 	);

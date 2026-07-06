@@ -4,19 +4,17 @@ import { Buffer } from "buffer";
 import fs from "fs/promises";
 import { revalidatePath, revalidateTag } from "next/cache";
 import path from "path";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { updateHeroInfo } from "src/server/hero";
-import { z } from "zod";
 import type {
 	HeroImage,
 	HeroInfoFormData,
 	HeroSingleImage,
+	LocalizedText,
 } from "./hero.type";
 
-/* =========================
-   Upload Result Type riêng
-========================= */
 type UploadHeroImageResult =
 	| {
 			success: true;
@@ -27,56 +25,18 @@ type UploadHeroImageResult =
 			error: string;
 	  };
 
-/* =========================
-   Helpers
-========================= */
 const emptySingleImage: HeroSingleImage = {
 	url: "",
 };
 
-function parseGallery(value: FormDataEntryValue | null): HeroImage[] {
-	try {
-		const parsedValue = JSON.parse((value as string) || "[]");
-
-		if (!Array.isArray(parsedValue)) return [];
-
-		return parsedValue
-			.filter((image) => image?.url)
-			.map((image, index) => ({
-				url: String(image.url || ""),
-				order:
-					typeof image.order === "number" && Number.isFinite(image.order)
-						? image.order
-						: index,
-			}));
-	} catch {
-		return [];
-	}
-}
-
-function parseSingleImage(value: FormDataEntryValue | null): HeroSingleImage {
-	try {
-		const parsedValue = JSON.parse((value as string) || "{}");
-
-		return {
-			url: String(parsedValue?.url || ""),
-		};
-	} catch {
-		return emptySingleImage;
-	}
-}
-
-/* =========================
-   Validation Schema
-========================= */
 const localizedTextSchema = z.object({
 	en: z.string(),
 	vi: z.string(),
 });
 
 const requiredLocalizedTextSchema = z.object({
-	en: z.string().min(1, "English text is required"),
-	vi: z.string().min(1, "Vietnamese text is required"),
+	en: z.string(),
+	vi: z.string().min(1, "Nội dung tiếng Việt là bắt buộc"),
 });
 
 const singleImageSchema = z.object({
@@ -125,123 +85,144 @@ const heroInfoSchema = z.object({
 	projecttitle: localizedTextSchema,
 });
 
-/* =========================
-   Update Hero Info
-========================= */
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return ((formData.get(key) as string | null) || "").trim();
+}
+
+/**
+ * Get localized text from form data and fallback missing language
+ * @param formData - Submitted form data
+ * @param key - Base field key
+ * @returns Localized text
+ */
+function getLocalizedText(formData: FormData, key: string): LocalizedText {
+	const vi = getFormString(formData, `${key}Vi`);
+	const en = getFormString(formData, `${key}En`);
+
+	return {
+		vi: vi || en,
+		en: en || vi,
+	};
+}
+
+/**
+ * Parse gallery data from hidden form input
+ * @param value - Form data value
+ * @returns Gallery image array
+ */
+function parseGallery(value: FormDataEntryValue | null): HeroImage[] {
+	try {
+		const parsedValue = JSON.parse((value as string) || "[]");
+
+		if (!Array.isArray(parsedValue)) return [];
+
+		return parsedValue
+			.filter((image) => image?.url)
+			.map((image, index) => ({
+				url: String(image.url || ""),
+				order:
+					typeof image.order === "number" && Number.isFinite(image.order)
+						? image.order
+						: index,
+			}));
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Parse single image data from hidden form input
+ * @param value - Form data value
+ * @returns Single image object
+ */
+function parseSingleImage(value: FormDataEntryValue | null): HeroSingleImage {
+	try {
+		const parsedValue = JSON.parse((value as string) || "{}");
+
+		return {
+			url: String(parsedValue?.url || ""),
+		};
+	} catch {
+		return emptySingleImage;
+	}
+}
+
+/**
+ * Revalidate home hero related pages
+ */
+function revalidateHeroPages(): void {
+	revalidateTag(CACHE_TAGS.HERO, "max");
+	revalidatePath("/admin/hero");
+	revalidatePath("/vi");
+	revalidatePath("/en");
+	revalidatePath("/");
+}
+
+/**
+ * Update hero information from admin form
+ * @param formData - Submitted hero form data
+ * @returns Form result for admin UI
+ */
 export async function updateHeroInformation(
 	formData: FormData,
 ): Promise<FormResult> {
 	try {
 		const rawData: HeroInfoFormData = {
-			title: {
-				en: (formData.get("titleEn") as string) || "",
-				vi: (formData.get("titleVi") as string) || "",
-			},
-			description: {
-				en: (formData.get("descriptionEn") as string) || "",
-				vi: (formData.get("descriptionVi") as string) || "",
-			},
+			title: getLocalizedText(formData, "title"),
+			description: getLocalizedText(formData, "description"),
 			gallery: parseGallery(formData.get("gallery")),
 
-			productitle: {
-				en: (formData.get("productitleEn") as string) || "",
-				vi: (formData.get("productitleVi") as string) || "",
-			},
-			productdescription: {
-				en: (formData.get("productdescriptionEn") as string) || "",
-				vi: (formData.get("productdescriptionVi") as string) || "",
-			},
+			productitle: getLocalizedText(formData, "productitle"),
+			productdescription: getLocalizedText(formData, "productdescription"),
 
-			servicetitle: {
-				en: (formData.get("servicetitleEn") as string) || "",
-				vi: (formData.get("servicetitleVi") as string) || "",
-			},
-			servicedesription: {
-				en: (formData.get("servicedesriptionEn") as string) || "",
-				vi: (formData.get("servicedesriptionVi") as string) || "",
-			},
+			servicetitle: getLocalizedText(formData, "servicetitle"),
+			servicedesription: getLocalizedText(formData, "servicedesription"),
 
-			machinetitle: {
-				en: (formData.get("machinetitleEn") as string) || "",
-				vi: (formData.get("machinetitleVi") as string) || "",
-			},
-			machinedescription: {
-				en: (formData.get("machinedescriptionEn") as string) || "",
-				vi: (formData.get("machinedescriptionVi") as string) || "",
-			},
+			machinetitle: getLocalizedText(formData, "machinetitle"),
+			machinedescription: getLocalizedText(formData, "machinedescription"),
 			machinebackgroundimage: parseSingleImage(
 				formData.get("machinebackgroundimage"),
 			),
 
-			machine1title: {
-				en: (formData.get("machine1titleEn") as string) || "",
-				vi: (formData.get("machine1titleVi") as string) || "",
-			},
-			machine1subtitle: {
-				en: (formData.get("machine1subtitleEn") as string) || "",
-				vi: (formData.get("machine1subtitleVi") as string) || "",
-			},
-			machine1description: {
-				en: (formData.get("machine1descriptionEn") as string) || "",
-				vi: (formData.get("machine1descriptionVi") as string) || "",
-			},
+			machine1title: getLocalizedText(formData, "machine1title"),
+			machine1subtitle: getLocalizedText(formData, "machine1subtitle"),
+			machine1description: getLocalizedText(formData, "machine1description"),
 			machine1image: parseSingleImage(formData.get("machine1image")),
 
-			machine2title: {
-				en: (formData.get("machine2titleEn") as string) || "",
-				vi: (formData.get("machine2titleVi") as string) || "",
-			},
-			machine2subtitle: {
-				en: (formData.get("machine2subtitleEn") as string) || "",
-				vi: (formData.get("machine2subtitleVi") as string) || "",
-			},
-			machine2description: {
-				en: (formData.get("machine2descriptionEn") as string) || "",
-				vi: (formData.get("machine2descriptionVi") as string) || "",
-			},
+			machine2title: getLocalizedText(formData, "machine2title"),
+			machine2subtitle: getLocalizedText(formData, "machine2subtitle"),
+			machine2description: getLocalizedText(formData, "machine2description"),
 			machine2image: parseSingleImage(formData.get("machine2image")),
 
-			machine3title: {
-				en: (formData.get("machine3titleEn") as string) || "",
-				vi: (formData.get("machine3titleVi") as string) || "",
-			},
-			machine3subtitle: {
-				en: (formData.get("machine3subtitleEn") as string) || "",
-				vi: (formData.get("machine3subtitleVi") as string) || "",
-			},
-			machine3description: {
-				en: (formData.get("machine3descriptionEn") as string) || "",
-				vi: (formData.get("machine3descriptionVi") as string) || "",
-			},
+			machine3title: getLocalizedText(formData, "machine3title"),
+			machine3subtitle: getLocalizedText(formData, "machine3subtitle"),
+			machine3description: getLocalizedText(formData, "machine3description"),
 			machine3image: parseSingleImage(formData.get("machine3image")),
 
-			clienttitle: {
-				en: (formData.get("clienttitleEn") as string) || "",
-				vi: (formData.get("clienttitleVi") as string) || "",
-			},
-			clientdescription: {
-				en: (formData.get("clientdescriptionEn") as string) || "",
-				vi: (formData.get("clientdescriptionVi") as string) || "",
-			},
+			clienttitle: getLocalizedText(formData, "clienttitle"),
+			clientdescription: getLocalizedText(formData, "clientdescription"),
 			clientimagegallery: parseGallery(formData.get("clientimagegallery")),
 
-			projecttitle: {
-				en: (formData.get("projecttitleEn") as string) || "",
-				vi: (formData.get("projecttitleVi") as string) || "",
-			},
+			projecttitle: getLocalizedText(formData, "projecttitle"),
 		};
 
 		const validationResult = heroInfoSchema.safeParse(rawData);
 
 		if (!validationResult.success) {
-			const errorMessages = validationResult.error.errors.map((err) => {
-				const pathName = err.path.join(".");
-				return `${pathName}: ${err.message}`;
+			const errorMessages = validationResult.error.errors.map((error) => {
+				const fieldPath = error.path.join(".");
+				return `${fieldPath}: ${error.message}`;
 			});
 
 			return {
 				success: false,
-				error: `Validation failed: ${errorMessages.join(", ")}`,
+				error: `Vui lòng kiểm tra lại: ${errorMessages.join(", ")}`,
 			};
 		}
 
@@ -249,8 +230,7 @@ export async function updateHeroInformation(
 		const result = await updateHeroInfo(validatedData);
 
 		if (result.success) {
-			// revalidateTag(CACHE_TAGS.HERO);
-			revalidatePath("/admin/hero");
+			revalidateHeroPages();
 
 			return {
 				success: true,
@@ -260,21 +240,23 @@ export async function updateHeroInformation(
 
 		return {
 			success: false,
-			error: result.error || "Failed to update hero information",
+			error: result.error || "Không thể cập nhật nội dung trang chủ",
 		};
 	} catch (error) {
 		console.error("Error updating hero information:", error);
 
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating hero information",
+			error: "Có lỗi xảy ra khi cập nhật nội dung trang chủ. Vui lòng thử lại.",
 		};
 	}
 }
 
-/* =========================
-   Upload Image
-========================= */
+/**
+ * Upload hero image to local uploads folder
+ * @param formData - Form data containing image file
+ * @returns Uploaded image URL or error
+ */
 export async function uploadHeroGalleryImage(
 	formData: FormData,
 ): Promise<UploadHeroImageResult> {
@@ -284,16 +266,25 @@ export async function uploadHeroGalleryImage(
 		if (!file || file.size === 0) {
 			return {
 				success: false,
-				error: "No image selected",
+				error: "Vui lòng chọn ảnh",
 			};
 		}
 
-		const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+		const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 
 		if (!allowedTypes.includes(file.type)) {
 			return {
 				success: false,
-				error: "Only JPG, PNG, or WEBP images are allowed",
+				error: "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc SVG",
+			};
+		}
+
+		const maxFileSize = 10 * 1024 * 1024;
+
+		if (file.size > maxFileSize) {
+			return {
+				success: false,
+				error: "Ảnh không được vượt quá 10MB",
 			};
 		}
 
@@ -318,7 +309,7 @@ export async function uploadHeroGalleryImage(
 
 		return {
 			success: false,
-			error: "Failed to upload hero image",
+			error: "Không thể tải ảnh lên. Vui lòng thử lại.",
 		};
 	}
 }

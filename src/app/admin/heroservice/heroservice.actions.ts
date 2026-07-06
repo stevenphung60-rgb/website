@@ -1,18 +1,19 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
 import { Buffer } from "buffer";
 import fs from "fs/promises";
+import { revalidatePath, revalidateTag } from "next/cache";
 import path from "path";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { updateHeroServiceInfo } from "src/server/heroservice";
-import { z } from "zod";
-import type { HeroServiceInfoFormData } from "./heroservice.type";
+import type {
+	HeroServiceImage,
+	HeroServiceInfoFormData,
+	LocalizedText,
+} from "./heroservice.type";
 
-/* =========================
-   Upload Result Type riêng
-========================= */
 type UploadHeroServiceImageResult =
 	| {
 			success: true;
@@ -23,64 +24,114 @@ type UploadHeroServiceImageResult =
 			error: string;
 	  };
 
-/* =========================
-   Validation Schema
-========================= */
-const heroServiceInfoSchema = z.object({
-	title: z.object({
-		en: z.string().min(1, "English title is required"),
-		vi: z.string().min(1, "Vietnamese title is required"),
-	}),
-	description: z.object({
-		en: z.string().min(1, "English description is required"),
-		vi: z.string().min(1, "Vietnamese description is required"),
-	}),
-	gallery: z
-		.array(
-			z.object({
-				url: z.string().min(1),
-				order: z.number(),
-			}),
-		)
-		.default([]),
+const localizedTextSchema = z.object({
+	en: z.string(),
+	vi: z.string().min(1, "Nội dung tiếng Việt là bắt buộc"),
 });
 
-/* =========================
-   Update HeroService Info
-========================= */
-export async function updateHeroServiceInformation(formData: FormData): Promise<FormResult> {
-	try {
-		let gallery: HeroServiceInfoFormData["gallery"] = [];
+const galleryImageSchema = z.object({
+	url: z.string().min(1),
+	order: z.number(),
+});
 
-		try {
-			gallery = JSON.parse((formData.get("gallery") as string) || "[]");
-		} catch {
-			gallery = [];
+const heroServiceInfoSchema = z.object({
+	title: localizedTextSchema,
+	description: localizedTextSchema,
+	gallery: z.array(galleryImageSchema).default([]),
+});
+
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return ((formData.get(key) as string | null) || "").trim();
+}
+
+/**
+ * Get localized text from form data and fallback missing language
+ * @param formData - Submitted form data
+ * @param key - Base field key
+ * @returns Localized text
+ */
+function getLocalizedText(formData: FormData, key: string): LocalizedText {
+	const vi = getFormString(formData, `${key}Vi`);
+	const en = getFormString(formData, `${key}En`);
+
+	return {
+		vi: vi || en,
+		en: en || vi,
+	};
+}
+
+/**
+ * Parse gallery data from hidden form input
+ * @param value - Form data value
+ * @returns Gallery image array
+ */
+function parseGallery(value: FormDataEntryValue | null): HeroServiceImage[] {
+	try {
+		const parsedValue = JSON.parse((value as string) || "[]");
+
+		if (!Array.isArray(parsedValue)) {
+			return [];
 		}
 
+		return parsedValue
+			.filter((image) => image?.url)
+			.map((image, index) => ({
+				url: String(image.url || ""),
+				order:
+					typeof image.order === "number" && Number.isFinite(image.order)
+						? image.order
+						: index,
+			}));
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Revalidate service banner pages after update
+ */
+function revalidateHeroServicePages(): void {
+	revalidateTag(CACHE_TAGS.HEROSERVICE, "max");
+	revalidatePath("/admin/heroservice");
+	revalidatePath("/vi/services");
+	revalidatePath("/en/services");
+	revalidatePath("/vi");
+	revalidatePath("/en");
+	revalidatePath("/");
+}
+
+/**
+ * Update hero service information from admin form
+ * @param formData - Submitted hero service form data
+ * @returns Form result for admin UI
+ */
+export async function updateHeroServiceInformation(
+	formData: FormData,
+): Promise<FormResult> {
+	try {
 		const rawData: HeroServiceInfoFormData = {
-			title: {
-				en: (formData.get("titleEn") as string) || "",
-				vi: (formData.get("titleVi") as string) || "",
-			},
-			description: {
-				en: (formData.get("descriptionEn") as string) || "",
-				vi: (formData.get("descriptionVi") as string) || "",
-			},
-			gallery,
+			title: getLocalizedText(formData, "title"),
+			description: getLocalizedText(formData, "description"),
+			gallery: parseGallery(formData.get("gallery")),
 		};
 
 		const validationResult = heroServiceInfoSchema.safeParse(rawData);
 
 		if (!validationResult.success) {
-			const errorMessages = validationResult.error.errors.map((err) => {
-				const pathName = err.path.join(".");
-				return `${pathName}: ${err.message}`;
+			const errorMessages = validationResult.error.errors.map((error) => {
+				const fieldPath = error.path.join(".");
+				return `${fieldPath}: ${error.message}`;
 			});
 
 			return {
 				success: false,
-				error: `Validation failed: ${errorMessages.join(", ")}`,
+				error: `Vui lòng kiểm tra lại: ${errorMessages.join(", ")}`,
 			};
 		}
 
@@ -88,8 +139,7 @@ export async function updateHeroServiceInformation(formData: FormData): Promise<
 		const result = await updateHeroServiceInfo(validatedData);
 
 		if (result.success) {
-			// revalidateTag(CACHE_TAGS.HEROSERVICE);
-			revalidatePath("/admin/heroservice");
+			revalidateHeroServicePages();
 
 			return {
 				success: true,
@@ -99,21 +149,23 @@ export async function updateHeroServiceInformation(formData: FormData): Promise<
 
 		return {
 			success: false,
-			error: result.error || "Failed to update hero service information",
+			error: result.error || "Không thể cập nhật banner dịch vụ",
 		};
 	} catch (error) {
 		console.error("Error updating hero service information:", error);
 
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating hero service information",
+			error: "Có lỗi xảy ra khi cập nhật banner dịch vụ. Vui lòng thử lại.",
 		};
 	}
 }
 
-/* =========================
-   Upload Image
-========================= */
+/**
+ * Upload service banner image to local uploads folder
+ * @param formData - Form data containing image file
+ * @returns Uploaded image URL or error
+ */
 export async function uploadHeroServiceGalleryImage(
 	formData: FormData,
 ): Promise<UploadHeroServiceImageResult> {
@@ -123,16 +175,25 @@ export async function uploadHeroServiceGalleryImage(
 		if (!file || file.size === 0) {
 			return {
 				success: false,
-				error: "No image selected",
+				error: "Vui lòng chọn ảnh",
 			};
 		}
 
-		const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+		const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 
 		if (!allowedTypes.includes(file.type)) {
 			return {
 				success: false,
-				error: "Only JPG, PNG, or WEBP images are allowed",
+				error: "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc SVG",
+			};
+		}
+
+		const maxFileSize = 10 * 1024 * 1024;
+
+		if (file.size > maxFileSize) {
+			return {
+				success: false,
+				error: "Ảnh không được vượt quá 10MB",
 			};
 		}
 
@@ -140,6 +201,7 @@ export async function uploadHeroServiceGalleryImage(
 		const buffer = Buffer.from(bytes);
 
 		const uploadDir = path.join(process.cwd(), "public", "uploads", "heroservice");
+
 		await fs.mkdir(uploadDir, { recursive: true });
 
 		const ext = file.name.split(".").pop() || "jpg";
@@ -157,7 +219,7 @@ export async function uploadHeroServiceGalleryImage(
 
 		return {
 			success: false,
-			error: "Failed to upload hero service image",
+			error: "Không thể tải ảnh lên. Vui lòng thử lại.",
 		};
 	}
 }

@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react";
 import type { Metadata } from "next";
 import type React from "react";
 import { Suspense } from "react";
-import { AdminNavigation } from "src/components/admin/admin-navigation";
+import { AdminShell } from "src/components/admin/admin-shell";
 import { requireAdminAuth } from "src/lib/admin-auth";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 function CheckingAdminAuth() {
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-[#FAF7F1]">
+		<div className="flex min-h-screen items-center justify-center bg-[#FAF7F1]">
 			<div className="flex items-center space-x-2">
 				<Loader2 className="size-6 animate-spin text-[#342312]" />
 				<span>Đang kiểm tra phiên đăng nhập...</span>
@@ -38,19 +38,17 @@ async function AdminLayoutContent({
 }: {
 	children: React.ReactNode;
 }) {
-	await requireAdminAuth();
+	const session = await requireAdminAuth();
 
 	return (
-		<div className="min-h-screen bg-[#FAF7F1]">
-			{/* Sidebar */}
-			<AdminNavigation />
-
-			{/* Content */}
-			<div className="pl-64">
-				<main className="min-h-screen px-8 py-10">
-					{children}
-				</main>
-			</div>
-		</div>
+		<AdminShell
+			user={{
+				name: session.user.name,
+				email: session.user.email,
+				image: session.user.image,
+			}}
+		>
+			{children}
+		</AdminShell>
 	);
 }

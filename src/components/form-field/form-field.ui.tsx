@@ -197,7 +197,7 @@ export function FormHelpText({ children, asChild = false, className }: FormHelpT
 
 	const helpTextProps = {
 		id: `${id}-help`,
-		className: cn("text-sm text-muted-foreground", className),
+		className: cn("text-sm italic text-muted-foreground", className),
 	};
 
 	if (asChild) {

@@ -4,15 +4,16 @@ import { Buffer } from "buffer";
 import fs from "fs/promises";
 import { revalidatePath, revalidateTag } from "next/cache";
 import path from "path";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { updateHeroAboutInfo } from "src/server/heroabout";
-import { z } from "zod";
-import type { HeroAboutInfoFormData } from "./heroabout.type";
+import type {
+	HeroAboutImage,
+	HeroAboutInfoFormData,
+	LocalizedText,
+} from "./heroabout.type";
 
-/* =========================
-   Upload Result Type riêng
-========================= */
 type UploadHeroAboutImageResult =
 	| {
 			success: true;
@@ -23,143 +24,202 @@ type UploadHeroAboutImageResult =
 			error: string;
 	  };
 
-/* =========================
-   Validation Schema
-========================= */
-const requiredLocalizedTextSchema = z.object({
-	en: z.string().min(1, "English content is required"),
-	vi: z.string().min(1, "Vietnamese content is required"),
-});
-
-const optionalLocalizedTextSchema = z.object({
+const localizedTextSchema = z.object({
 	en: z.string(),
 	vi: z.string(),
+});
+
+const requiredLocalizedTextSchema = z.object({
+	en: z.string(),
+	vi: z.string().min(1, "Nội dung tiếng Việt là bắt buộc"),
+});
+
+const galleryImageSchema = z.object({
+	url: z.string().min(1),
+	order: z.number(),
 });
 
 const heroAboutInfoSchema = z.object({
 	title: requiredLocalizedTextSchema,
 	description: requiredLocalizedTextSchema,
-	gallery: z
-		.array(
-			z.object({
-				url: z.string().min(1),
-				order: z.number(),
-			}),
-		)
-		.default([]),
+	gallery: z.array(galleryImageSchema).default([]),
 
-	factoryaddress: optionalLocalizedTextSchema,
-	officeaddress: optionalLocalizedTextSchema,
-	youtubelink: optionalLocalizedTextSchema,
-	videotitle: optionalLocalizedTextSchema,
-	videodescription: optionalLocalizedTextSchema,
+	factoryaddress: localizedTextSchema,
+	officeaddress: localizedTextSchema,
+	youtubelink: localizedTextSchema,
+	videotitle: localizedTextSchema,
+	videodescription: localizedTextSchema,
 
-	historytitle: optionalLocalizedTextSchema,
-	historydescription: optionalLocalizedTextSchema,
-	historytime1: optionalLocalizedTextSchema,
-	historytitle1: optionalLocalizedTextSchema,
-	historydetail1: optionalLocalizedTextSchema,
-	historytime2: optionalLocalizedTextSchema,
-	historytitle2: optionalLocalizedTextSchema,
-	historydetail2: optionalLocalizedTextSchema,
-	historytime3: optionalLocalizedTextSchema,
-	historytitle3: optionalLocalizedTextSchema,
-	historydetail3: optionalLocalizedTextSchema,
+	historytitle: localizedTextSchema,
+	historydescription: localizedTextSchema,
+	historytime1: localizedTextSchema,
+	historytitle1: localizedTextSchema,
+	historydetail1: localizedTextSchema,
+	historytime2: localizedTextSchema,
+	historytitle2: localizedTextSchema,
+	historydetail2: localizedTextSchema,
+	historytime3: localizedTextSchema,
+	historytitle3: localizedTextSchema,
+	historydetail3: localizedTextSchema,
 
-	valuestatementtitle: optionalLocalizedTextSchema,
-	valuestatementtitle1: optionalLocalizedTextSchema,
-	valuestatementdetail1: optionalLocalizedTextSchema,
-	valuestatementtitle2: optionalLocalizedTextSchema,
-	valuestatementdetail2: optionalLocalizedTextSchema,
-	valuestatementtitle3: optionalLocalizedTextSchema,
-	valuestatementdetail3: optionalLocalizedTextSchema,
+	valuestatementtitle: localizedTextSchema,
+	valuestatementtitle1: localizedTextSchema,
+	valuestatementdetail1: localizedTextSchema,
+	valuestatementtitle2: localizedTextSchema,
+	valuestatementdetail2: localizedTextSchema,
+	valuestatementtitle3: localizedTextSchema,
+	valuestatementdetail3: localizedTextSchema,
 
-	capacitytitle: optionalLocalizedTextSchema,
-	capacitydescription: optionalLocalizedTextSchema,
-	capacitytitle1: optionalLocalizedTextSchema,
-	capacitydetail1: optionalLocalizedTextSchema,
-	capacitytitle2: optionalLocalizedTextSchema,
-	capacitydetail2: optionalLocalizedTextSchema,
-	capacitytitle3: optionalLocalizedTextSchema,
-	capacitydetail3: optionalLocalizedTextSchema,
-	capacitytitle4: optionalLocalizedTextSchema,
-	capacitydetail4: optionalLocalizedTextSchema,
+	capacitytitle: localizedTextSchema,
+	capacitydescription: localizedTextSchema,
+	capacitytitle1: localizedTextSchema,
+	capacitydetail1: localizedTextSchema,
+	capacitytitle2: localizedTextSchema,
+	capacitydetail2: localizedTextSchema,
+	capacitytitle3: localizedTextSchema,
+	capacitydetail3: localizedTextSchema,
+	capacitytitle4: localizedTextSchema,
+	capacitydetail4: localizedTextSchema,
 });
 
-/* =========================
-   Update HeroAbout Info
-========================= */
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return ((formData.get(key) as string | null) || "").trim();
+}
+
+/**
+ * Get localized text from form data and fallback missing language
+ * @param formData - Submitted form data
+ * @param key - Base field key
+ * @returns Localized text
+ */
+function getLocalizedText(formData: FormData, key: string): LocalizedText {
+	const vi = getFormString(formData, `${key}Vi`);
+	const en = getFormString(formData, `${key}En`);
+
+	return {
+		vi: vi || en,
+		en: en || vi,
+	};
+}
+
+/**
+ * Parse gallery data from hidden form input
+ * @param value - Form data value
+ * @returns Gallery image array
+ */
+function parseGallery(value: FormDataEntryValue | null): HeroAboutImage[] {
+	try {
+		const parsedValue = JSON.parse((value as string) || "[]");
+
+		if (!Array.isArray(parsedValue)) {
+			return [];
+		}
+
+		return parsedValue
+			.filter((image) => image?.url)
+			.map((image, index) => ({
+				url: String(image.url || ""),
+				order:
+					typeof image.order === "number" && Number.isFinite(image.order)
+						? image.order
+						: index,
+			}));
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Revalidate about page content after update
+ */
+function revalidateHeroAboutPages(): void {
+	revalidateTag(CACHE_TAGS.HEROABOUT, "max");
+	revalidatePath("/admin/heroabout");
+	revalidatePath("/vi/about");
+	revalidatePath("/en/about");
+	revalidatePath("/vi");
+	revalidatePath("/en");
+	revalidatePath("/");
+}
+
+/**
+ * Update hero about information from admin form
+ * @param formData - Submitted hero about form data
+ * @returns Form result for admin UI
+ */
 export async function updateHeroAboutInformation(
 	formData: FormData,
 ): Promise<FormResult> {
 	try {
-		let gallery: HeroAboutInfoFormData["gallery"] = [];
-
-		try {
-			gallery = JSON.parse((formData.get("gallery") as string) || "[]");
-		} catch {
-			gallery = [];
-		}
-
-		const getLocalizedText = (key: string) => ({
-			en: (formData.get(`${key}En`) as string) || "",
-			vi: (formData.get(`${key}Vi`) as string) || "",
-		});
-
 		const rawData: HeroAboutInfoFormData = {
-			title: getLocalizedText("title"),
-			description: getLocalizedText("description"),
-			gallery,
+			title: getLocalizedText(formData, "title"),
+			description: getLocalizedText(formData, "description"),
+			gallery: parseGallery(formData.get("gallery")),
 
-			factoryaddress: getLocalizedText("factoryaddress"),
-			officeaddress: getLocalizedText("officeaddress"),
-			youtubelink: getLocalizedText("youtubelink"),
-			videotitle: getLocalizedText("videotitle"),
-			videodescription: getLocalizedText("videodescription"),
+			factoryaddress: getLocalizedText(formData, "factoryaddress"),
+			officeaddress: getLocalizedText(formData, "officeaddress"),
+			youtubelink: getLocalizedText(formData, "youtubelink"),
+			videotitle: getLocalizedText(formData, "videotitle"),
+			videodescription: getLocalizedText(formData, "videodescription"),
 
-			historytitle: getLocalizedText("historytitle"),
-			historydescription: getLocalizedText("historydescription"),
-			historytime1: getLocalizedText("historytime1"),
-			historytitle1: getLocalizedText("historytitle1"),
-			historydetail1: getLocalizedText("historydetail1"),
-			historytime2: getLocalizedText("historytime2"),
-			historytitle2: getLocalizedText("historytitle2"),
-			historydetail2: getLocalizedText("historydetail2"),
-			historytime3: getLocalizedText("historytime3"),
-			historytitle3: getLocalizedText("historytitle3"),
-			historydetail3: getLocalizedText("historydetail3"),
+			historytitle: getLocalizedText(formData, "historytitle"),
+			historydescription: getLocalizedText(formData, "historydescription"),
+			historytime1: getLocalizedText(formData, "historytime1"),
+			historytitle1: getLocalizedText(formData, "historytitle1"),
+			historydetail1: getLocalizedText(formData, "historydetail1"),
+			historytime2: getLocalizedText(formData, "historytime2"),
+			historytitle2: getLocalizedText(formData, "historytitle2"),
+			historydetail2: getLocalizedText(formData, "historydetail2"),
+			historytime3: getLocalizedText(formData, "historytime3"),
+			historytitle3: getLocalizedText(formData, "historytitle3"),
+			historydetail3: getLocalizedText(formData, "historydetail3"),
 
-			valuestatementtitle: getLocalizedText("valuestatementtitle"),
-			valuestatementtitle1: getLocalizedText("valuestatementtitle1"),
-			valuestatementdetail1: getLocalizedText("valuestatementdetail1"),
-			valuestatementtitle2: getLocalizedText("valuestatementtitle2"),
-			valuestatementdetail2: getLocalizedText("valuestatementdetail2"),
-			valuestatementtitle3: getLocalizedText("valuestatementtitle3"),
-			valuestatementdetail3: getLocalizedText("valuestatementdetail3"),
+			valuestatementtitle: getLocalizedText(formData, "valuestatementtitle"),
+			valuestatementtitle1: getLocalizedText(formData, "valuestatementtitle1"),
+			valuestatementdetail1: getLocalizedText(
+				formData,
+				"valuestatementdetail1",
+			),
+			valuestatementtitle2: getLocalizedText(formData, "valuestatementtitle2"),
+			valuestatementdetail2: getLocalizedText(
+				formData,
+				"valuestatementdetail2",
+			),
+			valuestatementtitle3: getLocalizedText(formData, "valuestatementtitle3"),
+			valuestatementdetail3: getLocalizedText(
+				formData,
+				"valuestatementdetail3",
+			),
 
-			capacitytitle: getLocalizedText("capacitytitle"),
-			capacitydescription: getLocalizedText("capacitydescription"),
-			capacitytitle1: getLocalizedText("capacitytitle1"),
-			capacitydetail1: getLocalizedText("capacitydetail1"),
-			capacitytitle2: getLocalizedText("capacitytitle2"),
-			capacitydetail2: getLocalizedText("capacitydetail2"),
-			capacitytitle3: getLocalizedText("capacitytitle3"),
-			capacitydetail3: getLocalizedText("capacitydetail3"),
-			capacitytitle4: getLocalizedText("capacitytitle4"),
-			capacitydetail4: getLocalizedText("capacitydetail4"),
+			capacitytitle: getLocalizedText(formData, "capacitytitle"),
+			capacitydescription: getLocalizedText(formData, "capacitydescription"),
+			capacitytitle1: getLocalizedText(formData, "capacitytitle1"),
+			capacitydetail1: getLocalizedText(formData, "capacitydetail1"),
+			capacitytitle2: getLocalizedText(formData, "capacitytitle2"),
+			capacitydetail2: getLocalizedText(formData, "capacitydetail2"),
+			capacitytitle3: getLocalizedText(formData, "capacitytitle3"),
+			capacitydetail3: getLocalizedText(formData, "capacitydetail3"),
+			capacitytitle4: getLocalizedText(formData, "capacitytitle4"),
+			capacitydetail4: getLocalizedText(formData, "capacitydetail4"),
 		};
 
 		const validationResult = heroAboutInfoSchema.safeParse(rawData);
 
 		if (!validationResult.success) {
-			const errorMessages = validationResult.error.errors.map((err) => {
-				const pathName = err.path.join(".");
-				return `${pathName}: ${err.message}`;
+			const errorMessages = validationResult.error.errors.map((error) => {
+				const fieldPath = error.path.join(".");
+				return `${fieldPath}: ${error.message}`;
 			});
 
 			return {
 				success: false,
-				error: `Validation failed: ${errorMessages.join(", ")}`,
+				error: `Vui lòng kiểm tra lại: ${errorMessages.join(", ")}`,
 			};
 		}
 
@@ -167,8 +227,7 @@ export async function updateHeroAboutInformation(
 		const result = await updateHeroAboutInfo(validatedData);
 
 		if (result.success) {
-			//revalidateTag(CACHE_TAGS.HEROABOUT);
-			revalidatePath("/admin/heroabout");
+			revalidateHeroAboutPages();
 
 			return {
 				success: true,
@@ -178,21 +237,23 @@ export async function updateHeroAboutInformation(
 
 		return {
 			success: false,
-			error: result.error || "Failed to update hero about information",
+			error: result.error || "Không thể cập nhật nội dung giới thiệu",
 		};
 	} catch (error) {
 		console.error("Error updating hero about information:", error);
 
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating hero about information",
+			error: "Có lỗi xảy ra khi cập nhật nội dung giới thiệu. Vui lòng thử lại.",
 		};
 	}
 }
 
-/* =========================
-   Upload Image
-========================= */
+/**
+ * Upload about page image to local uploads folder
+ * @param formData - Form data containing image file
+ * @returns Uploaded image URL or error
+ */
 export async function uploadHeroAboutGalleryImage(
 	formData: FormData,
 ): Promise<UploadHeroAboutImageResult> {
@@ -202,16 +263,25 @@ export async function uploadHeroAboutGalleryImage(
 		if (!file || file.size === 0) {
 			return {
 				success: false,
-				error: "No image selected",
+				error: "Vui lòng chọn ảnh",
 			};
 		}
 
-		const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+		const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 
 		if (!allowedTypes.includes(file.type)) {
 			return {
 				success: false,
-				error: "Only JPG, PNG, or WEBP images are allowed",
+				error: "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc SVG",
+			};
+		}
+
+		const maxFileSize = 10 * 1024 * 1024;
+
+		if (file.size > maxFileSize) {
+			return {
+				success: false,
+				error: "Ảnh không được vượt quá 10MB",
 			};
 		}
 
@@ -242,7 +312,7 @@ export async function uploadHeroAboutGalleryImage(
 
 		return {
 			success: false,
-			error: "Failed to upload hero about image",
+			error: "Không thể tải ảnh lên. Vui lòng thử lại.",
 		};
 	}
 }

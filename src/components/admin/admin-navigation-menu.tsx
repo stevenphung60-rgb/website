@@ -2,223 +2,325 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
+	Building2,
 	ChevronDown,
 	ChevronsRight,
 	FolderOpen,
+	Home,
 	ImageIcon,
+	Info,
+	LayoutDashboard,
 	Package,
 	Phone,
-	Shield,
+	Settings,
+	Tags,
 	Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
-type NavigationItem = {
+interface NavigationItem {
 	href: string;
 	label: string;
 	icon: LucideIcon;
-};
+}
 
-type NavigationGroup = {
+interface NavigationGroup {
 	label: string;
 	icon: LucideIcon;
 	children: NavigationItem[];
+}
+
+interface AdminNavigationMenuProps {
+	isCollapsed: boolean;
+	onRequestExpand: () => void;
+}
+
+const dashboardItem: NavigationItem = {
+	href: "/admin",
+	label: "TỔNG QUAN",
+	icon: LayoutDashboard,
 };
 
-export function AdminNavigationMenu() {
+const navigationGroups: NavigationGroup[] = [
+	{
+		label: "NỘI DUNG CHUNG",
+		icon: Settings,
+		children: [
+			{
+				href: "/admin/herobrand",
+				label: "Logo & tên công ty",
+				icon: Building2,
+			},
+			{
+				href: "/admin/hero",
+				label: "Trang chủ",
+				icon: Home,
+			},
+			{
+				href: "/admin/heroabout",
+				label: "Giới thiệu",
+				icon: Info,
+			},
+		],
+	},
+	{
+		label: "SẢN PHẨM",
+		icon: Package,
+		children: [
+			{
+				href: "/admin/products",
+				label: "Sản phẩm",
+				icon: Package,
+			},
+			{
+				href: "/admin/productcategories",
+				label: "Loại sản phẩm",
+				icon: Tags,
+			},
+		],
+	},
+	{
+		label: "DỊCH VỤ",
+		icon: Wrench,
+		children: [
+			{
+				href: "/admin/services",
+				label: "Dịch vụ",
+				icon: Wrench,
+			},
+			{
+				href: "/admin/heroservice",
+				label: "Banner dịch vụ",
+				icon: ImageIcon,
+			},
+		],
+	},
+	{
+		label: "DỰ ÁN",
+		icon: FolderOpen,
+		children: [
+			{
+				href: "/admin/projects",
+				label: "Dự án",
+				icon: FolderOpen,
+			},
+			{
+				href: "/admin/projectcategories",
+				label: "Loại dự án",
+				icon: Tags,
+			},
+			{
+				href: "/admin/heroproject",
+				label: "Banner dự án",
+				icon: ImageIcon,
+			},
+		],
+	},
+	{
+		label: "LIÊN HỆ",
+		icon: Phone,
+		children: [
+			{
+				href: "/admin/contact",
+				label: "Liên hệ",
+				icon: Phone,
+			},
+			{
+				href: "/admin/herocontact",
+				label: "Banner liên hệ",
+				icon: ImageIcon,
+			},
+		],
+	},
+];
+
+/**
+ * Check whether a sidebar route is active
+ * @param pathname - Current pathname
+ * @param href - Navigation item href
+ * @returns Whether the route is active
+ */
+function isRouteActive(pathname: string, href: string): boolean {
+	if (href === "/admin") {
+		return pathname === "/admin";
+	}
+
+	return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * Admin sidebar navigation menu
+ * @param props - Admin navigation menu props
+ * @returns Sidebar menu grouped by content area
+ */
+export function AdminNavigationMenu({
+	isCollapsed,
+	onRequestExpand,
+}: AdminNavigationMenuProps) {
 	const pathname = usePathname();
 
-	const dashboardItem: NavigationItem = {
-		href: "/admin",
-		label: "DASHBOARD",
-		icon: Shield,
-	};
+	const activeGroupLabel = useMemo(() => {
+		const activeGroup = navigationGroups.find((group) =>
+			group.children.some((item) => isRouteActive(pathname, item.href)),
+		);
 
-	const navigationGroups: NavigationGroup[] = [
-		{
-			label: "HEADER",
-			icon: ImageIcon,
-			children: [
-				{ href: "/admin/herobrand", label: "LOGO and COMPANY NAME", icon: ImageIcon },
-			],
-		},
-		{
-			label: "HOME PAGE",
-			icon: ImageIcon,
-			children: [
-				{ href: "/admin/hero", label: "HOME", icon: ImageIcon },
-			],
-		},
-		{
-			label: "ABOUT US",
-			icon: ImageIcon,
-			children: [
-				{ href: "/admin/heroabout", label: "ABOUT US", icon: ImageIcon },
-			],
-		},
-		{
-			label: "PRODUCTS",
-			icon: Package,
-			children: [
-				{ href: "/admin/products", label: "PRODUCTS", icon: Package },
-				{
-					href: "/admin/productcategories",
-					label: "PRODUCT CATEGORIES",
-					icon: Package,
-				},
-			],
-		},
-		{
-			label: "SERVICES",
-			icon: Wrench,
-			children: [
-				{ href: "/admin/services", label: "SERVICES", icon: Wrench },
-				{
-					href: "/admin/heroservice",
-					label: "SERVICES BANNER",
-					icon: Wrench,
-				},
-			],
-		},
-		{
-			label: "PROJECTS",
-			icon: FolderOpen,
-			children: [
-				{ href: "/admin/projects", label: "PROJECTS", icon: FolderOpen },
-				{
-					href: "/admin/projectcategories",
-					label: "PROJECT CATEGORIES",
-					icon: FolderOpen,
-				},
-				{
-					href: "/admin/heroproject",
-					label: "PROJECT BANNER",
-					icon: FolderOpen,
-				},
-			],
-		},
-		{
-			label: "CONTACT",
-			icon: Phone,
-			children: [
-				{ href: "/admin/contact", label: "CONTACT", icon: Phone },
-				{
-					href: "/admin/herocontact",
-					label: "CONTACT BANNER",
-					icon: Phone,
-				},
-			],
-		},
-	];
+		return activeGroup?.label ?? null;
+	}, [pathname]);
+
+	const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(
+		activeGroupLabel,
+	);
+
+	useEffect(() => {
+		setOpenGroupLabel(activeGroupLabel);
+	}, [activeGroupLabel]);
 
 	const DashboardIcon = dashboardItem.icon;
-	const isDashboardActive = pathname === dashboardItem.href;
+	const isDashboardActive = isRouteActive(pathname, dashboardItem.href);
 
 	return (
-		<>
-			<style>
-				{`
-					details:not([open]) > .admin-submenu {
-						display: grid;
-					}
+		<nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
+			<Link
+				href={dashboardItem.href}
+				title={dashboardItem.label}
+				className={[
+					"group relative flex items-center rounded-xl py-2.5 text-[14px] font-bold leading-5 tracking-[0.01em] transition-colors duration-200",
+					isCollapsed ? "justify-center px-0" : "gap-2 px-3",
+					isDashboardActive
+						? "bg-[#342312] text-[#E7D0AF]"
+						: "text-[#E7D0AF] hover:bg-[#2B190B]",
+				].join(" ")}
+			>
+				{isDashboardActive && !isCollapsed ? (
+					<span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#A87E3C]" />
+				) : null}
 
-					summary::-webkit-details-marker {
-						display: none;
-					}
-				`}
-			</style>
+				<DashboardIcon className="size-4 shrink-0 text-[#A87E3C]" />
 
-			<nav className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
-				<Link
-					href={dashboardItem.href}
-					className={[
-						"group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors duration-300",
-						isDashboardActive
-							? "text-[#E7D0AF]"
-							: "text-white hover:text-[#E7D0AF]",
-					].join(" ")}
-				>
-					<DashboardIcon className="size-4 shrink-0" />
+				{!isCollapsed ? (
+					<>
+						<span className="min-w-0 flex-1 truncate">
+							{dashboardItem.label}
+						</span>
 
-					<span className="relative">
-						{dashboardItem.label}
+						{isDashboardActive ? (
+							<ChevronsRight className="size-4 shrink-0 text-[#A87E3C]" />
+						) : null}
+					</>
+				) : null}
+			</Link>
 
-						<span
+			{navigationGroups.map((group) => {
+				const GroupIcon = group.icon;
+				const isGroupOpen = openGroupLabel === group.label;
+				const isGroupActive = activeGroupLabel === group.label;
+
+				return (
+					<div key={group.label}>
+						<button
+							type="button"
+							title={group.label}
+							onClick={() => {
+								if (isCollapsed) {
+									onRequestExpand();
+									setOpenGroupLabel(group.label);
+									return;
+								}
+
+								setOpenGroupLabel(isGroupOpen ? null : group.label);
+							}}
 							className={[
-								"absolute -bottom-1 left-0 h-[1px] bg-[#E7D0AF] transition-all duration-300 ease-in-out",
-								isDashboardActive ? "w-full" : "w-0 group-hover:w-full",
+								"relative flex w-full items-center rounded-xl py-2.5 text-[14px] font-bold leading-5 tracking-[0.01em] transition-colors duration-200",
+								isCollapsed ? "justify-center px-0" : "justify-between px-3",
+								isGroupActive || isGroupOpen
+									? "bg-[#342312] text-[#E7D0AF]"
+									: "text-[#E7D0AF] hover:bg-[#2B190B]",
 							].join(" ")}
-						/>
-					</span>
-				</Link>
+						>
+							{isGroupActive && !isCollapsed ? (
+								<span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#A87E3C]" />
+							) : null}
 
-				{navigationGroups.map((group) => {
-					const GroupIcon = group.icon;
+							<span
+								className={[
+									"flex min-w-0 items-center",
+									isCollapsed ? "justify-center" : "gap-2",
+								].join(" ")}
+							>
+								<GroupIcon className="size-4 shrink-0 text-[#A87E3C]" />
 
-					const isGroupActive = group.children.some(
-						(item) => pathname === item.href,
-					);
+								{!isCollapsed ? (
+									<span className="truncate">{group.label}</span>
+								) : null}
+							</span>
 
-					return (
-						<details key={group.label} className="group" open={isGroupActive}>
-							<summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold text-[#E7D0AF]">
-								<span className="flex items-center gap-2">
-									<GroupIcon className="size-4 shrink-0" />
-									<span>{group.label}</span>
-								</span>
+							{!isCollapsed ? (
+								<ChevronDown
+									className={[
+										"size-4 shrink-0 text-[#A87E3C] transition-transform duration-300",
+										isGroupOpen ? "rotate-180" : "",
+									].join(" ")}
+								/>
+							) : null}
+						</button>
 
-								<ChevronDown className="size-4 shrink-0 transition-transform duration-500 ease-in-out group-open:rotate-180" />
-							</summary>
-
-							<div className="admin-submenu grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-700 ease-in-out group-open:grid-rows-[1fr] group-open:opacity-100">
+						{!isCollapsed ? (
+							<div
+								className={[
+									"grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+									isGroupOpen
+										? "grid-rows-[1fr] opacity-100"
+										: "grid-rows-[0fr] opacity-0",
+								].join(" ")}
+							>
 								<div className="overflow-hidden">
-									<div className="mt-2 flex flex-col gap-1 border-l border-white/15 pl-3">
+									<div className="ml-4 mt-1 flex flex-col gap-1 border-l border-[#A87E3C]/25 pl-3">
 										{group.children.map((item) => {
 											const ItemIcon = item.icon;
-											const isActive = pathname === item.href;
+											const isActive = isRouteActive(pathname, item.href);
 
 											return (
 												<Link
 													key={item.href}
 													href={item.href}
+													onClick={() => setOpenGroupLabel(group.label)}
 													className={[
-														"group/child flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-300",
+														"group/child flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-[14px] leading-5 transition-colors duration-200",
 														isActive
-															? "text-[#E7D0AF]"
-															: "text-white hover:text-[#E7D0AF]",
+															? "bg-[#4A2E17] text-[#E7D0AF]"
+															: "text-[#E7D0AF]/85 hover:bg-[#2B190B] hover:text-[#E7D0AF]",
 													].join(" ")}
 												>
-													<span className="flex items-center gap-2">
-														<ItemIcon className="size-4 shrink-0" />
+													<span className="flex min-w-0 items-center gap-2">
+														<ItemIcon
+															className={[
+																"size-4 shrink-0",
+																isActive
+																	? "text-[#A87E3C]"
+																	: "text-[#A87E3C]/80",
+															].join(" ")}
+														/>
 
-														<span className="relative">
+														<span className="min-w-0 truncate">
 															{item.label}
-
-															<span
-																className={[
-																	"absolute -bottom-1 left-0 h-[1px] bg-[#E7D0AF] transition-all duration-300 ease-in-out",
-																	isActive
-																		? "w-full"
-																		: "w-0 group-hover/child:w-full",
-																].join(" ")}
-															/>
 														</span>
 													</span>
 
-													{isActive && (
-														<ChevronsRight className="size-4 shrink-0 text-[#E7D0AF]" />
-													)}
+													{isActive ? (
+														<ChevronsRight className="size-4 shrink-0 text-[#A87E3C]" />
+													) : null}
 												</Link>
 											);
 										})}
 									</div>
 								</div>
 							</div>
-						</details>
-					);
-				})}
-			</nav>
-		</>
+						) : null}
+					</div>
+				);
+			})}
+		</nav>
 	);
 }

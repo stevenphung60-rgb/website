@@ -1,3 +1,5 @@
+import { AdminFormSection } from "src/components/admin/admin-form-section";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import {
 	Form,
@@ -7,65 +9,54 @@ import {
 	FormSubmitMessage,
 } from "src/components/form-state";
 import { Button } from "src/components/ui/button";
-import {
-	VisualTabs,
-	VisualTabsContent,
-	VisualTabsList,
-	VisualTabsTrigger,
-} from "src/components/ui/visual-tabs";
 import { createProductCategory } from "./create-productcategory-dialog.actions";
 
+/**
+ * Create product category form
+ * @returns Product category creation form for admin users
+ */
 export function CreateProductCategoryForm() {
 	return (
 		<Form action={createProductCategory}>
 			<div className="space-y-6">
-				<div className="space-y-4">
-					<FormField>
-						<FormLabel>Product Category Name</FormLabel>
+				<AdminFormSection
+					title="Thông tin loại sản phẩm"
+					description="Nhập tên loại sản phẩm. Tiếng Việt là nội dung chính trên website."
+				>
+					<div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+						<FormField
+							fieldId="productCategoryNameVi"
+							name="productCategoryNameVi"
+							placeholder="Ví dụ: Ống gió vuông"
+							required
+						>
+							<FormLabel>Tên loại sản phẩm tiếng Việt</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
 
-						<VisualTabs defaultValue="en" className="w-full">
-							<VisualTabsList className="grid w-full grid-cols-2">
-								<VisualTabsTrigger value="en">English</VisualTabsTrigger>
-								<VisualTabsTrigger value="vi">Tiếng Việt</VisualTabsTrigger>
-							</VisualTabsList>
+						<FormField
+							fieldId="productCategoryNameEn"
+							name="productCategoryNameEn"
+							placeholder="Ví dụ: Rectangular ducts"
+						>
+							<FormLabel>Tên loại sản phẩm tiếng Anh</FormLabel>
+							<FormInput />
+							<FieldError />
+						</FormField>
+					</div>
+				</AdminFormSection>
 
-							<VisualTabsContent value="en">
-								<FormField
-									fieldId="productCategoryNameEn"
-									name="productCategoryNameEn"
-									placeholder="Enter product category name in English"
-									required
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
+				<FormErrorDisplay />
 
-							<VisualTabsContent value="vi">
-								<FormField
-									fieldId="productCategoryNameVi"
-									name="productCategoryNameVi"
-									placeholder="Nhập tên danh mục sản phẩm bằng tiếng Việt"
-									required
-								>
-									<FormInput />
-									<FieldError />
-								</FormField>
-							</VisualTabsContent>
-						</VisualTabs>
-					</FormField>
-				</div>
-			</div>
+				<AdminStickyActions note="Sau khi lưu, loại sản phẩm có thể dùng để phân nhóm sản phẩm trên website.">
+					<FormResetButton>Hủy</FormResetButton>
 
-			<FormErrorDisplay />
-
-			<div className="flex justify-end space-x-2 pt-4">
-				<FormResetButton>Cancel</FormResetButton>
-
-				<Button type="submit">
-					<FormSubmitMessage>Create Product Category</FormSubmitMessage>
-					<FormPendingMessage>Creating...</FormPendingMessage>
-				</Button>
+					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
+						<FormSubmitMessage>Tạo loại sản phẩm</FormSubmitMessage>
+						<FormPendingMessage>Đang tạo...</FormPendingMessage>
+					</Button>
+				</AdminStickyActions>
 			</div>
 		</Form>
 	);

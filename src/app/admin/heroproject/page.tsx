@@ -1,6 +1,8 @@
-import { Save } from "lucide-react";
+import { FolderOpen, Save } from "lucide-react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { AdminPageHeader } from "src/components/admin/admin-page-header";
+import { AdminStickyActions } from "src/components/admin/admin-sticky-actions";
 import {
 	Form,
 	FormErrorDisplay,
@@ -18,44 +20,48 @@ export const metadata: Metadata = {
 	description: "Update hero project information links in the admin panel",
 };
 
+/**
+ * Project banner management page
+ * @returns Project banner admin page
+ */
 export default async function HeroProjectPage() {
 	await connection();
+
 	const heroProjectInfo = await getHeroProjectInfo();
 
 	return (
 		<HeroProjectProvider heroProjectInfo={heroProjectInfo}>
-			<div className="container mx-auto px-4 py-8">
-				<div className="flex items-center justify-between mb-6">
-					<div className="flex items-center space-x-4">
-						<div className="p-2 rounded-lg bg-primary/10">
-							<Save className="size-6 text-primary" />
-						</div>
-						<div>
-							<h1 className="text-2xl font-serif font-bold text-foreground">HeroProject</h1>
-							<p className="text-muted-foreground">Update hero project information</p>
-						</div>
-					</div>
-				</div>
+			<div className="w-full">
+				<AdminPageHeader
+					title="Banner dự án"
+					eyebrow="Quản trị nội dung"
+					description="Quản lý banner dự án hiển thị trên website."
+					icon={FolderOpen}
+				/>
 
 				<Form action={updateHeroProjectInformation}>
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+					<div className="grid w-full grid-cols-1 gap-6">
 						<HeroProjectDetailsFormCard />
 					</div>
 
 					<FormErrorDisplay />
 
-					<div className="flex justify-end pt-4">
-						<Button type="submit">
+					<AdminStickyActions note="Sau khi lưu, banner dự án sẽ được cập nhật trên website.">
+						<Button
+							type="submit"
+							className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]"
+						>
 							<FormSubmitMessage>
 								<Save className="mr-2 size-4" />
-								Save Changes
+								Lưu thay đổi
 							</FormSubmitMessage>
+
 							<FormPendingMessage>
 								<Save className="mr-2 size-4" />
-								Saving...
+								Đang lưu...
 							</FormPendingMessage>
 						</Button>
-					</div>
+					</AdminStickyActions>
 				</Form>
 			</div>
 		</HeroProjectProvider>

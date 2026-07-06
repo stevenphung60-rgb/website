@@ -2,329 +2,354 @@
 
 import { chunk } from "lodash";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
 import type { S3UploadResult } from "src/lib/s3";
 import { deleteFromS3, uploadToS3 } from "src/lib/s3";
 import type { ProductDocument, ProductImage } from "src/server/products";
-import { getProductById } from "src/server/products";
-import type { ExistingImage } from "./image-management-dialog.type";
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Generate a unique S3 key for product images
- * @param productId - The ID of the product
- * @param fileName - The original file name
- * @param index - The index of the image (for multiple images)
- * @returns A unique S3 key
- */
-function generateProductS3Key(productId: string, fileName: string, index: number = 0): string {
-	const timestamp = Date.now();
-	const fileExtension = fileName.split(".").pop();
-	const uniqueKey = `${timestamp}-${index}`;
-
-	return `products/${productId}/${uniqueKey}.${fileExtension}`;
+interface DeletedImageInput {
+	id: string;
+	name?: string;
 }
 
-/**
- * Upload a batch of images to S3
- * @param images - Array of files to upload
- * @param productId - The product ID
- * @param startIndex - Starting index for this batch
- * @returns Promise that resolves to array of ProductImage objects
- */
-async function uploadImageBatch(
-	images: File[],
-	productId: string,
-	startIndex: number,
-): Promise<ProductImage[]> {
-	const uploadPromises = images.map(async (file, i) => {
-		const globalIndex = startIndex + i;
-		const s3Key = generateProductS3Key(productId, file.name, globalIndex);
-		const uploadResult: S3UploadResult = await uploadToS3(file, s3Key);
-
-		return {
-			key: uploadResult.key,
-			url: uploadResult.url,
-			isMain: false, // Will be set later based on main image selection
-			uploadedAt: new Date(),
-		};
-	});
-
-	return Promise.all(uploadPromises);
-}
-
-/**
- * Delete multiple images from S3
- * @param imageKeys - Array of S3 keys to delete
- * @returns Promise that resolves when all deletions are complete
- */
-async function deleteImagesFromS3(imageKeys: string[]): Promise<void> {
-	await Promise.all(imageKeys.map((key) => deleteFromS3(key)));
-}
-
-/**
- * Fetch existing product images from database
- * @param productId - The product ID
- * @returns Promise that resolves to existing ProductImage array or null if product not found
- */
-async function fetchExistingProductImages(productId: string): Promise<ProductImage[] | null> {
-	try {
-		const product = await getProductById(productId);
-		return product?.gallery || [];
-	} catch {
-		return null;
-	}
-}
-
-/**
- * Set the main image for a collection of images using index-based approach
- * @param images - Array of ProductImage objects
- * @param mainImageIndex - Index of the image to set as main
- */
-function setMainImage(images: ProductImage[], mainImageIndex: string): void {
-	if (!mainImageIndex || images.length === 0) {
-		// If no main image specified, set first image as main
-		images[0].isMain = true;
-		return;
-	}
-
-	// Reset all images to not main
-	images.forEach((img) => {
-		img.isMain = false;
-	});
-
-	// Parse the main image index
-	const targetIndex = parseInt(mainImageIndex, 10);
-
-	// Set the main image at the specified index
-	if (targetIndex >= 0 && targetIndex < images.length) {
-		images[targetIndex].isMain = true;
-	} else {
-		// If index is invalid, set first image as main
-		images[0].isMain = true;
-	}
-}
-
-/**
- * Update product images in the database
- * @param productId - The product ID
- * @param images - Array of ProductImage objects to save
- * @returns Promise that resolves to the update result
- */
-async function updateProductInDatabase(
-	productId: string,
-	images: ProductImage[],
-): Promise<boolean> {
-	const db = await getDatabase();
-	const result = await db.collection<ProductDocument>("products").updateOne(
-		{ id: productId },
-		{
-			$set: {
-				gallery: images,
-				updatedAt: new Date(),
-			},
-		},
-	);
-
-	return result.matchedCount > 0;
-}
-
-// ============================================================================
-// MAIN SERVER ACTIONS
-// ============================================================================
-
-/**
- * Server action to update product images with new uploads, deletions, and main image changes
- * @param formData - Form data containing product ID, new images, deleted images, and main image index
- * @returns Promise that resolves to the update result
- */
-export async function updateProductImages(formData: FormData): Promise<FormResult> {
-	try {
-		// Extract and validate input data
-		const inputData = extractUpdateImageInputData(formData);
-		if (!inputData.success || !inputData.data) {
-			return inputData;
-		}
-
-		const { productId, newImagesFiles, deletedImages, mainImageIndex } = inputData.data;
-
-		// Fetch existing images from database
-		const existingImages = await fetchExistingProductImages(productId);
-		if (existingImages === null) {
-			return {
-				success: false,
-				error: "Product not found",
-			};
-		}
-
-		// Upload new images to S3 in batches
-		const uploadedNewImages = await uploadNewImagesInBatches(newImagesFiles, productId);
-		if (!uploadedNewImages.success || !uploadedNewImages.data) {
-			return uploadedNewImages;
-		}
-
-		// Delete removed images from S3
-		if (deletedImages.length > 0) {
-			const deleteResult = await deleteRemovedImages(deletedImages);
-			if (!deleteResult.success) {
-				return deleteResult;
-			}
-		}
-
-		// Filter out deleted images from existing images
-		const deletedImageIds = deletedImages.map((img) => img.id);
-		const remainingExistingImages = existingImages.filter(
-			(img) => !deletedImageIds.includes(img.key),
-		);
-
-		// Combine remaining existing images with new images
-		const allImages = [...remainingExistingImages, ...uploadedNewImages.data];
-
-		// Set the main image
-		setMainImage(allImages, mainImageIndex);
-
-		// Update product in database
-		const updateResult = await updateProductInDatabase(productId, allImages);
-		if (!updateResult) {
-			return {
-				success: false,
-				error: "Product not found",
-			};
-		}
-
-		// Revalidate products cache
-		revalidateTag(CACHE_TAGS.PRODUCTS);
-		revalidatePath("/admin/products");
-
-		return {
-			success: true,
-			refresh: true,
-		};
-	} catch {
-		return {
-			success: false,
-			error: "An unexpected error occurred while updating product images",
-		};
-	}
-}
-
-// ============================================================================
-// INPUT PROCESSING FUNCTIONS
-// ============================================================================
-
-interface UpdateImageInputData {
+interface UpdateImagesInput {
 	productId: string;
-	newImagesFiles: File[];
-	deletedImages: ExistingImage[];
+	newImages: File[];
+	deletedImages: DeletedImageInput[];
 	mainImageIndex: string;
 }
 
-/**
- * Extract and validate input data from FormData
- * @param formData - Form data from the request
- * @returns Validation result with extracted data or error
- */
-function extractUpdateImageInputData(
-	formData: FormData,
-): FormResult & { data?: UpdateImageInputData } {
-	const productId = formData.get("productId") as string;
-	const rawNewImagesFiles = formData.getAll("newImages") as File[];
-	const deletedImagesJson = formData.get("deletedImages") as string;
-	const mainImageIndex = formData.get("mainImageIndex") as string;
+interface UploadedImageWithIndex extends ProductImage {
+	index: number;
+}
 
-	if (!productId) {
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const BATCH_SIZE = 10;
+
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const updateImagesSchema = z.object({
+	productId: z.string().trim().min(1, "Không tìm thấy ID sản phẩm"),
+	mainImageIndex: z.string().optional().default(""),
+});
+
+const deletedImagesSchema = z.array(
+	z.object({
+		id: z.string().trim().min(1),
+		name: z.string().optional(),
+	}),
+);
+
+/**
+ * Get a string value from form data
+ * @param formData - Submitted form data
+ * @param key - Field key
+ * @returns String value from form data
+ */
+function getFormString(formData: FormData, key: string): string {
+	return (formData.get(key) as string | null) || "";
+}
+
+/**
+ * Generate product image storage key
+ * @param productId - Product ID
+ * @param fileName - Uploaded file name
+ * @param index - File index
+ * @returns Storage key for product image
+ */
+function generateProductS3Key(productId: string, fileName: string, index: number): string {
+	const timestamp = Date.now();
+	const fileExtension = fileName.split(".").pop() || "jpg";
+
+	return `products/${productId}/${timestamp}-${index}.${fileExtension}`;
+}
+
+/**
+ * Get new image files from submitted form data
+ * @param formData - Submitted form data
+ * @returns Valid file objects from form data
+ */
+function getNewImageFiles(formData: FormData): File[] {
+	return (formData.getAll("newImages") as File[]).filter(
+		(file) => file.size > 0 && file.name.trim() !== "",
+	);
+}
+
+/**
+ * Parse deleted image data from hidden form input
+ * @param value - Deleted images JSON string
+ * @returns Parsed deleted image records
+ */
+function parseDeletedImages(value: string): DeletedImageInput[] {
+	if (!value) {
+		return [];
+	}
+
+	try {
+		const parsed = JSON.parse(value);
+		const result = deletedImagesSchema.safeParse(parsed);
+
+		if (!result.success) {
+			return [];
+		}
+
+		return result.data;
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Validate new image files
+ * @param images - Uploaded image files
+ * @returns Error message when invalid, otherwise null
+ */
+function validateNewImages(images: File[]): string | null {
+	for (const image of images) {
+		if (!allowedImageTypes.includes(image.type)) {
+			return "Ảnh sản phẩm chỉ hỗ trợ JPG, PNG, WEBP hoặc GIF";
+		}
+
+		if (image.size > MAX_FILE_SIZE) {
+			return "Mỗi ảnh sản phẩm không được vượt quá 10MB";
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Extract and validate image update input
+ * @param formData - Submitted form data
+ * @returns Parsed input or error result
+ */
+function extractUpdateImagesInput(
+	formData: FormData,
+): FormResult & { data?: UpdateImagesInput } {
+	const parsedFields = updateImagesSchema.safeParse({
+		productId: getFormString(formData, "productId"),
+		mainImageIndex: getFormString(formData, "mainImageIndex"),
+	});
+
+	if (!parsedFields.success) {
 		return {
 			success: false,
-			error: "Product ID is required",
+			error: parsedFields.error.errors.map((item) => item.message).join(", "),
 		};
 	}
 
-	// Filter out empty files - check if file has content (size > 0 and name is not empty)
-	const newImagesFiles = rawNewImagesFiles.filter(
-		(file) => file.size > 0 && file.name.trim() !== "",
-	);
+	const newImages = getNewImageFiles(formData);
+	const imageError = validateNewImages(newImages);
 
-	const deletedImages: ExistingImage[] = deletedImagesJson ? JSON.parse(deletedImagesJson) : [];
+	if (imageError) {
+		return {
+			success: false,
+			error: imageError,
+		};
+	}
 
 	return {
 		success: true,
 		refresh: true,
 		data: {
-			productId,
-			newImagesFiles,
-			deletedImages,
-			mainImageIndex,
+			productId: parsedFields.data.productId,
+			newImages,
+			deletedImages: parseDeletedImages(getFormString(formData, "deletedImages")),
+			mainImageIndex: parsedFields.data.mainImageIndex,
 		},
 	};
 }
 
-// ============================================================================
-// IMAGE PROCESSING FUNCTIONS
-// ============================================================================
-
 /**
- * Upload new images to S3 in batches
- * @param newImagesFiles - Array of new image files
- * @param productId - The product ID
- * @returns Promise that resolves to upload result
+ * Upload product images in batches
+ * @param productId - Product ID
+ * @param images - Image files to upload
+ * @returns Uploaded product image records
  */
-async function uploadNewImagesInBatches(
-	newImagesFiles: File[],
-	productId: string,
-): Promise<FormResult & { data?: ProductImage[] }> {
-	if (newImagesFiles.length === 0) {
-		return {
-			success: true,
-			refresh: true,
-			data: [],
-		};
+async function uploadProductImages(productId: string, images: File[]): Promise<ProductImage[]> {
+	if (images.length === 0) {
+		return [];
 	}
 
-	const batchSize = 10;
-	const imageBatches = chunk(newImagesFiles, batchSize);
-	const uploadedNewImages: ProductImage[] = [];
+	const imageBatches = chunk(images, BATCH_SIZE);
+	const uploadedImages: ProductImage[] = [];
 
 	for (const [batchIndex, batchImages] of imageBatches.entries()) {
-		const startIndex = batchIndex * batchSize;
+		const startIndex = batchIndex * BATCH_SIZE;
 
-		try {
-			const batchResults = await uploadImageBatch(batchImages, productId, startIndex);
-			uploadedNewImages.push(...batchResults);
-		} catch {
+		const uploadPromises = batchImages.map(async (file, index): Promise<UploadedImageWithIndex> => {
+			const globalIndex = startIndex + index;
+			const s3Key = generateProductS3Key(productId, file.name, globalIndex);
+			const uploadResult: S3UploadResult = await uploadToS3(file, s3Key);
+
 			return {
-				success: false,
-				error: "Failed to upload new images",
+				key: uploadResult.key,
+				url: uploadResult.url,
+				isMain: false,
+				uploadedAt: new Date(),
+				index: globalIndex,
 			};
-		}
+		});
+
+		const batchResults = await Promise.all(uploadPromises);
+		const sortedBatchResults = batchResults
+			.sort((a, b) => a.index - b.index)
+			.map(({ index, ...image }) => image);
+
+		uploadedImages.push(...sortedBatchResults);
 	}
 
-	return {
-		success: true,
-		refresh: true,
-		data: uploadedNewImages,
-	};
+	return uploadedImages;
 }
 
 /**
- * Delete removed images from S3
- * @param deletedImages - Array of images to delete
- * @returns Promise that resolves to deletion result
+ * Delete product images from storage
+ * @param imageKeys - Image storage keys
+ * @returns Promise that resolves after deletion attempts
  */
-async function deleteRemovedImages(deletedImages: ExistingImage[]): Promise<FormResult> {
-	const keysToDelete = deletedImages.map((img) => img.id);
+async function deleteImagesFromStorage(imageKeys: string[]): Promise<void> {
+	if (imageKeys.length === 0) {
+		return;
+	}
+
+	const imageKeyChunks = chunk(imageKeys, 5);
+
+	for (const imageKeyChunk of imageKeyChunks) {
+		await Promise.all(
+			imageKeyChunk.map(async (key) => {
+				try {
+					await deleteFromS3(key);
+				} catch (error) {
+					console.error(`Error deleting product image ${key}:`, error);
+				}
+			}),
+		);
+	}
+}
+
+/**
+ * Cleanup newly uploaded images when database update fails
+ * @param images - Uploaded product images
+ * @returns Promise that resolves after cleanup attempts
+ */
+async function cleanupUploadedImages(images: ProductImage[]): Promise<void> {
+	await deleteImagesFromStorage(images.map((image) => image.key));
+}
+
+/**
+ * Set main image by index
+ * @param images - Product image list
+ * @param mainImageIndex - Main image index from form data
+ */
+function setMainImage(images: ProductImage[], mainImageIndex: string): void {
+	if (images.length === 0) {
+		return;
+	}
+
+	const parsedIndex = Number.parseInt(mainImageIndex, 10);
+	const safeIndex =
+		Number.isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= images.length
+			? 0
+			: parsedIndex;
+
+	images.forEach((image, index) => {
+		image.isMain = index === safeIndex;
+	});
+}
+
+/**
+ * Revalidate product pages after image changes
+ * @param productId - Product ID
+ */
+function revalidateProductImages(productId: string): void {
+	revalidateTag(CACHE_TAGS.PRODUCTS, "max");
+	revalidatePath("/admin/products");
+	revalidatePath("/vi/products");
+	revalidatePath("/en/products");
+	revalidatePath(`/vi/products/${productId}`);
+	revalidatePath(`/en/products/${productId}`);
+}
+
+/**
+ * Update product images with new uploads, deletions, and main image selection
+ * @param formData - Form data containing product ID, new images, deleted images, and main image index
+ * @returns Form result for the admin UI
+ */
+export async function updateProductImages(formData: FormData): Promise<FormResult> {
+	const inputResult = extractUpdateImagesInput(formData);
+
+	if (!inputResult.success || !inputResult.data) {
+		return inputResult;
+	}
+
+	const { productId, newImages, deletedImages, mainImageIndex } = inputResult.data;
+	const db = await getDatabase();
+	const productsCollection = db.collection<ProductDocument>("products");
 
 	try {
-		await deleteImagesFromS3(keysToDelete);
-		return { success: true, refresh: true };
-	} catch {
+		const existingProduct = await productsCollection.findOne({ id: productId });
+
+		if (!existingProduct) {
+			return {
+				success: false,
+				error: "Không tìm thấy sản phẩm cần cập nhật ảnh",
+			};
+		}
+
+		const deletedImageKeys = deletedImages.map((image) => image.id);
+		const remainingExistingImages = (existingProduct.gallery || []).filter(
+			(image) => !deletedImageKeys.includes(image.key),
+		);
+
+		const uploadedNewImages = await uploadProductImages(productId, newImages);
+		const updatedImages: ProductImage[] = [...remainingExistingImages, ...uploadedNewImages];
+
+		if (updatedImages.length === 0) {
+			await cleanupUploadedImages(uploadedNewImages);
+
+			return {
+				success: false,
+				error: "Sản phẩm cần ít nhất 1 ảnh. Vui lòng giữ lại hoặc tải thêm ảnh mới.",
+			};
+		}
+
+		setMainImage(updatedImages, mainImageIndex);
+
+		const updateResult = await productsCollection.updateOne(
+			{ id: productId },
+			{
+				$set: {
+					gallery: updatedImages,
+					updatedAt: new Date(),
+				},
+			},
+		);
+
+		if (updateResult.matchedCount === 0) {
+			await cleanupUploadedImages(uploadedNewImages);
+
+			return {
+				success: false,
+				error: "Không tìm thấy sản phẩm cần cập nhật ảnh",
+			};
+		}
+
+		await deleteImagesFromStorage(deletedImageKeys);
+		revalidateProductImages(productId);
+
+		return {
+			success: true,
+			refresh: true,
+		};
+	} catch (error) {
+		console.error("Error updating product images:", error);
+
 		return {
 			success: false,
-			error: "Failed to delete removed images",
+			error: "Có lỗi xảy ra khi cập nhật ảnh sản phẩm. Vui lòng thử lại.",
 		};
 	}
 }

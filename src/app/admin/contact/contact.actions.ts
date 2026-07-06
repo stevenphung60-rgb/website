@@ -38,20 +38,20 @@ const singleImageSchema = z.object({
 const contactInfoSchema = z.object({
 	phone1: z
 		.string()
-		.min(1, "Primary phone is required")
+		.min(1, "Số điện thoại chính là bắt buộc")
 		.regex(
 			/^[0-9+\-\s()]+$/,
-			"Primary phone must contain only numbers, spaces, hyphens, parentheses, and plus signs",
+			"Số điện thoại chính chỉ được chứa số, khoảng trắng, dấu gạch ngang, ngoặc và dấu cộng",
 		),
 	phone2: z
 		.string()
 		.optional()
 		.refine(
-			(val) => !val || /^[0-9+\-\s()]+$/.test(val),
-			"Secondary phone must contain only numbers, spaces, hyphens, parentheses, and plus signs",
+			(value) => !value || /^[0-9+\-\s()]+$/.test(value),
+			"Số điện thoại phụ chỉ được chứa số, khoảng trắng, dấu gạch ngang, ngoặc và dấu cộng",
 		),
-	email1: z.string().email("Invalid primary email").min(1, "Primary email is required"),
-	email2: z.string().email("Invalid secondary email").optional(),
+	email1: z.string().email("Email chính không hợp lệ").min(1, "Email chính là bắt buộc"),
+	email2: z.string().email("Email phụ không hợp lệ").optional(),
 
 	consultanttitle: localizedTextSchema,
 	consultantsubtitle: localizedTextSchema,
@@ -63,8 +63,8 @@ const contactInfoSchema = z.object({
 	footercompanydescription: localizedTextSchema,
 
 	workingHours: z.object({
-		en: z.string().min(1, "English working hours are required"),
-		vi: z.string().min(1, "Vietnamese working hours are required"),
+		en: z.string().min(1, "Giờ làm việc tiếng Anh là bắt buộc"),
+		vi: z.string().min(1, "Giờ làm việc tiếng Việt là bắt buộc"),
 	}),
 
 	socialMediaLinks: z
@@ -73,7 +73,7 @@ const contactInfoSchema = z.object({
 				platformId: z.nativeEnum(SocialMediaPlatformId),
 				url: z
 					.string()
-					.min(1, "Social media URL is required")
+					.min(1, "Đường dẫn mạng xã hội là bắt buộc")
 					.refine(
 						(url) => {
 							if (!url.trim()) return true;
@@ -87,7 +87,7 @@ const contactInfoSchema = z.object({
 						},
 						{
 							message:
-								"Please enter a valid URL (e.g., https://facebook.com/yourpage)",
+								"Vui lòng nhập đường dẫn hợp lệ, ví dụ: https://facebook.com/ten-trang",
 						},
 					),
 			}),
@@ -96,6 +96,12 @@ const contactInfoSchema = z.object({
 		.default([]),
 });
 
+/**
+ * Get localized text from form data
+ * @param formData - Submitted form data
+ * @param key - Base form field key
+ * @returns Localized text value
+ */
 function getLocalizedText(formData: FormData, key: string): LocalizedText {
 	return {
 		en: (formData.get(`${key}En`) as string) || "",
@@ -103,6 +109,12 @@ function getLocalizedText(formData: FormData, key: string): LocalizedText {
 	};
 }
 
+/**
+ * Parse single image data from form data
+ * @param formData - Submitted form data
+ * @param key - Image field key
+ * @returns Parsed single image object
+ */
 function parseSingleImage(formData: FormData, key: string): ContactSingleImage {
 	const value = formData.get(key) as string | null;
 
@@ -121,6 +133,11 @@ function parseSingleImage(formData: FormData, key: string): ContactSingleImage {
 	}
 }
 
+/**
+ * Parse social media links from form data
+ * @param formData - Submitted form data
+ * @returns Social media links array
+ */
 function parseSocialMediaLinks(formData: FormData) {
 	const socialMediaLinksData = formData.get("socialMediaLinks") as string | null;
 
@@ -133,6 +150,23 @@ function parseSocialMediaLinks(formData: FormData) {
 	}
 }
 
+/**
+ * Revalidate contact-related admin and public pages
+ */
+function revalidateContactPages(): void {
+	revalidateTag(CACHE_TAGS.CONTACT, "max");
+	revalidatePath("/admin/contact");
+	revalidatePath("/vi");
+	revalidatePath("/en");
+	revalidatePath("/vi/contact");
+	revalidatePath("/en/contact");
+}
+
+/**
+ * Update contact information from admin form
+ * @param formData - Submitted contact form data
+ * @returns Form result for admin UI
+ */
 export async function updateContactInformation(
 	formData: FormData,
 ): Promise<FormResult> {
@@ -177,28 +211,28 @@ export async function updateContactInformation(
 		const validationResult = contactInfoSchema.safeParse(rawData);
 
 		if (!validationResult.success) {
-			const errorMessages = validationResult.error.errors.map((err) => {
-				const fieldPath = err.path.join(".");
+			const errorMessages = validationResult.error.errors.map((error) => {
+				const fieldPath = error.path.join(".");
 
 				if (
 					fieldPath.includes("socialMediaLinks") &&
 					fieldPath.includes("url")
 				) {
-					const linkIndex = err.path[1] as number;
+					const linkIndex = error.path[1] as number;
 					const platformId = rawData.socialMediaLinks?.[linkIndex]?.platformId;
 					const platformName = platformId
 						? platformId.charAt(0).toUpperCase() + platformId.slice(1)
-						: "Social media";
+						: "Mạng xã hội";
 
-					return `${platformName} URL: ${err.message}`;
+					return `${platformName}: ${error.message}`;
 				}
 
-				return `${fieldPath}: ${err.message}`;
+				return error.message;
 			});
 
 			return {
 				success: false,
-				error: `Validation failed: ${errorMessages.join(", ")}`,
+				error: `Vui lòng kiểm tra lại: ${errorMessages.join(", ")}`,
 			};
 		}
 
@@ -206,8 +240,7 @@ export async function updateContactInformation(
 		const result = await updateContactInfo(validatedData);
 
 		if (result.success) {
-			//revalidateTag(CACHE_TAGS.CONTACT);
-			revalidatePath("/admin/contact");
+			revalidateContactPages();
 
 			return {
 				success: true,
@@ -217,18 +250,23 @@ export async function updateContactInformation(
 
 		return {
 			success: false,
-			error: result.error || "Failed to update contact information",
+			error: result.error || "Không thể cập nhật thông tin liên hệ",
 		};
 	} catch (error) {
 		console.error("Error updating contact information:", error);
 
 		return {
 			success: false,
-			error: "An unexpected error occurred while updating contact information",
+			error: "Có lỗi xảy ra khi cập nhật thông tin liên hệ. Vui lòng thử lại.",
 		};
 	}
 }
 
+/**
+ * Upload contact image to local uploads folder
+ * @param formData - Form data containing image file
+ * @returns Uploaded image URL or error
+ */
 export async function uploadContactImage(
 	formData: FormData,
 ): Promise<UploadContactImageResult> {
@@ -238,7 +276,7 @@ export async function uploadContactImage(
 		if (!file || file.size === 0) {
 			return {
 				success: false,
-				error: "No image selected",
+				error: "Vui lòng chọn ảnh",
 			};
 		}
 
@@ -247,7 +285,7 @@ export async function uploadContactImage(
 		if (!allowedTypes.includes(file.type)) {
 			return {
 				success: false,
-				error: "Only JPG, PNG, WEBP, or SVG images are allowed",
+				error: "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc SVG",
 			};
 		}
 
@@ -273,7 +311,7 @@ export async function uploadContactImage(
 
 		return {
 			success: false,
-			error: "Failed to upload contact image",
+			error: "Không thể tải ảnh lên. Vui lòng thử lại.",
 		};
 	}
 }

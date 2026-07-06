@@ -164,6 +164,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 			href: "/projects",
 			children: projectMenu,
 		},
+		{ name: "BLOG", href: "/blog" },
 		{ name: dictionary.nav.contact, href: "/contact" },
 	];
 

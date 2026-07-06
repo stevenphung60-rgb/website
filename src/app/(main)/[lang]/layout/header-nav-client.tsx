@@ -56,9 +56,9 @@ export function HeaderNavClient({
 							href={item.href}
 							prefetch={true}
 							onClick={() => setActiveMenu(null)}
-							className="relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.12em] text-[#342312] hover:text-[#342312]
+							className="relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.1em] text-[#241407] hover:text-[#A87E3C]
 							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
-							after:origin-left after:scale-x-0 after:bg-[#342312] after:transition-transform
+							after:origin-left after:scale-x-0 after:bg-[#A87E3C] after:transition-transform
 							hover:after:scale-x-100"
 						>
 							{item.name}
@@ -77,9 +77,9 @@ export function HeaderNavClient({
 							href={item.href}
 							prefetch={true}
 							onClick={() => setActiveMenu(null)}
-							className={`relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.12em] text-[#342312]
+							className={`relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.1em] text-[#241407] transition-colors hover:text-[#A87E3C]
 							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
-							after:origin-left after:bg-[#342312] after:transition-transform ${
+							after:origin-left after:bg-[#A87E3C] after:transition-transform ${
 								isActive ? "after:scale-x-100" : "after:scale-x-0"
 							}`}
 						>

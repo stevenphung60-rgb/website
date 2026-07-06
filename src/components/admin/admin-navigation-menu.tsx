@@ -5,6 +5,7 @@ import {
 	Building2,
 	ChevronDown,
 	ChevronsRight,
+	FileText,
 	FolderOpen,
 	Home,
 	ImageIcon,
@@ -121,6 +122,22 @@ const navigationGroups: NavigationGroup[] = [
 				href: "/admin/heroproject",
 				label: "Banner dự án",
 				icon: ImageIcon,
+			},
+		],
+	},
+	{
+		label: "BLOG",
+		icon: FileText,
+		children: [
+			{
+				href: "/admin/blogs",
+				label: "Blog",
+				icon: FileText,
+			},
+			{
+				href: "/admin/blogcategories",
+				label: "Loại blog",
+				icon: Tags,
 			},
 		],
 	},

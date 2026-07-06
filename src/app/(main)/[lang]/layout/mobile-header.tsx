@@ -162,7 +162,7 @@ export function MobileHeader({
 											key={item.name}
 											href={item.href}
 											onClick={closeMenu}
-											className={`py-4 text-[14px] font-bold uppercase tracking-[0.08em] text-[#342312] transition-all duration-300 hover:text-[#A87E3C] ${
+											className={`py-4 text-[14px] font-semibold uppercase tracking-[0.08em] text-[#342312] transition-all duration-300 hover:text-[#A87E3C] ${
 												isMenuOpen
 													? "translate-y-0 opacity-100"
 													: "translate-y-2 opacity-0"

@@ -242,7 +242,7 @@ export default function HomeFeaturedProjectsShowcase({
 							</div>
 
 							<div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-								<h3 className="line-clamp-3 break-words text-[28px] font-black uppercase leading-[1.03] tracking-[-0.04em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] sm:text-[32px] lg:text-[38px]">
+								<h3 className="line-clamp-3 break-words text-[28px] font-black uppercase leading-[1.12] tracking-[0.01em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] sm:text-[32px] lg:text-[38px]">
 									{project.name}
 								</h3>
 

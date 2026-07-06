@@ -8,6 +8,7 @@ import {
 	ImageIcon,
 	LayoutDashboard,
 	Package,
+	Palette,
 	Phone,
 	Settings,
 	Tags,
@@ -268,6 +269,13 @@ export default async function AdminPage() {
 							description="Logo và tên công ty ở header."
 							href="/admin/herobrand"
 							icon={Building2}
+						/>
+
+						<ContentLink
+							title="Giao diện website"
+							description="Font tiêu đề và font nội dung trên website."
+							href="/admin/appearance"
+							icon={Palette}
 						/>
 
 						<ContentLink

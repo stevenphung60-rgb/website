@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { AdminNavigation } from "./admin-navigation";
 
@@ -15,6 +15,16 @@ interface AdminShellProps {
 	user: AdminShellUser;
 }
 
+type AdminShellStyle = CSSProperties & {
+	"--site-font-heading": string;
+	"--site-font-body": string;
+};
+
+const adminShellStyle: AdminShellStyle = {
+	"--site-font-heading": "var(--font-montserrat)",
+	"--site-font-body": "var(--font-roboto)",
+};
+
 /**
  * Admin shell with collapsible sidebar
  * @param props - Admin shell props
@@ -24,7 +34,10 @@ export function AdminShell({ children, user }: AdminShellProps) {
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
 	return (
-		<div className="min-h-screen bg-[#FAF7F1]">
+		<div
+			className="min-h-screen bg-[#FAF7F1] font-sans"
+			style={adminShellStyle}
+		>
 			<AdminNavigation
 				user={user}
 				isCollapsed={isSidebarCollapsed}

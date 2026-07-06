@@ -11,6 +11,7 @@ import {
 	Info,
 	LayoutDashboard,
 	Package,
+	Palette,
 	Phone,
 	Settings,
 	Tags,
@@ -52,6 +53,11 @@ const navigationGroups: NavigationGroup[] = [
 				href: "/admin/herobrand",
 				label: "Logo & tên công ty",
 				icon: Building2,
+			},
+			{
+				href: "/admin/appearance",
+				label: "Giao diện website",
+				icon: Palette,
 			},
 			{
 				href: "/admin/hero",

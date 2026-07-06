@@ -6,7 +6,6 @@ import {
 	Form,
 	FormErrorDisplay,
 	FormPendingMessage,
-	FormResetButton,
 	FormSubmitMessage,
 } from "src/components/form-state";
 import {
@@ -18,6 +17,7 @@ import {
 	ImageUploadTrigger,
 } from "src/components/image-upload";
 import { Button } from "src/components/ui/button";
+import { DialogClose } from "src/components/ui/dialog";
 import { Textarea } from "src/components/ui/textarea";
 import { ServiceStatus } from "src/server/services";
 import { createService } from "./create-service-dialog.actions";
@@ -192,7 +192,11 @@ export function CreateServiceForm() {
 				<FormErrorDisplay />
 
 				<AdminStickyActions note="Sau khi lưu, dịch vụ sẽ xuất hiện ngoài website nếu trạng thái là Đang hiển thị.">
-					<FormResetButton>Hủy</FormResetButton>
+					<DialogClose asChild>
+						<Button type="button" variant="outline" className="border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]">
+							Hủy
+						</Button>
+					</DialogClose>
 
 					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
 						<FormSubmitMessage>Tạo dịch vụ</FormSubmitMessage>

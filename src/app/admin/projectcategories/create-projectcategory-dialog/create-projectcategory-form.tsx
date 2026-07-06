@@ -5,10 +5,10 @@ import {
 	Form,
 	FormErrorDisplay,
 	FormPendingMessage,
-	FormResetButton,
 	FormSubmitMessage,
 } from "src/components/form-state";
 import { Button } from "src/components/ui/button";
+import { DialogClose } from "src/components/ui/dialog";
 import { createProjectCategory } from "./create-projectcategory-dialog.actions";
 
 /**
@@ -50,9 +50,16 @@ export function CreateProjectCategoryForm() {
 				<FormErrorDisplay />
 
 				<AdminStickyActions note="Sau khi lưu, loại dự án có thể dùng để phân nhóm dự án trên website.">
-					<FormResetButton>Hủy</FormResetButton>
+					<DialogClose asChild>
+						<Button type="button" variant="outline" className="border-[#E7D0AF] bg-white text-[#342312] hover:bg-[#FAF7F1]">
+							Hủy
+						</Button>
+					</DialogClose>
 
-					<Button type="submit" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
+					<Button
+						type="submit"
+						className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]"
+					>
 						<FormSubmitMessage>Tạo loại dự án</FormSubmitMessage>
 						<FormPendingMessage>Đang tạo...</FormPendingMessage>
 					</Button>

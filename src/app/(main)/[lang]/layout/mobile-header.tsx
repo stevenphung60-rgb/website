@@ -1,11 +1,12 @@
 "use client";
 
-import { ChevronsRight, Mail, Menu, Phone, Search } from "lucide-react";
+import { ChevronsRight, Mail, Menu, Phone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import LocaleLink from "src/components/behaviors/LocaleLink";
 import { LanguageSwitcher } from "src/components/language-toggle";
 import type { Locale } from "src/lib/i18n/config";
+import { HeaderSearch } from "./header-search";
 
 interface MobileHeaderProps {
 	navigation: Array<{
@@ -143,15 +144,12 @@ export function MobileHeader({
 
 							<div className="px-5 py-5">
 								{searchPlaceholder ? (
-									<div className="mb-5 flex items-center rounded-full border border-[#E7D0AF] bg-[#FAF7F0] px-3 py-2">
-										<div className="mr-3 flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E7D0AF] text-[#342312]">
-											<Search className="size-[18px]" strokeWidth={2.2} />
-										</div>
-
-										<input
-											type="text"
+									<div className="mb-5">
+										<HeaderSearch
+											locale={locale}
 											placeholder={searchPlaceholder}
-											className="w-full bg-transparent text-[15px] font-medium text-[#342312] placeholder:text-[#342312]/55 focus:outline-none"
+											variant="mobile"
+											onNavigate={closeMenu}
 										/>
 									</div>
 								) : null}
@@ -162,7 +160,7 @@ export function MobileHeader({
 											key={item.name}
 											href={item.href}
 											onClick={closeMenu}
-											className={`py-4 text-[14px] font-semibold uppercase tracking-[0.08em] text-[#342312] transition-all duration-300 hover:text-[#A87E3C] ${
+											className={`py-4 text-[14px] font-bold uppercase tracking-[0.08em] text-[#342312] transition-all duration-300 hover:text-[#A87E3C] ${
 												isMenuOpen
 													? "translate-y-0 opacity-100"
 													: "translate-y-2 opacity-0"

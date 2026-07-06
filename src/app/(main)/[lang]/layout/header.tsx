@@ -1,4 +1,4 @@
-import { Mail, Phone, Search } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { cacheTag } from "next/cache";
 import LocaleLink from "src/components/behaviors/LocaleLink";
 import { LanguageSwitcher } from "src/components/language-toggle";
@@ -16,6 +16,7 @@ import { getActiveProjectIds, getProjectById } from "src/server/projects";
 import { getActiveServiceIds, getServiceById } from "src/server/services";
 import { HeaderNavClient } from "./header-nav-client";
 import { HeaderScrollShell } from "./header-scroll-shell";
+import { HeaderSearch } from "./header-search";
 import { MobileHeader } from "./mobile-header";
 
 export default async function Header({ locale }: { locale: Locale }) {
@@ -201,17 +202,10 @@ export default async function Header({ locale }: { locale: Locale }) {
 							</LocaleLink>
 
 							<div className="hidden max-w-xl flex-1 md:flex">
-								<div className="relative w-full">
-									<div className="absolute left-3 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-[#E7D0AF] p-1.5">
-										<Search className="h-3.5 w-3.5 text-[#342312]" />
-									</div>
-
-									<input
-										type="text"
-										placeholder={dictionary.header.searchPlaceholder}
-										className="w-full rounded-full border border-[#E7D0AF] bg-[#F7F3EF] py-1.5 pl-12 pr-4 text-sm text-[#342312] placeholder:text-[#8a7663] focus:outline-none focus:ring-1 focus:ring-[#AA8140]"
-									/>
-								</div>
+								<HeaderSearch
+									locale={locale}
+									placeholder={dictionary.header.searchPlaceholder}
+								/>
 							</div>
 
 							<div className="hidden shrink-0 items-center gap-2 lg:flex">
@@ -235,9 +229,9 @@ export default async function Header({ locale }: { locale: Locale }) {
 									</a>
 								) : null}
 
-									<div className="ml-1 shrink-0 font-heading">
-										<LanguageSwitcher currentLang={locale} />
-									</div>
+								<div className="ml-1 shrink-0 font-heading">
+									<LanguageSwitcher currentLang={locale} />
+								</div>
 							</div>
 
 							<MobileHeader

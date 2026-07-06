@@ -10,18 +10,11 @@ import {
 } from "src/components/ui/dialog";
 import { BlogCategoryForm } from "./blogcategory-form";
 
-/**
- * Create blog category dialog
- * @returns Create blog category dialog
- */
 export function CreateBlogCategoryDialog() {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button
-					type="button"
-					className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]"
-				>
+				<Button type="button" className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
 					<Plus className="mr-2 size-4" />
 					Thêm loại blog
 				</Button>
@@ -33,19 +26,16 @@ export function CreateBlogCategoryDialog() {
 						<div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#342312]/10 text-[#342312]">
 							<FileText className="size-5" />
 						</div>
-
 						<div className="min-w-0">
 							<DialogTitle className="break-words font-serif text-2xl font-bold text-[#342312]">
 								Thêm loại blog
 							</DialogTitle>
-
 							<DialogDescription className="mt-2 break-words text-sm leading-6 text-[#342312]/70">
-								Nhập thông tin loại blog để phân nhóm bài viết trên website.
+								Tạo loại blog để phân nhóm bài viết ngoài website.
 							</DialogDescription>
 						</div>
 					</div>
 				</DialogHeader>
-
 				<div className="px-5 py-6 sm:px-6">
 					<BlogCategoryForm />
 				</div>

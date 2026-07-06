@@ -12,19 +12,14 @@ import type { BlogCategory } from "src/server/blogs";
 import { BlogCategoryForm } from "./blogcategory-form";
 
 interface EditBlogCategoryDialogProps {
-	blogCategory: BlogCategory;
+	category: BlogCategory;
 }
 
-/**
- * Edit blog category dialog
- * @param props - Edit blog category dialog props
- * @returns Edit blog category dialog
- */
-export function EditBlogCategoryDialog({ blogCategory }: EditBlogCategoryDialogProps) {
+export function EditBlogCategoryDialog({ category }: EditBlogCategoryDialogProps) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button type="button" variant="outline" size="sm">
+				<Button type="button" variant="outline" size="sm" className="border-[#E7D0AF] bg-white text-[#342312]">
 					<Edit className="mr-1 size-4" />
 					Sửa
 				</Button>
@@ -36,21 +31,18 @@ export function EditBlogCategoryDialog({ blogCategory }: EditBlogCategoryDialogP
 						<div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#342312]/10 text-[#342312]">
 							<FileText className="size-5" />
 						</div>
-
 						<div className="min-w-0">
 							<DialogTitle className="break-words font-serif text-2xl font-bold text-[#342312]">
 								Sửa loại blog
 							</DialogTitle>
-
 							<DialogDescription className="mt-2 break-words text-sm leading-6 text-[#342312]/70">
-								Cập nhật thông tin loại blog đang dùng để phân nhóm bài viết.
+								Cập nhật tên, slug và mô tả loại blog.
 							</DialogDescription>
 						</div>
 					</div>
 				</DialogHeader>
-
 				<div className="px-5 py-6 sm:px-6">
-					<BlogCategoryForm blogCategory={blogCategory} />
+					<BlogCategoryForm category={category} />
 				</div>
 			</DialogContent>
 		</Dialog>

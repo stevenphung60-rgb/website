@@ -10,6 +10,7 @@ export interface BlogImage {
 	alt: LocalizedText;
 	caption?: LocalizedText;
 	order: number;
+	isMain?: boolean;
 }
 
 export type BlogPostStatus = "draft" | "published" | "hidden";
@@ -22,6 +23,10 @@ export type BlogLineHeight = "compact" | "standard" | "relaxed";
 export type BlogContentWidth = "narrow" | "standard" | "wide";
 export type BlogFontSelection = SiteFontId | "site";
 
+/**
+ * Legacy block types kept for backward compatibility with the first blog editor.
+ * Blog v2 stores rendered article content as controlled HTML in BlogPost.content.
+ */
 interface BlogBlockBase {
 	id: string;
 }
@@ -113,14 +118,13 @@ export interface BlogPost {
 	coverImage: BlogImage;
 	categoryId: string;
 	tags: string[];
-	content: {
-		vi: BlogContentBlock[];
-		en: BlogContentBlock[];
-	};
+	content: LocalizedText;
 	gallery: BlogImage[];
 	relatedProductIds: string[];
+	relatedProductCategoryIds: string[];
 	relatedServiceIds: string[];
 	relatedProjectIds: string[];
+	relatedProjectCategoryIds: string[];
 	relatedBlogPostIds: string[];
 	appearance: BlogAppearanceSettings;
 	seo: BlogSeoSettings;
@@ -143,14 +147,13 @@ export interface BlogPostFormData {
 	coverImage: BlogImage;
 	categoryId: string;
 	tags: string[];
-	content: {
-		vi: BlogContentBlock[];
-		en: BlogContentBlock[];
-	};
+	content: LocalizedText;
 	gallery: BlogImage[];
 	relatedProductIds: string[];
+	relatedProductCategoryIds: string[];
 	relatedServiceIds: string[];
 	relatedProjectIds: string[];
+	relatedProjectCategoryIds: string[];
 	relatedBlogPostIds: string[];
 	appearance: BlogAppearanceSettings;
 	seo: BlogSeoSettings;
@@ -183,4 +186,5 @@ export const EMPTY_BLOG_IMAGE: BlogImage = {
 	alt: EMPTY_LOCALIZED_TEXT,
 	caption: EMPTY_LOCALIZED_TEXT,
 	order: 0,
+	isMain: false,
 };

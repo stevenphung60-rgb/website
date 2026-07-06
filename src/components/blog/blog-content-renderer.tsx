@@ -1,10 +1,6 @@
+import type { CSSProperties } from "react";
 import { getSiteFontFamilyValue, type SiteFontId } from "src/lib/font-presets";
-import type {
-	BlogAppearanceSettings,
-	BlogContentBlock,
-	BlogFontSelection,
-} from "src/server/blogs";
-import { renderBlogInlineContent } from "./blog-inline-content";
+import type { BlogAppearanceSettings, BlogFontSelection } from "src/server/blogs";
 
 const bodySizeClass = {
 	compact: "text-[15px]",
@@ -33,175 +29,129 @@ function getFontValue(fontId: BlogFontSelection, fallback: "heading" | "body") {
 	return getSiteFontFamilyValue(fontId as SiteFontId);
 }
 
-function paragraphSizeClass(size: string) {
-	if (size === "small") return "text-sm";
-	if (size === "large") return "text-lg";
-	return "text-base";
-}
-
-function headingSizeClass(size: string, level: 2 | 3) {
-	if (level === 2) {
-		if (size === "xlarge") return "text-4xl";
-		if (size === "large") return "text-3xl";
-		return "text-2xl";
-	}
-
-	if (size === "xlarge") return "text-3xl";
-	if (size === "large") return "text-2xl";
-	return "text-xl";
+function sanitizeBlogHtml(html: string): string {
+	return html
+		.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+		.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+		.replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, "")
+		.replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, "")
+		.replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, "")
+		.replace(/\son\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+		.replace(/href=("|')javascript:[\s\S]*?\1/gi, 'href="#"')
+		.replace(/src=("|')javascript:[\s\S]*?\1/gi, 'src=""');
 }
 
 interface BlogContentRendererProps {
-	blocks: BlogContentBlock[];
+	html: string;
 	appearance: BlogAppearanceSettings;
 }
 
+type BlogContentStyle = CSSProperties & {
+	"--blog-heading-font": string;
+	"--blog-body-font": string;
+};
+
 /**
- * Render blog content blocks with controlled typography
+ * Render blog HTML content with controlled typography and basic sanitation.
  * @param props - Blog content renderer props
  * @returns Blog article content
  */
-export function BlogContentRenderer({ blocks, appearance }: BlogContentRendererProps) {
+export function BlogContentRenderer({ html, appearance }: BlogContentRendererProps) {
 	const headingFont = getFontValue(appearance.headingFontId, "heading");
 	const bodyFont = getFontValue(appearance.bodyFontId, "body");
+	const style: BlogContentStyle = {
+		"--blog-heading-font": headingFont,
+		"--blog-body-font": bodyFont,
+		fontFamily: bodyFont,
+	};
 
 	return (
-		<div
-			className={["mx-auto w-full space-y-8", widthClass[appearance.contentWidth]].join(" ")}
-			style={{ fontFamily: bodyFont }}
-		>
-			{blocks.map((block) => {
-				if (block.type === "paragraph") {
-					return (
-						<p
-							key={block.id}
-							className={[
-								paragraphSizeClass(block.size),
-								lineHeightClass[appearance.lineHeight],
-								"text-[#342312]/78",
-								block.align === "center" ? "text-center" : "text-left",
-							].join(" ")}
-						>
-							{renderBlogInlineContent(block.text)}
-						</p>
-					);
+		<div className={["mx-auto w-full", widthClass[appearance.contentWidth]].join(" ")}>
+			<style>{`
+				.blog-rich-content {
+					font-family: var(--blog-body-font);
 				}
 
-				if (block.type === "heading") {
-					const Tag = block.level === 2 ? "h2" : "h3";
-
-					return (
-						<Tag
-							key={block.id}
-							className={[
-								headingSizeClass(block.size, block.level),
-								"font-extrabold leading-tight text-[#342312]",
-								block.align === "center" ? "text-center" : "text-left",
-							].join(" ")}
-							style={{ fontFamily: headingFont }}
-						>
-							{renderBlogInlineContent(block.text)}
-						</Tag>
-					);
+				.blog-rich-content h1,
+				.blog-rich-content h2,
+				.blog-rich-content h3 {
+					font-family: var(--blog-heading-font);
+					font-weight: 800;
+					line-height: 1.16;
+					color: #342312;
+					margin-top: 2.25rem;
+					margin-bottom: 1rem;
 				}
 
-				if (block.type === "quote") {
-					return (
-						<blockquote
-							key={block.id}
-							className="border-l-4 border-[#A87E3C] bg-[#FAF7F1] px-5 py-4 text-lg font-semibold italic leading-8 text-[#342312]"
-						>
-							{renderBlogInlineContent(block.text)}
-						</blockquote>
-					);
+				.blog-rich-content h1 { font-size: clamp(2rem, 4vw, 3.25rem); }
+				.blog-rich-content h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); }
+				.blog-rich-content h3 { font-size: clamp(1.35rem, 2.2vw, 1.85rem); }
+
+				.blog-rich-content p {
+					margin: 1rem 0;
+					color: rgb(52 35 18 / 0.78);
 				}
 
-				if (block.type === "list") {
-					const ListTag = block.style === "numbered" ? "ol" : "ul";
-
-					return (
-						<ListTag
-							key={block.id}
-							className={[
-								"space-y-2 pl-6 text-[#342312]/78",
-								block.style === "numbered" ? "list-decimal" : "list-disc",
-								bodySizeClass[appearance.bodySize],
-								lineHeightClass[appearance.lineHeight],
-							].join(" ")}
-						>
-							{block.items.map((item, index) => (
-								<li key={`${item}-${index}`}>{renderBlogInlineContent(item)}</li>
-							))}
-						</ListTag>
-					);
+				.blog-rich-content a {
+					color: #A87E3C;
+					font-weight: 700;
+					text-decoration: underline;
+					text-underline-offset: 4px;
 				}
 
-				if (block.type === "image") {
-					return (
-						<figure key={block.id} className="overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white">
-							<img
-								src={block.image.url}
-								alt={block.image.alt.vi || block.image.alt.en || "Blog image"}
-								className="w-full object-cover"
-							/>
-							{block.image.caption?.vi || block.image.caption?.en ? (
-								<figcaption className="border-t border-[#E7D0AF]/70 px-4 py-3 text-sm italic text-[#342312]/60">
-									{block.image.caption.vi || block.image.caption.en}
-								</figcaption>
-							) : null}
-						</figure>
-					);
+				.blog-rich-content ul,
+				.blog-rich-content ol {
+					margin: 1rem 0;
+					padding-left: 1.5rem;
+					color: rgb(52 35 18 / 0.78);
 				}
 
-				if (block.type === "gallery") {
-					return (
-						<div
-							key={block.id}
-							className={[
-								"grid gap-4",
-								block.columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2",
-							].join(" ")}
-						>
-							{block.images.map((image) => (
-								<figure key={image.url} className="overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white">
-									<img
-										src={image.url}
-										alt={image.alt.vi || image.alt.en || "Blog gallery image"}
-										className="aspect-[4/3] w-full object-cover"
-									/>
-									{image.caption?.vi || image.caption?.en ? (
-										<figcaption className="border-t border-[#E7D0AF]/70 px-3 py-2 text-xs italic text-[#342312]/60">
-											{image.caption.vi || image.caption.en}
-										</figcaption>
-									) : null}
-								</figure>
-							))}
-						</div>
-					);
+				.blog-rich-content ul { list-style: disc; }
+				.blog-rich-content ol { list-style: decimal; }
+				.blog-rich-content li { margin: 0.4rem 0; }
+
+				.blog-rich-content blockquote {
+					margin: 1.5rem 0;
+					border-left: 4px solid #A87E3C;
+					background: #FAF7F1;
+					padding: 1rem 1.25rem;
+					font-style: italic;
+					font-weight: 600;
+					color: #342312;
 				}
 
-				if (block.type === "table") {
-					return (
-						<div key={block.id} className="overflow-x-auto rounded-2xl border border-[#E7D0AF] bg-white">
-							<table className="min-w-full divide-y divide-[#E7D0AF]/70 text-left text-sm text-[#342312]">
-								<tbody className="divide-y divide-[#E7D0AF]/70">
-									{block.rows.map((row, rowIndex) => (
-										<tr key={`${block.id}-${rowIndex}`} className={rowIndex === 0 ? "bg-[#FAF7F1] font-semibold" : ""}>
-											{row.map((cell, cellIndex) => (
-												<td key={`${block.id}-${rowIndex}-${cellIndex}`} className="px-4 py-3 align-top">
-													{renderBlogInlineContent(cell)}
-												</td>
-											))}
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-					);
+				.blog-rich-content img {
+					max-width: 100%;
+					height: auto;
+					border-radius: 1rem;
+					border: 1px solid #E7D0AF;
+					margin: 1.5rem 0;
 				}
 
-				return null;
-			})}
+				.blog-rich-content table {
+					width: 100%;
+					border-collapse: collapse;
+					margin: 1.5rem 0;
+					background: white;
+				}
+
+				.blog-rich-content td,
+				.blog-rich-content th {
+					border: 1px solid #E7D0AF;
+					padding: 0.75rem;
+					text-align: left;
+				}
+			`}</style>
+
+			<div
+				className={[
+					"blog-rich-content rounded-2xl bg-transparent text-[#342312]",
+					bodySizeClass[appearance.bodySize],
+					lineHeightClass[appearance.lineHeight],
+				].join(" ")}
+				style={style}
+				dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(html) }}
+			/>
 		</div>
 	);
 }

@@ -2,6 +2,7 @@ import { cacheTag } from "next/cache";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
 import type { BlogPost, BlogPostDocument } from "./blog.types";
+import { normalizeBlogPostDocument } from "./normalize-blogpost";
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
 	"use cache";
@@ -12,6 +13,5 @@ export async function getBlogPostById(id: string): Promise<BlogPost | null> {
 
 	if (!document) return null;
 
-	const { _id, ...blogPost } = document;
-	return blogPost;
+	return normalizeBlogPostDocument(document);
 }

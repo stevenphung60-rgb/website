@@ -2,6 +2,7 @@ import { cacheTag } from "next/cache";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
 import type { BlogPost, BlogPostDocument, BlogPostStatus } from "./blog.types";
+import { normalizeBlogPostDocument } from "./normalize-blogpost";
 
 interface GetBlogPostsInput {
 	status?: BlogPostStatus;
@@ -35,7 +36,7 @@ export async function getBlogPosts(input: GetBlogPostsInput = {}): Promise<BlogP
 
 	const documents = await cursor.toArray();
 
-	return documents.map(({ _id, ...blogPost }) => blogPost);
+	return documents.map(normalizeBlogPostDocument);
 }
 
 export async function getPublishedBlogPosts(categoryId?: string | null) {

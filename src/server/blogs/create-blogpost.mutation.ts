@@ -18,14 +18,17 @@ export async function createBlogPost(input: BlogPostFormData): Promise<string> {
 		content: input.content,
 		gallery: input.gallery,
 		relatedProductIds: input.relatedProductIds,
+		relatedProductCategoryIds: input.relatedProductCategoryIds,
 		relatedServiceIds: input.relatedServiceIds,
 		relatedProjectIds: input.relatedProjectIds,
+		relatedProjectCategoryIds: input.relatedProjectCategoryIds,
 		relatedBlogPostIds: input.relatedBlogPostIds,
 		appearance: input.appearance,
 		seo: input.seo,
 		status: input.status,
 		isFeatured: input.isFeatured,
-		publishedAt: input.status === "published" ? input.publishedAt || now : input.publishedAt,
+		publishedAt:
+			input.status === "published" ? input.publishedAt || now : input.publishedAt,
 		createdAt: now,
 		updatedAt: now,
 	};

@@ -12,13 +12,12 @@ import {
 	deleteBlogPost,
 	updateBlogPost,
 	type BlogAppearanceSettings,
-	type BlogContentBlock,
 	type BlogFontSelection,
 	type BlogImage,
 	type BlogPostFormData,
 	type BlogPostStatus,
 } from "src/server/blogs";
-import { slugify } from "src/server/blogs/blog-utils";
+import { getMainBlogImage, normalizeBlogImages, slugify } from "src/server/blogs/blog-utils";
 
 type UploadBlogImageResult =
 	| {
@@ -98,33 +97,38 @@ function parseAppearance(formData: FormData): BlogAppearanceSettings {
 	};
 }
 
-function normalizeImages(images: BlogImage[]): BlogImage[] {
-	return images
-		.filter((image) => image.url)
-		.map((image, index) => ({
-			url: image.url,
-			alt: {
-				vi: image.alt?.vi || "",
-				en: image.alt?.en || image.alt?.vi || "",
-			},
-			caption: {
-				vi: image.caption?.vi || "",
-				en: image.caption?.en || image.caption?.vi || "",
-			},
-			order: index,
-		}));
+function normalizeHtml(value: string): string {
+	return value.trim();
+}
+
+function createFallbackImage(titleVi: string, titleEn: string): BlogImage {
+	return {
+		url: "",
+		alt: {
+			vi: titleVi,
+			en: titleEn || titleVi,
+		},
+		caption: {
+			vi: "",
+			en: "",
+		},
+		order: 0,
+		isMain: false,
+	};
 }
 
 function parseBlogPostFormData(formData: FormData): BlogPostFormData {
 	const titleVi = getFormString(formData, "titleVi");
 	const titleEn = getFormString(formData, "titleEn") || titleVi;
-	const slugVi = getFormString(formData, "slugVi") || slugify(titleVi);
-	const slugEn = getFormString(formData, "slugEn") || slugify(titleEn || titleVi);
 	const statusValue = getFormString(formData, "status");
-	const coverImageUrl = getFormString(formData, "coverImageUrl");
-	const gallery = normalizeImages(parseJsonArray<BlogImage>(getFormString(formData, "gallery"), []));
-	const contentVi = parseJsonArray<BlogContentBlock>(getFormString(formData, "contentVi"), []);
-	const contentEn = parseJsonArray<BlogContentBlock>(getFormString(formData, "contentEn"), contentVi);
+	const gallery = normalizeBlogImages(
+		parseJsonArray<BlogImage>(getFormString(formData, "gallery"), []),
+	);
+	const mainImage = getMainBlogImage(gallery) || createFallbackImage(titleVi, titleEn);
+	const excerptVi = getFormString(formData, "excerptVi");
+	const excerptEn = getFormString(formData, "excerptEn") || excerptVi;
+	const contentVi = normalizeHtml(getFormString(formData, "contentHtmlVi"));
+	const contentEn = normalizeHtml(getFormString(formData, "contentHtmlEn")) || contentVi;
 
 	if (!titleVi) {
 		throw new Error("Tiêu đề tiếng Việt là bắt buộc");
@@ -137,25 +141,14 @@ function parseBlogPostFormData(formData: FormData): BlogPostFormData {
 			en: titleEn,
 		},
 		slug: {
-			vi: slugVi,
-			en: slugEn,
+			vi: slugify(titleVi),
+			en: slugify(titleEn || titleVi),
 		},
 		excerpt: {
-			vi: getFormString(formData, "excerptVi"),
-			en: getFormString(formData, "excerptEn") || getFormString(formData, "excerptVi"),
+			vi: excerptVi,
+			en: excerptEn,
 		},
-		coverImage: {
-			url: coverImageUrl,
-			alt: {
-				vi: getFormString(formData, "coverImageAltVi") || titleVi,
-				en: getFormString(formData, "coverImageAltEn") || titleEn,
-			},
-			caption: {
-				vi: getFormString(formData, "coverImageCaptionVi"),
-				en: getFormString(formData, "coverImageCaptionEn"),
-			},
-			order: 0,
-		},
+		coverImage: mainImage,
 		categoryId: getFormString(formData, "categoryId"),
 		tags: parseCsv(getFormString(formData, "tags")),
 		content: {
@@ -164,21 +157,27 @@ function parseBlogPostFormData(formData: FormData): BlogPostFormData {
 		},
 		gallery,
 		relatedProductIds: parseCsv(getFormString(formData, "relatedProductIds")),
+		relatedProductCategoryIds: parseCsv(
+			getFormString(formData, "relatedProductCategoryIds"),
+		),
 		relatedServiceIds: parseCsv(getFormString(formData, "relatedServiceIds")),
 		relatedProjectIds: parseCsv(getFormString(formData, "relatedProjectIds")),
+		relatedProjectCategoryIds: parseCsv(
+			getFormString(formData, "relatedProjectCategoryIds"),
+		),
 		relatedBlogPostIds: parseCsv(getFormString(formData, "relatedBlogPostIds")),
 		appearance: parseAppearance(formData),
 		seo: {
 			title: {
-				vi: getFormString(formData, "seoTitleVi") || titleVi,
-				en: getFormString(formData, "seoTitleEn") || titleEn,
+				vi: titleVi,
+				en: titleEn,
 			},
 			description: {
-				vi: getFormString(formData, "seoDescriptionVi") || getFormString(formData, "excerptVi"),
-				en: getFormString(formData, "seoDescriptionEn") || getFormString(formData, "excerptEn") || getFormString(formData, "excerptVi"),
+				vi: excerptVi,
+				en: excerptEn,
 			},
-			keywords: parseCsv(getFormString(formData, "seoKeywords")),
-			ogImage: getFormString(formData, "seoOgImage") || coverImageUrl,
+			keywords: parseCsv(getFormString(formData, "tags")),
+			ogImage: mainImage.url,
 		},
 		status: isBlogPostStatus(statusValue) ? statusValue : "draft",
 		isFeatured: getFormBoolean(formData, "isFeatured"),
@@ -186,7 +185,7 @@ function parseBlogPostFormData(formData: FormData): BlogPostFormData {
 	};
 }
 
-function revalidateBlogPages() {
+function revalidateBlogPages(input?: BlogPostFormData) {
 	revalidateTag(CACHE_TAGS.BLOG_POSTS, "max");
 	revalidateTag(CACHE_TAGS.BLOG_CATEGORIES, "max");
 	revalidatePath("/admin/blogs");
@@ -195,19 +194,24 @@ function revalidateBlogPages() {
 	revalidatePath("/en/blog");
 	revalidatePath("/vi", "layout");
 	revalidatePath("/en", "layout");
+
+	if (input) {
+		revalidatePath(`/vi/blog/${input.slug.vi}`);
+		revalidatePath(`/en/blog/${input.slug.en}`);
+	}
 }
 
 export async function createBlogPostAction(formData: FormData) {
 	const input = parseBlogPostFormData(formData);
 	await createBlogPost(input);
-	revalidateBlogPages();
+	revalidateBlogPages(input);
 	redirect("/admin/blogs");
 }
 
 export async function updateBlogPostAction(formData: FormData) {
 	const input = parseBlogPostFormData(formData);
 	await updateBlogPost(input);
-	revalidateBlogPages();
+	revalidateBlogPages(input);
 	redirect("/admin/blogs");
 }
 

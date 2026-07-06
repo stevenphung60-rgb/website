@@ -2,6 +2,7 @@ import { cacheTag } from "next/cache";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
 import type { BlogPost, BlogPostDocument } from "./blog.types";
+import { normalizeBlogPostDocument } from "./normalize-blogpost";
 
 export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
 	"use cache";
@@ -15,5 +16,5 @@ export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
 		.limit(limit)
 		.toArray();
 
-	return documents.map(({ _id, ...blogPost }) => blogPost);
+	return documents.map(normalizeBlogPostDocument);
 }

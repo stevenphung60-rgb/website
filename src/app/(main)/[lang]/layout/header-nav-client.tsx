@@ -44,7 +44,7 @@ export function HeaderNavClient({
 	}, [pathname]);
 
 	return (
-		<nav className="hidden w-full items-center justify-center gap-8 md:flex">
+		<nav className="hidden w-full items-center justify-center gap-8 font-heading md:flex">
 			{navigation.map((item) => {
 				const hasChildren = !!item.children?.length;
 				const isActive = activeMenu === item.name;

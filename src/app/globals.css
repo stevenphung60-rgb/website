@@ -172,10 +172,16 @@
 	h1,
 	h2,
 	h3,
-	h4,
 	.font-heading,
 	.font-serif {
 		font-family: var(--site-font-heading);
+	}
+
+	h4,
+	h5,
+	h6,
+	.font-body {
+		font-family: var(--site-font-body);
 	}
 
 	button,
@@ -183,11 +189,6 @@
 	select,
 	textarea {
 		font-family: inherit;
-	}
-
-	input,
-	textarea {
-		@apply bg-white border-slate-700;
 	}
 
 	html {

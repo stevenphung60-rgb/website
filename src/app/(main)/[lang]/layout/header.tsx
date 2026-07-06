@@ -190,7 +190,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 
 								{brandCompanyName ? (
 									<span className="relative min-w-0 overflow-visible pb-1.5 sm:pb-2">
-										<span className="block max-w-[172px] truncate font-sans text-[18px] font-black uppercase leading-[1.18] tracking-[0.1em] text-[#2F2114] drop-shadow-[0_1px_0_rgba(168,126,60,0.24)] sm:max-w-none sm:text-[21px] sm:tracking-[0.11em] lg:text-[22px] xl:text-[24px]">
+										<span className="block max-w-[172px] truncate font-heading text-[18px] font-black uppercase leading-[1.18] tracking-[0.1em] text-[#2F2114] drop-shadow-[0_1px_0_rgba(168,126,60,0.24)] sm:max-w-none sm:text-[21px] sm:tracking-[0.11em] lg:text-[22px] xl:text-[24px]">
 											{brandCompanyName}
 										</span>
 
@@ -217,7 +217,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 								{contactInfo.phone1 ? (
 									<a
 										href={`tel:${contactInfo.phone1.replace(/[^\d+]/g, "")}`}
-										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
+										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
 									>
 										<Phone className="h-4 w-4 text-[#A87E3C]" />
 										<span>{contactInfo.phone1}</span>
@@ -227,16 +227,16 @@ export default async function Header({ locale }: { locale: Locale }) {
 								{contactInfo.email1 ? (
 									<a
 										href={`mailto:${contactInfo.email1}`}
-										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
+										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
 									>
 										<Mail className="h-4 w-4 text-[#A87E3C]" />
 										<span>{contactInfo.email1}</span>
 									</a>
 								) : null}
 
-								<div className="ml-1 shrink-0">
-									<LanguageSwitcher currentLang={locale} />
-								</div>
+									<div className="ml-1 shrink-0 font-heading">
+										<LanguageSwitcher currentLang={locale} />
+									</div>
 							</div>
 
 							<MobileHeader

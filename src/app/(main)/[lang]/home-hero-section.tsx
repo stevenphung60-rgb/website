@@ -135,7 +135,7 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 									<span>{dictionary.hero.badge}</span>
 								</div>
 
-								<h1 className="mb-5 max-w-4xl text-[34px] font-black leading-[1.06] text-white sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl">
+								<h1 className="font-heading mb-5 max-w-4xl text-[34px] font-black leading-[1.06] text-white sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl">
 									{heroTitle.split("\n").map((line, index) => (
 										<span key={index} className="hero-line-mask">
 											<span

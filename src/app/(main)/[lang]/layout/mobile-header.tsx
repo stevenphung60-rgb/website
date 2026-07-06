@@ -124,7 +124,7 @@ export function MobileHeader({
 
 									{brandCompanyName ? (
 										<span className="min-w-0 overflow-hidden">
-											<span className="block max-w-[calc(100vw-140px)] truncate font-sans text-[20px] font-black uppercase leading-[1.18] tracking-[0.075em] text-[#2F2114] drop-shadow-[0_1px_0_rgba(168,126,60,0.2)] sm:max-w-[250px] sm:text-[21px] sm:tracking-[0.09em]">
+											<span className="block max-w-[calc(100vw-140px)] truncate font-heading text-[20px] font-black uppercase leading-[1.18] tracking-[0.075em] text-[#2F2114] drop-shadow-[0_1px_0_rgba(168,126,60,0.2)] sm:max-w-[250px] sm:text-[21px] sm:tracking-[0.09em]">
 												{brandCompanyName}
 											</span>
 										</span>
@@ -156,7 +156,7 @@ export function MobileHeader({
 									</div>
 								) : null}
 
-								<nav className="flex flex-col divide-y divide-[#E7D0AF]/50">
+								<nav className="flex flex-col divide-y divide-[#E7D0AF]/50 font-heading">
 									{navigation.map((item, index) => (
 										<LocaleLink
 											key={item.name}
@@ -179,7 +179,7 @@ export function MobileHeader({
 								</nav>
 
 								<div
-									className={`pt-5 transition-all duration-300 ${
+									className={`pt-5 font-heading transition-all duration-300 ${
 										isMenuOpen
 											? "translate-y-0 opacity-100"
 											: "translate-y-2 opacity-0"
@@ -207,7 +207,7 @@ export function MobileHeader({
 										{phone ? (
 											<a
 												href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-												className="flex items-center gap-3.5 text-[#342312] transition-colors hover:text-[#A87E3C]"
+												className="flex items-center gap-3.5 font-heading text-[#342312] transition-colors hover:text-[#A87E3C]"
 											>
 												<Phone
 													className="size-[18px] shrink-0 text-[#A87E3C]"
@@ -223,7 +223,7 @@ export function MobileHeader({
 										{email ? (
 											<a
 												href={`mailto:${email}`}
-												className="flex items-center gap-3.5 text-[#342312] transition-colors hover:text-[#A87E3C]"
+												className="flex items-center gap-3.5 font-heading text-[#342312] transition-colors hover:text-[#A87E3C]"
 											>
 												<Mail
 													className="size-[18px] shrink-0 text-[#A87E3C]"

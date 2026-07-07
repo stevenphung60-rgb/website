@@ -13,12 +13,27 @@ export async function getBlogPostBySlug(
 
 	const db = await getDatabase();
 	const slugKey = `slug.${locale}`;
-	const document = await db.collection<BlogPostDocument>("blogPosts").findOne({
+	const exactLocaleDocument = await db.collection<BlogPostDocument>("blogPosts").findOne({
 		[slugKey]: slug,
 		status: "published",
 	});
 
-	if (!document) return null;
+	if (exactLocaleDocument) {
+		return normalizeBlogPostDocument(exactLocaleDocument);
+	}
 
-	return normalizeBlogPostDocument(document);
+	/*
+	 * Language switcher changes only the locale prefix, for example:
+	 * /vi/blog/ong-gio-chong-chay-ei-la-gi -> /en/blog/ong-gio-chong-chay-ei-la-gi.
+	 * Blog slugs are localized, so the incoming slug may belong to the other locale.
+	 * Fallback lookup allows the detail page to find the post and redirect to the proper localized slug.
+	 */
+	const fallbackDocument = await db.collection<BlogPostDocument>("blogPosts").findOne({
+		status: "published",
+		$or: [{ "slug.vi": slug }, { "slug.en": slug }],
+	});
+
+	if (!fallbackDocument) return null;
+
+	return normalizeBlogPostDocument(fallbackDocument);
 }

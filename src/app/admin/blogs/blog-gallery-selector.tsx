@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ImagePlus, Plus, Star, Trash2 } from "lucide-react";
+import { Check, ImagePlus, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "src/components/ui/button";
 import type { BlogImage } from "src/server/blogs";
@@ -29,9 +29,17 @@ function createImage(url = ""): BlogImage {
 
 function normalizeImages(images: BlogImage[]): BlogImage[] {
 	const filteredImages = images
-		.filter((image) => image.url || image.alt.vi || image.caption?.vi)
+		.filter((image) => image.url)
 		.map((image, index) => ({
 			...image,
+			alt: {
+				vi: image.alt?.vi || "",
+				en: image.alt?.en || "",
+			},
+			caption: {
+				vi: image.caption?.vi || "",
+				en: image.caption?.en || "",
+			},
 			order: index,
 		}));
 
@@ -67,17 +75,17 @@ async function uploadImage(file: File) {
  * @param props - Gallery selector props
  * @returns Gallery selector
  */
-export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySelectorProps) {
-	const [images, setImages] = useState<BlogImage[]>(normalizeImages(defaultImages));
-	const serializedImages = useMemo(() => JSON.stringify(normalizeImages(images)), [images]);
-
-	function updateImage(index: number, nextImage: BlogImage) {
-		setImages((currentImages) =>
-			normalizeImages(
-				currentImages.map((image, imageIndex) => (imageIndex === index ? nextImage : image)),
-			),
-		);
-	}
+export function BlogGallerySelector({
+	fieldName,
+	defaultImages,
+}: BlogGallerySelectorProps) {
+	const [images, setImages] = useState<BlogImage[]>(
+		normalizeImages(defaultImages),
+	);
+	const serializedImages = useMemo(
+		() => JSON.stringify(normalizeImages(images)),
+		[images],
+	);
 
 	function setMainImage(index: number) {
 		setImages((currentImages) =>
@@ -106,7 +114,9 @@ export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySel
 			if (url) uploadedImages.push(createImage(url));
 		}
 
-		setImages((currentImages) => normalizeImages([...currentImages, ...uploadedImages]));
+		setImages((currentImages) =>
+			normalizeImages([...currentImages, ...uploadedImages]),
+		);
 	}
 
 	return (
@@ -116,9 +126,12 @@ export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySel
 			<div className="border-b border-[#E7D0AF]/70 px-4 py-4 sm:px-6">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div>
-						<h2 className="text-base font-semibold text-[#342312]">Gallery ảnh blog</h2>
+						<h2 className="text-base font-semibold text-[#342312]">
+							Gallery ảnh blog
+						</h2>
 						<p className="mt-1 text-sm leading-6 text-[#342312]/65">
-							Upload nhiều ảnh và chọn một ảnh làm ảnh chính. Ảnh chính dùng cho card blog và cover đầu bài.
+							Upload nhiều ảnh và chọn một ảnh làm ảnh chính. Ảnh chính dùng cho
+							card blog và cover đầu bài.
 						</p>
 					</div>
 
@@ -143,13 +156,16 @@ export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySel
 				{images.length > 0 ? (
 					<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 						{images.map((image, index) => (
-							<div key={`${image.url}-${index}`} className="rounded-2xl border border-[#E7D0AF] bg-[#FAF7F1] p-3">
+							<div
+								key={`${image.url}-${index}`}
+								className="rounded-2xl border border-[#E7D0AF] bg-[#FAF7F1] p-3"
+							>
 								<div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E7D0AF] bg-white">
-									{image.url ? (
-										<img src={image.url} alt={image.alt.vi || "Blog image"} className="h-full w-full object-cover" />
-									) : (
-										<div className="flex h-full items-center justify-center text-sm text-[#342312]/55">Chưa có ảnh</div>
-									)}
+									<img
+										src={image.url}
+										alt="Blog image"
+										className="h-full w-full object-cover"
+									/>
 
 									{image.isMain ? (
 										<div className="absolute left-2 top-2 inline-flex items-center rounded-full bg-[#A87E3C] px-2 py-1 text-xs font-semibold text-white">
@@ -158,19 +174,21 @@ export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySel
 									) : null}
 								</div>
 
-								<div className="mt-3 space-y-2">
-									<input value={image.url} onChange={(event) => updateImage(index, { ...image, url: event.target.value })} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-2 text-sm" placeholder="URL ảnh" />
-									<input value={image.alt.vi} onChange={(event) => updateImage(index, { ...image, alt: { ...image.alt, vi: event.target.value } })} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-2 text-sm" placeholder="Alt tiếng Việt" />
-									<input value={image.alt.en} onChange={(event) => updateImage(index, { ...image, alt: { ...image.alt, en: event.target.value } })} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-2 text-sm" placeholder="Alt tiếng Anh" />
-									<input value={image.caption?.vi || ""} onChange={(event) => updateImage(index, { ...image, caption: { vi: event.target.value, en: image.caption?.en || "" } })} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-2 text-sm" placeholder="Caption tiếng Việt" />
-									<input value={image.caption?.en || ""} onChange={(event) => updateImage(index, { ...image, caption: { vi: image.caption?.vi || "", en: event.target.value } })} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-2 text-sm" placeholder="Caption tiếng Anh" />
-								</div>
-
 								<div className="mt-3 flex flex-wrap gap-2">
-									<Button type="button" variant="outline" onClick={() => setMainImage(index)} className="border-[#E7D0AF] bg-white text-[#342312]">
+									<Button
+										type="button"
+										variant="outline"
+										onClick={() => setMainImage(index)}
+										className="border-[#E7D0AF] bg-white text-[#342312]"
+									>
 										<Check className="mr-1 size-4" /> Chọn ảnh chính
 									</Button>
-									<Button type="button" variant="destructive" onClick={() => removeImage(index)}>
+
+									<Button
+										type="button"
+										variant="destructive"
+										onClick={() => removeImage(index)}
+									>
 										<Trash2 className="mr-1 size-4" /> Xóa
 									</Button>
 								</div>
@@ -179,13 +197,9 @@ export function BlogGallerySelector({ fieldName, defaultImages }: BlogGallerySel
 					</div>
 				) : (
 					<div className="rounded-2xl border border-dashed border-[#E7D0AF] bg-[#FAF7F1] px-4 py-10 text-center text-sm text-[#342312]/65">
-						Chưa có ảnh. Upload ảnh hoặc thêm URL ảnh để tạo gallery blog.
+						Chưa có ảnh. Upload ảnh để tạo gallery blog.
 					</div>
 				)}
-
-				<Button type="button" variant="outline" onClick={() => setImages((currentImages) => normalizeImages([...currentImages, createImage()]))} className="border-[#E7D0AF] bg-white text-[#342312]">
-					<Plus className="mr-2 size-4" /> Thêm ảnh bằng URL
-				</Button>
 			</div>
 		</section>
 	);

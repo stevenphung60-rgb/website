@@ -237,7 +237,7 @@ export async function getSiteSearchResults(input: SiteSearchInput): Promise<Site
 			title,
 			description,
 			searchText: [title, description].join(" "),
-			href: `/${locale}/services#service-card-${service.id}`,
+			href: `/${locale}/services/${service.id}`,
 			query,
 		});
 

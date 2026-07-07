@@ -3,22 +3,22 @@ import { getSiteFontFamilyValue, type SiteFontId } from "src/lib/font-presets";
 import type { BlogAppearanceSettings, BlogFontSelection } from "src/server/blogs";
 
 const bodySizeClass = {
-	compact: "text-[15px]",
-	standard: "text-[16px]",
-	comfortable: "text-[17px]",
-	large: "text-[18px]",
+	compact: "text-[16px]",
+	standard: "text-[18px]",
+	comfortable: "text-[19px]",
+	large: "text-[20px]",
 } satisfies Record<BlogAppearanceSettings["bodySize"], string>;
 
 const lineHeightClass = {
-	compact: "leading-7",
-	standard: "leading-8",
-	relaxed: "leading-9",
+	compact: "leading-8",
+	standard: "leading-[1.85]",
+	relaxed: "leading-[2]",
 } satisfies Record<BlogAppearanceSettings["lineHeight"], string>;
 
 const widthClass = {
 	narrow: "max-w-3xl",
-	standard: "max-w-4xl",
-	wide: "max-w-6xl",
+	standard: "max-w-[860px]",
+	wide: "max-w-5xl",
 } satisfies Record<BlogAppearanceSettings["contentWidth"], string>;
 
 function getFontValue(fontId: BlogFontSelection, fallback: "heading" | "body") {
@@ -76,20 +76,27 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content h2,
 				.blog-rich-content h3 {
 					font-family: var(--blog-heading-font);
-					font-weight: 800;
-					line-height: 1.16;
+					font-weight: 760;
+					line-height: 1.18;
 					color: #342312;
-					margin-top: 2.25rem;
+					margin-top: 2.6rem;
 					margin-bottom: 1rem;
+					letter-spacing: -0.01em;
 				}
 
-				.blog-rich-content h1 { font-size: clamp(2rem, 4vw, 3.25rem); }
-				.blog-rich-content h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); }
-				.blog-rich-content h3 { font-size: clamp(1.35rem, 2.2vw, 1.85rem); }
+				.blog-rich-content h1 { font-size: clamp(2.15rem, 4vw, 3.4rem); }
+				.blog-rich-content h2 { font-size: clamp(1.8rem, 3vw, 2.55rem); }
+				.blog-rich-content h3 { font-size: clamp(1.35rem, 2.2vw, 1.9rem); }
 
 				.blog-rich-content p {
-					margin: 1rem 0;
+					margin: 1.15rem 0;
 					color: rgb(52 35 18 / 0.78);
+				}
+
+				.blog-rich-content strong,
+				.blog-rich-content b {
+					color: #342312;
+					font-weight: 760;
 				}
 
 				.blog-rich-content a {
@@ -101,20 +108,20 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 
 				.blog-rich-content ul,
 				.blog-rich-content ol {
-					margin: 1rem 0;
+					margin: 1.1rem 0;
 					padding-left: 1.5rem;
 					color: rgb(52 35 18 / 0.78);
 				}
 
 				.blog-rich-content ul { list-style: disc; }
 				.blog-rich-content ol { list-style: decimal; }
-				.blog-rich-content li { margin: 0.4rem 0; }
+				.blog-rich-content li { margin: 0.45rem 0; }
 
 				.blog-rich-content blockquote {
-					margin: 1.5rem 0;
-					border-left: 4px solid #A87E3C;
-					background: #FAF7F1;
-					padding: 1rem 1.25rem;
+					margin: 1.75rem 0;
+					border-left: 3px solid #A87E3C;
+					background: #F7F1E6;
+					padding: 1.15rem 1.35rem;
 					font-style: italic;
 					font-weight: 600;
 					color: #342312;
@@ -123,29 +130,29 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content img {
 					max-width: 100%;
 					height: auto;
-					border-radius: 1rem;
+					border-radius: 0.75rem;
 					border: 1px solid #E7D0AF;
-					margin: 1.5rem 0;
+					margin: 1.75rem 0;
 				}
 
 				.blog-rich-content table {
 					width: 100%;
 					border-collapse: collapse;
-					margin: 1.5rem 0;
+					margin: 1.75rem 0;
 					background: white;
 				}
 
 				.blog-rich-content td,
 				.blog-rich-content th {
 					border: 1px solid #E7D0AF;
-					padding: 0.75rem;
+					padding: 0.8rem;
 					text-align: left;
 				}
 			`}</style>
 
 			<div
 				className={[
-					"blog-rich-content rounded-2xl bg-transparent text-[#342312]",
+					"blog-rich-content text-[#342312]",
 					bodySizeClass[appearance.bodySize],
 					lineHeightClass[appearance.lineHeight],
 				].join(" ")}

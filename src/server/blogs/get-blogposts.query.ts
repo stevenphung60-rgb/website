@@ -10,7 +10,15 @@ interface GetBlogPostsInput {
 	limit?: number;
 }
 
-export async function getBlogPosts(input: GetBlogPostsInput = {}): Promise<BlogPost[]> {
+/**
+ * Get blog posts for admin and public listing.
+ * Default order is newest created first.
+ * @param input - Blog post filter input
+ * @returns Blog posts
+ */
+export async function getBlogPosts(
+	input: GetBlogPostsInput = {},
+): Promise<BlogPost[]> {
 	"use cache";
 	cacheTag(CACHE_TAGS.BLOG_POSTS);
 
@@ -28,7 +36,7 @@ export async function getBlogPosts(input: GetBlogPostsInput = {}): Promise<BlogP
 	const cursor = db
 		.collection<BlogPostDocument>("blogPosts")
 		.find(query)
-		.sort({ publishedAt: -1, updatedAt: -1 });
+		.sort({ createdAt: -1, publishedAt: -1, updatedAt: -1 });
 
 	if (input.limit && input.limit > 0) {
 		cursor.limit(input.limit);
@@ -39,6 +47,11 @@ export async function getBlogPosts(input: GetBlogPostsInput = {}): Promise<BlogP
 	return documents.map(normalizeBlogPostDocument);
 }
 
+/**
+ * Get published blog posts
+ * @param categoryId - Optional category filter
+ * @returns Published blog posts
+ */
 export async function getPublishedBlogPosts(categoryId?: string | null) {
 	return getBlogPosts({ status: "published", categoryId });
 }

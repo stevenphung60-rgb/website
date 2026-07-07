@@ -16,44 +16,65 @@ export function BlogCategoryForm({ category }: BlogCategoryFormProps) {
 
 			<AdminFormSection
 				title="Thông tin loại blog"
-				description="Nhập tên loại blog. Tiếng Việt là nội dung chính trên website. Slug có thể để trống để hệ thống tự tạo."
+				description="Nhập tên và mô tả loại blog. Slug sẽ được hệ thống tự tạo từ tên loại blog."
 			>
 				<div className="grid gap-5 lg:grid-cols-2">
 					<label className="space-y-2">
-						<span className="text-sm font-semibold text-[#342312]">Tên loại blog tiếng Việt *</span>
-						<input name="nameVi" defaultValue={category?.name.vi || ""} required className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
+						<span className="text-sm font-semibold text-[#342312]">
+							Tên loại blog tiếng Việt *
+						</span>
+						<input
+							name="nameVi"
+							defaultValue={category?.name.vi || ""}
+							required
+							className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm"
+						/>
 					</label>
 
 					<label className="space-y-2">
-						<span className="text-sm font-semibold text-[#342312]">Tên loại blog tiếng Anh</span>
-						<input name="nameEn" defaultValue={category?.name.en || ""} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
-					</label>
-
-					<label className="space-y-2">
-						<span className="text-sm font-semibold text-[#342312]">Slug tiếng Việt</span>
-						<input name="slugVi" defaultValue={category?.slug.vi || ""} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
-					</label>
-
-					<label className="space-y-2">
-						<span className="text-sm font-semibold text-[#342312]">Slug tiếng Anh</span>
-						<input name="slugEn" defaultValue={category?.slug.en || ""} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
+						<span className="text-sm font-semibold text-[#342312]">
+							Tên loại blog tiếng Anh
+						</span>
+						<input
+							name="nameEn"
+							defaultValue={category?.name.en || ""}
+							className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm"
+						/>
 					</label>
 
 					<label className="space-y-2 lg:col-span-2">
-						<span className="text-sm font-semibold text-[#342312]">Mô tả tiếng Việt</span>
-						<textarea name="descriptionVi" defaultValue={category?.description.vi || ""} rows={3} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
+						<span className="text-sm font-semibold text-[#342312]">
+							Mô tả tiếng Việt
+						</span>
+						<textarea
+							name="descriptionVi"
+							defaultValue={category?.description.vi || ""}
+							rows={3}
+							className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm"
+						/>
 					</label>
 
 					<label className="space-y-2 lg:col-span-2">
-						<span className="text-sm font-semibold text-[#342312]">Mô tả tiếng Anh</span>
-						<textarea name="descriptionEn" defaultValue={category?.description.en || ""} rows={3} className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm" />
+						<span className="text-sm font-semibold text-[#342312]">
+							Mô tả tiếng Anh
+						</span>
+						<textarea
+							name="descriptionEn"
+							defaultValue={category?.description.en || ""}
+							rows={3}
+							className="w-full rounded-lg border border-[#E7D0AF] bg-white p-3 text-sm"
+						/>
 					</label>
 				</div>
 			</AdminFormSection>
 
 			<AdminStickyActions note="Sau khi lưu, loại blog có thể dùng để phân nhóm bài viết.">
 				<DialogClose asChild>
-					<Button type="button" variant="outline" className="border-[#E7D0AF] bg-white text-[#342312]">
+					<Button
+						type="button"
+						variant="outline"
+						className="border-[#E7D0AF] bg-white text-[#342312]"
+					>
 						Hủy
 					</Button>
 				</DialogClose>

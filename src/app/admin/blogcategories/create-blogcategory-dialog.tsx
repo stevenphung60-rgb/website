@@ -1,4 +1,4 @@
-import { FileText, Plus } from "lucide-react";
+import { Plus, Tags } from "lucide-react";
 import { Button } from "src/components/ui/button";
 import {
 	Dialog,
@@ -24,8 +24,9 @@ export function CreateBlogCategoryDialog() {
 				<DialogHeader className="sticky top-0 z-10 border-b border-[#E7D0AF] bg-white px-5 py-5 sm:px-6">
 					<div className="flex items-start gap-4">
 						<div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#342312]/10 text-[#342312]">
-							<FileText className="size-5" />
+							<Tags className="size-5" />
 						</div>
+
 						<div className="min-w-0">
 							<DialogTitle className="break-words font-serif text-2xl font-bold text-[#342312]">
 								Thêm loại blog
@@ -36,6 +37,7 @@ export function CreateBlogCategoryDialog() {
 						</div>
 					</div>
 				</DialogHeader>
+
 				<div className="px-5 py-6 sm:px-6">
 					<BlogCategoryForm />
 				</div>

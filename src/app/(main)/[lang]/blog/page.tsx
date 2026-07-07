@@ -119,7 +119,9 @@ async function BlogCard({
 	const excerpt = getLocalizedBlogText(post.excerpt, locale);
 	const slug = getLocalizedBlogText(post.slug, locale);
 	const readTime = getBlogReadingTime(post.content[locale] || "");
-	const mainImage = getMainBlogImage(post.gallery) || post.coverImage;
+	const mainImage = post.coverImage?.url
+		? post.coverImage
+		: getMainBlogImage(post.gallery) || post.coverImage;
 
 	return (
 		<Link href={`/${locale}/blog/${slug}`} className="group overflow-hidden rounded-2xl border border-[#E7D0AF] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">

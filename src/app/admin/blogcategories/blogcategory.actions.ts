@@ -33,10 +33,6 @@ export async function saveBlogCategoryAction(formData: FormData) {
 			vi: nameVi,
 			en: nameEn,
 		},
-		slug: {
-			vi: getFormString(formData, "slugVi"),
-			en: getFormString(formData, "slugEn"),
-		},
 		description: {
 			vi: getFormString(formData, "descriptionVi"),
 			en: getFormString(formData, "descriptionEn"),

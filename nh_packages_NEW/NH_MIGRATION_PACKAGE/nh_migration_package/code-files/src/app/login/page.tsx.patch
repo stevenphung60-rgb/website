@@ -1,0 +1,10 @@
+*** Begin Patch
+*** Update File: src/app/login/page.tsx
+@@
+-			} else {
+-				router.push("/admin/unauthorized");
+-			}
++			} else {
++				router.push("/unauthorized");
++			}
+*** End Patch

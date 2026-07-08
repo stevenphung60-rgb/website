@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, CalendarDays, Clock3 } from "lucide-react";
+import type { ReactNode } from "react";
 import { BlogMobileCategorySelect } from "src/components/blog/blog-mobile-category-select";
 import type { Locale } from "src/lib/i18n/config";
 import {
-	getBlogListPage,
-	type BlogCategoryFilterItem,
-	type BlogTagFilterItem,
+	getBlogListPageData,
+	type BlogCategorySummary,
+	type BlogTagSummary,
 	type BlogPost,
 } from "src/server/blogs";
 import {
@@ -26,62 +26,96 @@ interface BlogListPageProps {
 	params: Promise<{ lang: Locale }>;
 	searchParams?: Promise<{
 		category?: string | string[];
-		tag?: string | string[];
 		page?: string | string[];
+		tag?: string | string[];
 	}>;
 }
 
+type BlogLocale = "vi" | "en";
+
+type BlogCategoryMap = Map<string, BlogCategorySummary["category"]>;
+
 const blogText = {
 	vi: {
-		blog: "Blog",
+		all: "Tất cả",
+		blogCount: "blog",
+		breadcrumbHome: "Trang chủ",
+		categoryLabel: "Danh mục blog",
+		empty: "Chưa có blog phù hợp.",
+		featured: "Blog nổi bật",
 		latest: "Blog mới nhất",
 		list: "Danh sách blog",
-		categories: "Danh mục blog",
-		featured: "Blog nổi bật",
-		tags: "Tags",
-		all: "Tất cả",
-		empty: "Chưa có blog phù hợp.",
-		readMinute: "phút đọc",
+		mobileCategoryLabel: "Chọn danh mục blog",
 		readBlog: "Đọc blog",
-		page: "Trang",
+		readMinute: "phút đọc",
+		tags: "Tags",
 	},
 	en: {
-		blog: "Blog",
+		all: "All",
+		blogCount: "blog",
+		breadcrumbHome: "Home",
+		categoryLabel: "Blog categories",
+		empty: "No matching blog.",
+		featured: "Featured blog",
 		latest: "Latest blog",
 		list: "Blog list",
-		categories: "Blog categories",
-		featured: "Featured blog",
-		tags: "Tags",
-		all: "All",
-		empty: "No matching blogs.",
-		readMinute: "min read",
+		mobileCategoryLabel: "Choose blog category",
 		readBlog: "Read blog",
-		page: "Page",
+		readMinute: "min read",
+		tags: "Tags",
 	},
 };
 
-function getSingleSearchParam(value?: string | string[]): string {
-	return Array.isArray(value) ? value[0] || "" : value || "";
+function getSearchParam(value: string | string[] | undefined): string | null {
+	if (Array.isArray(value)) return value[0] || null;
+	return value || null;
 }
 
-function parsePage(value?: string | string[]): number {
-	const page = Number(getSingleSearchParam(value));
-	return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+function getPageParam(value: string | string[] | undefined): number {
+	const rawValue = getSearchParam(value);
+	const page = rawValue ? Number.parseInt(rawValue, 10) : 1;
+	return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
-function getBlogHref(locale: Locale, options: { category?: string; tag?: string; page?: number }) {
+function createBlogHref(
+	locale: Locale,
+	input: {
+		categoryId?: string | null;
+		page?: number;
+		tag?: string | null;
+	} = {},
+) {
 	const params = new URLSearchParams();
 
-	if (options.category) params.set("category", options.category);
-	if (options.tag) params.set("tag", options.tag);
-	if (options.page && options.page > 1) params.set("page", String(options.page));
+	if (input.categoryId) params.set("category", input.categoryId);
+	if (input.tag) params.set("tag", input.tag);
+	if (input.page && input.page > 1) params.set("page", String(input.page));
 
-	const query = params.toString();
-	return `/${locale}/blog${query ? `?${query}` : ""}`;
+	const queryString = params.toString();
+	return `/${locale}/blog${queryString ? `?${queryString}` : ""}`;
 }
 
-function getBlogImage(post: BlogPost) {
+function formatDate(date: Date | null | undefined, locale: Locale): string {
+	if (!date) return "";
+
+	return new Date(date).toLocaleDateString(locale === "en" ? "en-US" : "vi-VN", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+	});
+}
+
+function getBlogCardImage(post: BlogPost) {
 	return post.coverImage?.url ? post.coverImage : getMainBlogImage(post.gallery) || post.coverImage;
+}
+
+function createCategoryMap(categories: BlogCategorySummary[]): BlogCategoryMap {
+	return new Map(categories.map(({ category }) => [category.id, category]));
+}
+
+function getCategoryName(categoryMap: BlogCategoryMap, categoryId: string, locale: BlogLocale) {
+	const category = categoryMap.get(categoryId);
+	return category ? getLocalizedBlogText(category.name, locale) : "Blog";
 }
 
 export default async function BlogListPage({ params, searchParams }: BlogListPageProps) {
@@ -89,138 +123,132 @@ export default async function BlogListPage({ params, searchParams }: BlogListPag
 	const resolvedSearchParams = await searchParams;
 	const lang = locale === "en" ? "en" : "vi";
 	const text = blogText[lang];
-	const selectedCategoryId = getSingleSearchParam(resolvedSearchParams?.category);
-	const selectedTag = getSingleSearchParam(resolvedSearchParams?.tag);
-	const currentPage = parsePage(resolvedSearchParams?.page);
-
-	const blogPage = await getBlogListPage({
-		categoryId: selectedCategoryId || null,
-		tag: selectedTag || null,
-		page: currentPage,
+	const selectedCategoryId = getSearchParam(resolvedSearchParams?.category);
+	const selectedTag = getSearchParam(resolvedSearchParams?.tag);
+	const page = getPageParam(resolvedSearchParams?.page);
+	const blogData = await getBlogListPageData({
+		categoryId: selectedCategoryId,
+		page,
+		tag: selectedTag,
 	});
-
-	const activeFilterLabel = blogPage.selectedCategory
-		? getLocalizedBlogText(blogPage.selectedCategory.name, lang)
-		: blogPage.selectedTag || text.all;
+	const categoryMap = createCategoryMap(blogData.categories);
 
 	return (
 		<main className="bg-[#FAF7F1] text-[#342312]">
 			<style>{`
-				@keyframes blogListFadeUp {
-					from { opacity: 0; transform: translateY(18px); }
+				@keyframes blogRevealUp {
+					from { opacity: 0; transform: translateY(20px); }
 					to { opacity: 1; transform: translateY(0); }
 				}
-				.blog-list-reveal {
+
+				.blog-reveal {
 					opacity: 0;
-					animation: blogListFadeUp 0.72s ease forwards;
+					animation: blogRevealUp 700ms ease forwards;
 				}
 			`}</style>
 
-			<section className="blog-list-reveal border-b border-[#E7D0AF] px-4 pb-10 pt-14 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-				<div className="mx-auto max-w-[1480px]">
-					<div className="text-sm text-[#342312]/58">
+			<section className="px-4 pb-16 pt-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+				<div className="mx-auto max-w-[1560px]">
+					<nav className="blog-reveal mb-7 text-sm text-[#342312]/55">
 						<Link href={`/${locale}`} className="transition hover:text-[#A87E3C]">
-							Home
+							{text.breadcrumbHome}
 						</Link>
-						<span className="mx-2">/</span>
-						<span>{text.blog}</span>
-					</div>
+						<span className="mx-2 text-[#A87E3C]/55">/</span>
+						<span>Blog</span>
+					</nav>
 
-					<p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-[#A87E3C]">
-						{text.blog}
-					</p>
-					<h1 className="font-heading mt-3 text-[58px] font-black uppercase leading-none tracking-[-0.04em] text-[#342312] sm:text-[76px] lg:text-[96px]">
-						{text.blog}
-					</h1>
-				</div>
-			</section>
-
-			<section className="px-4 py-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-				<div className="mx-auto max-w-[1480px]">
 					<BlogMobileCategorySelect
-						locale={locale}
-						categories={blogPage.categories}
-						selectedCategoryId={selectedCategoryId}
 						allLabel={text.all}
-						label={text.categories}
+						categories={blogData.categories}
+						label={text.mobileCategoryLabel}
+						locale={locale}
+						selectedCategoryId={blogData.selectedCategoryId}
+						selectedTag={blogData.selectedTag}
 					/>
 
-					<div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
-						<div className="min-w-0 space-y-12">
-							{blogPage.latestBlog ? (
-								<section className="blog-list-reveal" style={{ animationDelay: "120ms" }}>
-									<div className="mb-5 flex items-center justify-between border-b border-[#E7D0AF] pb-3">
-										<p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A87E3C]">
-											{text.latest}
-										</p>
-										<p className="hidden text-sm text-[#342312]/55 sm:block">{activeFilterLabel}</p>
-									</div>
+					<div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_390px]">
+						<div className="min-w-0 space-y-14">
+							<section className="blog-reveal" style={{ animationDelay: "80ms" }}>
+								<SectionHeading
+									count={`${blogData.filteredBlogCount} ${text.blogCount}`}
+									title={text.latest}
+								/>
 
-									<LatestBlogCard post={blogPage.latestBlog} locale={lang} readMinuteLabel={text.readMinute} readBlogLabel={text.readBlog} />
-								</section>
-							) : null}
+								{blogData.latestPost ? (
+									<LatestBlogCard
+										categoryMap={categoryMap}
+										locale={locale}
+										post={blogData.latestPost}
+										readBlogLabel={text.readBlog}
+										readMinuteLabel={text.readMinute}
+									/>
+								) : (
+									<EmptyBlogState>{text.empty}</EmptyBlogState>
+								)}
+							</section>
 
-							<section className="blog-list-reveal" style={{ animationDelay: "220ms" }}>
-								<div className="mb-5 flex flex-col gap-2 border-b border-[#E7D0AF] pb-3 sm:flex-row sm:items-end sm:justify-between">
-									<div>
-										<p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A87E3C]">
-											{text.blog}
-										</p>
-										<h2 className="font-heading mt-2 text-3xl font-bold text-[#342312]">
-											{text.list}
-										</h2>
-									</div>
-									<p className="text-sm text-[#342312]/55">
-										{text.page} {blogPage.pagination.currentPage} / {blogPage.pagination.totalPages}
-									</p>
-								</div>
+							<section className="blog-reveal" style={{ animationDelay: "180ms" }}>
+								<SectionHeading
+									count={`${blogData.listBlogCount} ${text.blogCount}`}
+									title={text.list}
+								/>
 
-								{blogPage.blogs.length > 0 ? (
-									<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-										{blogPage.blogs.map((post, index) => (
+								{blogData.posts.length > 0 ? (
+									<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+										{blogData.posts.map((post, index) => (
 											<BlogCard
 												key={post.id}
+												categoryMap={categoryMap}
+												index={index}
+												locale={locale}
 												post={post}
-												locale={lang}
-												readMinuteLabel={text.readMinute}
 												readBlogLabel={text.readBlog}
-												animationDelay={`${300 + index * 70}ms`}
+												readMinuteLabel={text.readMinute}
 											/>
 										))}
 									</div>
 								) : (
-									<div className="border border-[#E7D0AF] bg-white px-5 py-12 text-center text-sm text-[#342312]/65">
-										{text.empty}
-									</div>
+									<EmptyBlogState>{text.empty}</EmptyBlogState>
 								)}
 
 								<BlogPagination
+									currentPage={blogData.currentPage}
 									locale={locale}
-									category={selectedCategoryId}
-									tag={selectedTag}
-									currentPage={blogPage.pagination.currentPage}
-									totalPages={blogPage.pagination.totalPages}
+									selectedCategoryId={blogData.selectedCategoryId}
+									selectedTag={blogData.selectedTag}
+									totalPages={blogData.totalPages}
 								/>
 							</section>
 						</div>
 
-						<aside className="hidden space-y-5 lg:block">
-							<BlogCategorySidebar
-								locale={locale}
-								categories={blogPage.categories}
-								selectedCategoryId={selectedCategoryId}
-								allLabel={text.all}
-								title={text.categories}
-							/>
+						<aside className="hidden lg:block lg:pt-[52px]">
+							<div className="space-y-6">
+								<CategorySidebar
+									allLabel={text.all}
+									categories={blogData.categories}
+									locale={locale}
+									selectedCategoryId={blogData.selectedCategoryId}
+									selectedTag={blogData.selectedTag}
+									title={text.categoryLabel}
+									totalCount={blogData.totalBlogCount}
+								/>
 
-							<FeaturedBlogSidebar
-								locale={lang}
-								blogs={blogPage.featuredBlogs}
-								title={text.featured}
-								readMinuteLabel={text.readMinute}
-							/>
+								<FeaturedSidebar
+									categoryMap={categoryMap}
+									locale={locale}
+									posts={blogData.featuredPosts}
+									readMinuteLabel={text.readMinute}
+									title={text.featured}
+								/>
 
-							<BlogTagSidebar locale={locale} tags={blogPage.tags} selectedTag={selectedTag} title={text.tags} />
+								<TagSidebar
+									locale={locale}
+									selectedCategoryId={blogData.selectedCategoryId}
+									selectedTag={blogData.selectedTag}
+									tags={blogData.tags}
+									title={text.tags}
+								/>
+							</div>
 						</aside>
 					</div>
 				</div>
@@ -229,50 +257,83 @@ export default async function BlogListPage({ params, searchParams }: BlogListPag
 	);
 }
 
+function SectionHeading({ count, title }: { count?: string; title: string }) {
+	return (
+		<div className="mb-5 flex items-end justify-between gap-4 border-b border-[#E7D0AF] pb-3">
+			<p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A87E3C]">
+				{title}
+			</p>
+			{count ? <p className="shrink-0 text-sm text-[#342312]/55">{count}</p> : null}
+		</div>
+	);
+}
+
 function LatestBlogCard({
-	post,
+	categoryMap,
 	locale,
-	readMinuteLabel,
+	post,
 	readBlogLabel,
+	readMinuteLabel,
 }: {
+	categoryMap: BlogCategoryMap;
+	locale: Locale;
 	post: BlogPost;
-	locale: "vi" | "en";
-	readMinuteLabel: string;
 	readBlogLabel: string;
+	readMinuteLabel: string;
 }) {
-	const title = getLocalizedBlogText(post.title, locale);
-	const excerpt = getLocalizedBlogText(post.excerpt, locale);
-	const slug = getLocalizedBlogText(post.slug, locale);
-	const mainImage = getBlogImage(post);
-	const readTime = getBlogReadingTime(post.content[locale] || "");
+	const lang = locale === "en" ? "en" : "vi";
+	const image = getBlogCardImage(post);
+	const title = getLocalizedBlogText(post.title, lang);
+	const excerpt = getLocalizedBlogText(post.excerpt, lang);
+	const slug = getLocalizedBlogText(post.slug, lang);
+	const categoryName = getCategoryName(categoryMap, post.categoryId, lang);
+	const readTime = getBlogReadingTime(post.content[lang] || "");
+	const publishedDate = formatDate(post.publishedAt, locale);
 
 	return (
-		<Link href={`/${locale}/blog/${slug}`} className="group grid overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/55 lg:grid-cols-[1.05fr_0.95fr]">
-			<div className="relative min-h-[320px] bg-[#F7F1E6] sm:min-h-[420px] lg:min-h-[500px]">
-				{mainImage.url ? (
+		<Link
+			href={`/${locale}/blog/${slug}`}
+			className="group grid overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/70 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
+		>
+			<div className="relative min-h-[280px] bg-[#F7F1E6] sm:min-h-[360px] lg:min-h-[460px]">
+				{image.url ? (
 					<Image
-						src={mainImage.url}
-						alt={mainImage.alt[locale] || title}
+						src={image.url}
+						alt={image.alt?.[lang] || title}
 						fill
 						priority
-						sizes="(max-width: 1024px) 100vw, 55vw"
+						sizes="(max-width: 1024px) 100vw, 50vw"
 						className="object-cover"
 					/>
 				) : null}
 			</div>
 
-			<div className="flex min-h-[360px] flex-col justify-center p-6 sm:p-9 lg:p-12">
-				<p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A87E3C]">{post.tags[0] || "Blog"}</p>
-				<h2 className="font-heading mt-5 text-[34px] font-black uppercase leading-[1.02] tracking-[-0.02em] text-[#342312] sm:text-[46px] lg:text-[56px]">
+			<div className="flex min-h-[360px] flex-col justify-center px-6 py-8 sm:px-8 lg:px-12">
+				<p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A87E3C]">
+					{categoryName}
+				</p>
+				<h2 className="mt-5 max-w-2xl font-heading text-[30px] font-semibold leading-[1.08] tracking-[-0.02em] text-[#342312] transition group-hover:text-[#A87E3C] sm:text-[38px] lg:text-[46px]">
 					{title}
 				</h2>
-				<p className="mt-5 line-clamp-4 text-[16px] leading-8 text-[#342312]/68 sm:text-[17px]">
+				<p className="mt-5 max-w-xl text-base leading-8 text-[#342312]/68">
 					{excerpt}
 				</p>
+
 				<div className="mt-8 border-t border-[#E7D0AF] pt-5">
-					<div className="flex items-center justify-between gap-4 text-sm text-[#342312]/58">
-						<span>{readTime} {readMinuteLabel}</span>
-						<span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#A87E3C]">
+					<div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#342312]/62">
+						<div className="flex flex-wrap items-center gap-4">
+							{publishedDate ? (
+								<span className="inline-flex items-center gap-1.5">
+									<CalendarDays className="size-4 text-[#A87E3C]" />
+									{publishedDate}
+								</span>
+							) : null}
+							<span className="inline-flex items-center gap-1.5">
+								<Clock3 className="size-4 text-[#A87E3C]" />
+								{readTime} {readMinuteLabel}
+							</span>
+						</div>
+						<span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#A87E3C]">
 							{readBlogLabel}
 							<ArrowRight className="size-4 transition group-hover:translate-x-1" />
 						</span>
@@ -284,263 +345,342 @@ function LatestBlogCard({
 }
 
 function BlogCard({
-	post,
+	categoryMap,
+	index,
 	locale,
-	readMinuteLabel,
+	post,
 	readBlogLabel,
-	animationDelay,
+	readMinuteLabel,
 }: {
+	categoryMap: BlogCategoryMap;
+	index: number;
+	locale: Locale;
 	post: BlogPost;
-	locale: "vi" | "en";
-	readMinuteLabel: string;
 	readBlogLabel: string;
-	animationDelay: string;
+	readMinuteLabel: string;
 }) {
-	const title = getLocalizedBlogText(post.title, locale);
-	const excerpt = getLocalizedBlogText(post.excerpt, locale);
-	const slug = getLocalizedBlogText(post.slug, locale);
-	const mainImage = getBlogImage(post);
-	const readTime = getBlogReadingTime(post.content[locale] || "");
+	const lang = locale === "en" ? "en" : "vi";
+	const image = getBlogCardImage(post);
+	const title = getLocalizedBlogText(post.title, lang);
+	const excerpt = getLocalizedBlogText(post.excerpt, lang);
+	const slug = getLocalizedBlogText(post.slug, lang);
+	const categoryName = getCategoryName(categoryMap, post.categoryId, lang);
+	const readTime = getBlogReadingTime(post.content[lang] || "");
+	const publishedDate = formatDate(post.publishedAt, locale);
 
 	return (
 		<Link
 			href={`/${locale}/blog/${slug}`}
-			className="blog-list-reveal group flex h-full flex-col overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/55"
-			style={{ animationDelay }}
+			className="blog-reveal group flex min-h-[460px] flex-col overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/70"
+			style={{ animationDelay: `${260 + index * 70}ms` }}
 		>
 			<div className="relative aspect-[16/10] bg-[#F7F1E6]">
-				{mainImage.url ? (
+				{image.url ? (
 					<Image
-						src={mainImage.url}
-						alt={mainImage.alt[locale] || title}
+						src={image.url}
+						alt={image.alt?.[lang] || title}
 						fill
-						sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+						sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 24vw"
 						className="object-cover"
 					/>
 				) : null}
 			</div>
 
-			<div className="flex flex-1 flex-col p-5">
-				<p className="text-xs font-bold uppercase tracking-[0.18em] text-[#A87E3C]">{post.tags[0] || "Blog"}</p>
-				<h3 className="font-heading mt-3 line-clamp-2 text-2xl font-bold leading-tight text-[#342312] transition group-hover:text-[#A87E3C]">
+			<div className="flex flex-1 flex-col px-5 py-5">
+				<p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A87E3C]">
+					{categoryName}
+				</p>
+				<h3 className="mt-3 line-clamp-2 font-heading text-xl font-semibold leading-tight text-[#342312] transition group-hover:text-[#A87E3C]">
 					{title}
 				</h3>
-				<p className="mt-3 line-clamp-3 text-sm leading-7 text-[#342312]/65">{excerpt}</p>
-				<div className="mt-auto flex items-center justify-between gap-4 pt-6 text-xs text-[#342312]/55">
-					<span>{readTime} {readMinuteLabel}</span>
-					<span className="inline-flex items-center gap-1 font-bold uppercase tracking-[0.12em] text-[#A87E3C]">
-						{readBlogLabel}
-						<ArrowRight className="size-3.5" />
-					</span>
+				<p className="mt-3 line-clamp-3 text-sm leading-7 text-[#342312]/65">
+					{excerpt}
+				</p>
+
+				<div className="mt-auto pt-5">
+					<div className="flex items-center justify-between gap-3 text-xs text-[#342312]/55">
+						{publishedDate ? <span>{publishedDate}</span> : <span />}
+						<span>
+							{readTime} {readMinuteLabel}
+						</span>
+					</div>
+					<div className="mt-4 flex justify-end text-xs font-bold uppercase tracking-[0.14em] text-[#A87E3C]">
+						<span className="inline-flex items-center gap-2">
+							{readBlogLabel}
+							<ArrowRight className="size-4 transition group-hover:translate-x-1" />
+						</span>
+					</div>
 				</div>
 			</div>
 		</Link>
 	);
 }
 
-function BlogCategorySidebar({
-	locale,
-	categories,
-	selectedCategoryId,
-	allLabel,
-	title,
-}: {
-	locale: Locale;
-	categories: BlogCategoryFilterItem[];
-	selectedCategoryId: string;
-	allLabel: string;
-	title: string;
-}) {
-	const lang = locale === "en" ? "en" : "vi";
-	const totalCount = categories.reduce((sum, category) => sum + category.count, 0);
-
+function EmptyBlogState({ children }: { children: string }) {
 	return (
-		<section className="border border-[#E7D0AF] bg-white p-6 shadow-sm">
-			<h2 className="font-heading text-xl font-bold text-[#342312]">{title}</h2>
-			<div className="mt-5 space-y-1">
-				<SidebarFilterLink href={`/${locale}/blog`} label={allLabel} count={totalCount} active={!selectedCategoryId} />
-				{categories.map((category) => (
-					<SidebarFilterLink
-						key={category.id}
-						href={getBlogHref(locale, { category: category.id })}
-						label={getLocalizedBlogText(category.name, lang)}
-						count={category.count}
-						active={selectedCategoryId === category.id}
-					/>
-				))}
-			</div>
-		</section>
+		<div className="border border-[#E7D0AF] bg-white px-5 py-12 text-center text-sm text-[#342312]/65">
+			{children}
+		</div>
 	);
 }
 
-function FeaturedBlogSidebar({
+function CategorySidebar({
+	allLabel,
+	categories,
 	locale,
-	blogs,
+	selectedCategoryId,
+	selectedTag,
 	title,
-	readMinuteLabel,
+	totalCount,
 }: {
-	locale: "vi" | "en";
-	blogs: BlogPost[];
+	allLabel: string;
+	categories: BlogCategorySummary[];
+	locale: Locale;
+	selectedCategoryId: string | null;
+	selectedTag: string | null;
 	title: string;
-	readMinuteLabel: string;
+	totalCount: number;
 }) {
-	if (blogs.length === 0) return null;
+	const lang = locale === "en" ? "en" : "vi";
 
 	return (
-		<section className="border border-[#E7D0AF] bg-white p-6 shadow-sm">
-			<h2 className="font-heading text-xl font-bold text-[#342312]">{title}</h2>
-			<div className="mt-5 divide-y divide-[#E7D0AF]">
-				{blogs.slice(0, 4).map((blog) => {
-					const title = getLocalizedBlogText(blog.title, locale);
-					const slug = getLocalizedBlogText(blog.slug, locale);
-					const mainImage = getBlogImage(blog);
-					const readTime = getBlogReadingTime(blog.content[locale] || "");
+		<SidebarCard title={title}>
+			<div className="space-y-1">
+				<SidebarFilterLink
+					active={!selectedCategoryId}
+					href={createBlogHref(locale, { tag: selectedTag })}
+					label={allLabel}
+					value={totalCount}
+				/>
+				{categories.map(({ category, count }) => (
+					<SidebarFilterLink
+						key={category.id}
+						active={selectedCategoryId === category.id}
+						href={createBlogHref(locale, { categoryId: category.id, tag: selectedTag })}
+						label={getLocalizedBlogText(category.name, lang)}
+						value={count}
+					/>
+				))}
+			</div>
+		</SidebarCard>
+	);
+}
+
+function FeaturedSidebar({
+	categoryMap,
+	locale,
+	posts,
+	readMinuteLabel,
+	title,
+}: {
+	categoryMap: BlogCategoryMap;
+	locale: Locale;
+	posts: BlogPost[];
+	readMinuteLabel: string;
+	title: string;
+}) {
+	const lang = locale === "en" ? "en" : "vi";
+
+	if (posts.length === 0) return null;
+
+	return (
+		<SidebarCard title={title}>
+			<div className="space-y-4">
+				{posts.map((post) => {
+					const image = getBlogCardImage(post);
+					const titleText = getLocalizedBlogText(post.title, lang);
+					const slug = getLocalizedBlogText(post.slug, lang);
+					const readTime = getBlogReadingTime(post.content[lang] || "");
 
 					return (
-						<Link key={blog.id} href={`/${locale}/blog/${slug}`} className="group grid grid-cols-[72px_minmax(0,1fr)] gap-3 py-3 first:pt-0 last:pb-0">
+						<Link
+							key={post.id}
+							href={`/${locale}/blog/${slug}`}
+							className="group grid grid-cols-[72px_minmax(0,1fr)] gap-3 border-b border-[#E7D0AF]/70 pb-4 last:border-b-0 last:pb-0"
+						>
 							<div className="relative aspect-square border border-[#E7D0AF] bg-[#F7F1E6]">
-								{mainImage.url ? <Image src={mainImage.url} alt={mainImage.alt[locale] || title} fill sizes="72px" className="object-cover" /> : null}
+								{image.url ? (
+									<Image
+										src={image.url}
+										alt={image.alt?.[lang] || titleText}
+										fill
+										sizes="72px"
+										className="object-cover"
+									/>
+								) : null}
 							</div>
 							<div className="min-w-0">
-								<p className="line-clamp-2 text-sm font-bold leading-5 text-[#342312] transition group-hover:text-[#A87E3C]">{title}</p>
-								<p className="mt-1 text-xs text-[#342312]/55">{readTime} {readMinuteLabel}</p>
+								<p className="line-clamp-2 text-sm font-semibold leading-5 text-[#342312] transition group-hover:text-[#A87E3C]">
+									{titleText}
+								</p>
+								<p className="mt-1 text-xs text-[#342312]/55">
+									{readTime} {readMinuteLabel}
+								</p>
+								<p className="sr-only">{getCategoryName(categoryMap, post.categoryId, lang)}</p>
 							</div>
 						</Link>
 					);
 				})}
 			</div>
-		</section>
+		</SidebarCard>
 	);
 }
 
-function BlogTagSidebar({
+function TagSidebar({
 	locale,
-	tags,
+	selectedCategoryId,
 	selectedTag,
+	tags,
 	title,
 }: {
 	locale: Locale;
-	tags: BlogTagFilterItem[];
-	selectedTag: string;
+	selectedCategoryId: string | null;
+	selectedTag: string | null;
+	tags: BlogTagSummary[];
 	title: string;
 }) {
 	if (tags.length === 0) return null;
 
 	return (
-		<section className="border border-[#E7D0AF] bg-white p-6 shadow-sm">
-			<h2 className="font-heading text-xl font-bold text-[#342312]">{title}</h2>
-			<div className="mt-5 flex flex-wrap gap-2">
+		<SidebarCard title={title}>
+			<div className="flex flex-wrap gap-2">
 				{tags.map((tag) => (
 					<Link
 						key={tag.name}
-						href={getBlogHref(locale, { tag: tag.name })}
+						href={createBlogHref(locale, {
+							categoryId: selectedCategoryId,
+							tag: selectedTag === tag.name ? null : tag.name,
+						})}
 						className={[
 							"rounded-full border px-3 py-1.5 text-xs font-semibold transition",
 							selectedTag === tag.name
 								? "border-[#342312] bg-[#342312] text-[#E7D0AF]"
-								: "border-[#E7D0AF] bg-[#FAF7F1] text-[#342312] hover:border-[#A87E3C]",
+								: "border-[#E7D0AF] bg-[#FAF7F1] text-[#342312]/70 hover:border-[#A87E3C] hover:text-[#342312]",
 						].join(" ")}
 					>
-						{tag.name}
+						{tag.name} <span className="text-current/55">{tag.count}</span>
 					</Link>
 				))}
 			</div>
-		</section>
+		</SidebarCard>
+	);
+}
+
+function SidebarCard({ children, title }: { children: ReactNode; title: string }) {
+	return (
+		<div className="border border-[#E7D0AF] bg-white px-5 py-5 shadow-sm">
+			<h2 className="font-heading text-2xl font-semibold text-[#342312]">{title}</h2>
+			<div className="mt-5">{children}</div>
+		</div>
 	);
 }
 
 function SidebarFilterLink({
+	active,
 	href,
 	label,
-	count,
-	active,
+	value,
 }: {
+	active: boolean;
 	href: string;
 	label: string;
-	count: number;
-	active: boolean;
+	value: number;
 }) {
 	return (
 		<Link
 			href={href}
 			className={[
-				"flex items-center justify-between gap-4 px-3 py-3 text-sm font-semibold transition",
-				active ? "bg-[#342312] text-[#E7D0AF]" : "text-[#342312]/78 hover:bg-[#FAF7F1] hover:text-[#342312]",
+				"flex items-center justify-between gap-4 px-4 py-3 text-sm font-semibold transition",
+				active
+					? "bg-[#342312] text-[#E7D0AF]"
+					: "text-[#342312]/78 hover:bg-[#FAF7F1] hover:text-[#342312]",
 			].join(" ")}
 		>
-			<span className="line-clamp-1">{label}</span>
-			<span className={active ? "text-[#E7D0AF]/80" : "text-[#342312]/45"}>{count}</span>
+			<span>{label}</span>
+			<span className="text-current/65">{value}</span>
 		</Link>
 	);
 }
 
 function BlogPagination({
-	locale,
-	category,
-	tag,
 	currentPage,
+	locale,
+	selectedCategoryId,
+	selectedTag,
 	totalPages,
 }: {
-	locale: Locale;
-	category: string;
-	tag: string;
 	currentPage: number;
+	locale: Locale;
+	selectedCategoryId: string | null;
+	selectedTag: string | null;
 	totalPages: number;
 }) {
 	if (totalPages <= 1) return null;
 
 	const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
-	const previousPage = Math.max(currentPage - 1, 1);
-	const nextPage = Math.min(currentPage + 1, totalPages);
 
 	return (
-		<nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Blog pagination">
-			<PaginationCircle href={getBlogHref(locale, { category, tag, page: previousPage })} disabled={currentPage === 1}>
-				<ChevronLeft className="size-4" />
-			</PaginationCircle>
-
+		<div className="mt-10 flex items-center justify-center gap-2">
+			<PaginationButton
+				disabled={currentPage <= 1}
+				href={createBlogHref(locale, {
+					categoryId: selectedCategoryId,
+					page: currentPage - 1,
+					tag: selectedTag,
+				})}
+			>
+				‹
+			</PaginationButton>
 			{pages.map((page) => (
-				<PaginationCircle key={page} href={getBlogHref(locale, { category, tag, page })} active={page === currentPage}>
+				<PaginationButton
+					key={page}
+					active={page === currentPage}
+					href={createBlogHref(locale, {
+						categoryId: selectedCategoryId,
+						page,
+						tag: selectedTag,
+					})}
+				>
 					{page}
-				</PaginationCircle>
+				</PaginationButton>
 			))}
-
-			<PaginationCircle href={getBlogHref(locale, { category, tag, page: nextPage })} disabled={currentPage === totalPages}>
-				<ChevronRight className="size-4" />
-			</PaginationCircle>
-		</nav>
+			<PaginationButton
+				disabled={currentPage >= totalPages}
+				href={createBlogHref(locale, {
+					categoryId: selectedCategoryId,
+					page: currentPage + 1,
+					tag: selectedTag,
+				})}
+			>
+				›
+			</PaginationButton>
+		</div>
 	);
 }
 
-function PaginationCircle({
-	href,
-	children,
+function PaginationButton({
 	active,
+	children,
 	disabled,
+	href,
 }: {
-	href: string;
-	children: ReactNode;
 	active?: boolean;
+	children: ReactNode;
 	disabled?: boolean;
+	href: string;
 }) {
-	if (disabled) {
-		return (
-			<span className="flex size-10 items-center justify-center rounded-full border border-[#E7D0AF] bg-white text-sm font-semibold text-[#342312]/30">
-				{children}
-			</span>
-		);
-	}
+	const className = [
+		"flex size-10 items-center justify-center rounded-full border text-sm font-semibold transition",
+		active
+			? "border-[#342312] bg-[#342312] text-[#E7D0AF]"
+			: "border-[#E7D0AF] bg-white text-[#342312] hover:border-[#A87E3C] hover:text-[#A87E3C]",
+		disabled ? "pointer-events-none opacity-40" : "",
+	]
+		.filter(Boolean)
+		.join(" ");
 
 	return (
-		<Link
-			href={href}
-			className={[
-				"flex size-10 items-center justify-center rounded-full border text-sm font-semibold transition",
-				active
-					? "border-[#342312] bg-[#342312] text-[#E7D0AF]"
-					: "border-[#E7D0AF] bg-white text-[#342312] hover:border-[#A87E3C] hover:text-[#A87E3C]",
-			].join(" ")}
-		>
+		<Link href={href} className={className} aria-disabled={disabled || undefined}>
 			{children}
 		</Link>
 	);

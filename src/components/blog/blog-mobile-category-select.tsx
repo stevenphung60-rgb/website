@@ -2,58 +2,76 @@
 
 import { useRouter } from "next/navigation";
 import type { Locale } from "src/lib/i18n/config";
-import type { BlogCategoryFilterItem } from "src/server/blogs";
-
-function getCategoryName(category: BlogCategoryFilterItem, locale: "vi" | "en") {
-	return category.name?.[locale] || category.name?.vi || category.name?.en || "";
-}
+import type { BlogCategorySummary } from "src/server/blogs";
 
 interface BlogMobileCategorySelectProps {
+	categories: BlogCategorySummary[];
 	locale: Locale;
-	categories: BlogCategoryFilterItem[];
-	selectedCategoryId: string;
+	selectedCategoryId: string | null;
+	selectedTag: string | null;
 	allLabel: string;
 	label: string;
 }
 
+function getLocalizedText(value: { vi: string; en: string }, locale: "vi" | "en") {
+	return value[locale] || value.vi || value.en || "";
+}
+
+function createBlogPath(locale: Locale, input: { categoryId?: string | null; tag?: string | null }) {
+	const params = new URLSearchParams();
+
+	if (input.categoryId) {
+		params.set("category", input.categoryId);
+	}
+
+	if (input.tag) {
+		params.set("tag", input.tag);
+	}
+
+	const queryString = params.toString();
+	return `/${locale}/blog${queryString ? `?${queryString}` : ""}`;
+}
+
 /**
- * Mobile category filter for the public blog page.
- * @param props - Mobile category select props
- * @returns Mobile select that navigates to the selected category
+ * Mobile category selector for the public blog page.
+ * Desktop category filtering is handled in the sidebar.
  */
 export function BlogMobileCategorySelect({
-	locale,
-	categories,
-	selectedCategoryId,
 	allLabel,
+	categories,
 	label,
+	locale,
+	selectedCategoryId,
+	selectedTag,
 }: BlogMobileCategorySelectProps) {
 	const router = useRouter();
 	const lang = locale === "en" ? "en" : "vi";
 
 	return (
-		<div className="mb-8 border border-[#E7D0AF] bg-white px-4 py-4 shadow-sm lg:hidden">
-			<label htmlFor="mobileBlogCategory" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-[#A87E3C]">
+		<label className="block rounded-none border border-[#E7D0AF] bg-white px-4 py-4 shadow-sm lg:hidden">
+			<span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-[#A87E3C]">
 				{label}
-			</label>
+			</span>
 
 			<select
-				id="mobileBlogCategory"
-				value={selectedCategoryId}
+				value={selectedCategoryId || ""}
 				onChange={(event) => {
-					const categoryId = event.target.value;
-					router.push(categoryId ? `/${locale}/blog?category=${encodeURIComponent(categoryId)}` : `/${locale}/blog`);
-					window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+					router.push(
+						createBlogPath(locale, {
+							categoryId: event.target.value || null,
+							tag: selectedTag,
+						}),
+					);
 				}}
-				className="h-11 w-full border border-[#E7D0AF] bg-[#FAF7F1] px-3 text-sm font-semibold text-[#342312] outline-none transition focus:border-[#A87E3C] focus:ring-2 focus:ring-[#A87E3C]/12"
+				className="h-11 w-full rounded-none border border-[#E7D0AF] bg-[#FAF7F1] px-3 text-sm font-semibold text-[#342312] outline-none transition focus:border-[#A87E3C]"
 			>
 				<option value="">{allLabel}</option>
-				{categories.map((category) => (
+				{categories.map(({ category, count }) => (
 					<option key={category.id} value={category.id}>
-						{getCategoryName(category, lang)} ({category.count})
+						{getLocalizedText(category.name, lang)} ({count})
 					</option>
 				))}
 			</select>
-		</div>
+		</label>
 	);
 }

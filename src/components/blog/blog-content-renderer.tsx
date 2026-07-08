@@ -4,21 +4,21 @@ import type { BlogAppearanceSettings, BlogFontSelection } from "src/server/blogs
 
 const bodySizeClass = {
 	compact: "text-[16px]",
-	standard: "text-[18px]",
-	comfortable: "text-[19px]",
-	large: "text-[20px]",
+	standard: "text-[17px]",
+	comfortable: "text-[18px]",
+	large: "text-[19px]",
 } satisfies Record<BlogAppearanceSettings["bodySize"], string>;
 
 const lineHeightClass = {
-	compact: "leading-8",
-	standard: "leading-[1.85]",
-	relaxed: "leading-[2]",
+	compact: "leading-7",
+	standard: "leading-8",
+	relaxed: "leading-9",
 } satisfies Record<BlogAppearanceSettings["lineHeight"], string>;
 
 const widthClass = {
-	narrow: "max-w-3xl",
-	standard: "max-w-[860px]",
-	wide: "max-w-5xl",
+	narrow: "max-w-[760px]",
+	standard: "max-w-[840px]",
+	wide: "max-w-[980px]",
 } satisfies Record<BlogAppearanceSettings["contentWidth"], string>;
 
 function getFontValue(fontId: BlogFontSelection, fallback: "heading" | "body") {
@@ -66,7 +66,7 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 	};
 
 	return (
-		<div className={["mx-auto w-full", widthClass[appearance.contentWidth]].join(" ")}>
+		<div className={["w-full", widthClass[appearance.contentWidth]].join(" ")}>
 			<style>{`
 				.blog-rich-content {
 					font-family: var(--blog-body-font);
@@ -76,27 +76,20 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content h2,
 				.blog-rich-content h3 {
 					font-family: var(--blog-heading-font);
-					font-weight: 760;
+					font-weight: 800;
 					line-height: 1.18;
 					color: #342312;
-					margin-top: 2.6rem;
-					margin-bottom: 1rem;
-					letter-spacing: -0.01em;
+					margin-top: 2.1rem;
+					margin-bottom: 0.95rem;
 				}
 
-				.blog-rich-content h1 { font-size: clamp(2.15rem, 4vw, 3.4rem); }
-				.blog-rich-content h2 { font-size: clamp(1.8rem, 3vw, 2.55rem); }
-				.blog-rich-content h3 { font-size: clamp(1.35rem, 2.2vw, 1.9rem); }
+				.blog-rich-content h1 { font-size: clamp(2rem, 4vw, 3.25rem); }
+				.blog-rich-content h2 { font-size: clamp(1.65rem, 3vw, 2.35rem); }
+				.blog-rich-content h3 { font-size: clamp(1.3rem, 2.2vw, 1.75rem); }
 
 				.blog-rich-content p {
-					margin: 1.15rem 0;
+					margin: 1.05rem 0;
 					color: rgb(52 35 18 / 0.78);
-				}
-
-				.blog-rich-content strong,
-				.blog-rich-content b {
-					color: #342312;
-					font-weight: 760;
 				}
 
 				.blog-rich-content a {
@@ -108,7 +101,7 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 
 				.blog-rich-content ul,
 				.blog-rich-content ol {
-					margin: 1.1rem 0;
+					margin: 1rem 0;
 					padding-left: 1.5rem;
 					color: rgb(52 35 18 / 0.78);
 				}
@@ -118,10 +111,10 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content li { margin: 0.45rem 0; }
 
 				.blog-rich-content blockquote {
-					margin: 1.75rem 0;
-					border-left: 3px solid #A87E3C;
-					background: #F7F1E6;
-					padding: 1.15rem 1.35rem;
+					margin: 1.7rem 0;
+					border-left: 4px solid #A87E3C;
+					background: #F4E9D8;
+					padding: 1rem 1.25rem;
 					font-style: italic;
 					font-weight: 600;
 					color: #342312;
@@ -130,29 +123,28 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content img {
 					max-width: 100%;
 					height: auto;
-					border-radius: 0.75rem;
 					border: 1px solid #E7D0AF;
-					margin: 1.75rem 0;
+					margin: 1.5rem 0;
 				}
 
 				.blog-rich-content table {
 					width: 100%;
 					border-collapse: collapse;
-					margin: 1.75rem 0;
+					margin: 1.5rem 0;
 					background: white;
 				}
 
 				.blog-rich-content td,
 				.blog-rich-content th {
 					border: 1px solid #E7D0AF;
-					padding: 0.8rem;
+					padding: 0.75rem;
 					text-align: left;
 				}
 			`}</style>
 
 			<div
 				className={[
-					"blog-rich-content text-[#342312]",
+					"blog-rich-content bg-transparent text-[#342312]",
 					bodySizeClass[appearance.bodySize],
 					lineHeightClass[appearance.lineHeight],
 				].join(" ")}

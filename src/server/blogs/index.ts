@@ -5,6 +5,8 @@ export { deleteBlogPost } from "./delete-blogpost.mutation";
 export { getBlogCategories } from "./get-blogcategories.query";
 export { getBlogCategoryById } from "./get-blogcategory-by-id.query";
 export { getBlogCategoryIds } from "./get-blogcategory-ids.query";
+export { getBlogListPage, BLOG_LIST_PAGE_SIZE } from "./get-blog-list-page.query";
+export type { BlogCategoryFilterItem, BlogListPageData, BlogListPagination, BlogTagFilterItem } from "./get-blog-list-page.query";
 export { getBlogPostById } from "./get-blogpost-by-id.query";
 export { getBlogPostBySlug } from "./get-blogpost-by-slug.query";
 export { getBlogPostIds } from "./get-blogpost-ids.query";

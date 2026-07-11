@@ -124,7 +124,7 @@ export default function HomeServicesShowcase({
 		<section
 			ref={sectionRef}
 			className={[
-				"w-full overflow-x-hidden bg-[#342312] py-14 text-[#F7F1E6] sm:py-16 lg:pb-16 lg:pt-5",
+				"w-full overflow-x-hidden bg-[#342312] px-4 py-14 text-[#F7F1E6] sm:px-6 sm:py-16 lg:px-10 lg:pb-16 lg:pt-5 xl:px-16 2xl:px-24",
 				isVisible ? "home-service-visible" : "",
 			].join(" ")}
 		>
@@ -195,7 +195,7 @@ export default function HomeServicesShowcase({
 				`}
 			</style>
 
-			<div className="px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+			<div>
 				<div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-[0.58fr_0.42fr] lg:items-end">
 					<div className="max-w-[820px]">
 						<p
@@ -250,7 +250,7 @@ export default function HomeServicesShowcase({
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:pr-10 xl:pr-16 2xl:pr-24">
+			<div className="grid grid-cols-1 gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)]">
 				<Link
 					href={`/${locale}/services/${activeService.id}`}
 					className="home-service-reveal-up group/image relative block h-[420px] w-full overflow-hidden bg-[#24180D] sm:h-[500px] lg:h-[660px]"
@@ -310,7 +310,7 @@ export default function HomeServicesShowcase({
 					onMouseEnter={() => setIsPaused(true)}
 					onMouseLeave={() => setIsPaused(false)}
 				>
-					<div className="flex flex-col lg:min-h-full">
+					<div className="flex flex-col lg:h-full">
 						{services.map((service, index) => {
 							const isActive = index === activeIndex;
 
@@ -322,7 +322,7 @@ export default function HomeServicesShowcase({
 									onMouseEnter={() => setActiveIndex(index)}
 									onFocus={() => setActiveIndex(index)}
 									className={[
-										"home-service-reveal-right group relative flex min-h-[112px] flex-none items-center overflow-hidden border-b border-white/10 px-5 py-5 text-left transition-all duration-500 ease-out last:border-b-0 sm:min-h-[118px] sm:px-6 lg:min-h-[96px] lg:flex-1 lg:px-8",
+										"home-service-reveal-right group relative flex min-h-[112px] flex-none items-center overflow-hidden border-b border-white/10 px-5 py-5 text-left transition-all duration-500 ease-out last:border-b-0 sm:min-h-[118px] sm:px-6 lg:min-h-0 lg:flex-1 lg:px-8",
 										isActive ? "bg-white/[0.06]" : "bg-transparent",
 									].join(" ")}
 									style={{ animationDelay: `${660 + index * 110}ms` }}

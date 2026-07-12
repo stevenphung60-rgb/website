@@ -27,6 +27,17 @@ function getVisibleCount() {
 	return 1;
 }
 
+function getScrollAmount(carouselElement: HTMLDivElement) {
+	const firstItem = carouselElement.firstElementChild;
+	const itemWidth =
+		firstItem instanceof HTMLElement
+			? firstItem.getBoundingClientRect().width
+			: carouselElement.clientWidth;
+	const gap = Number.parseFloat(window.getComputedStyle(carouselElement).columnGap) || 0;
+
+	return itemWidth + gap;
+}
+
 export default function RelatedServicesCarousel({
 	children,
 	itemCount,
@@ -75,11 +86,13 @@ export default function RelatedServicesCarousel({
 
 		if (!carouselElement) return;
 
+		const scrollAmount =
+			window.innerWidth < 640
+				? getScrollAmount(carouselElement)
+				: carouselElement.clientWidth;
+
 		carouselElement.scrollBy({
-			left:
-				direction === "next"
-					? carouselElement.clientWidth
-					: -carouselElement.clientWidth,
+			left: direction === "next" ? scrollAmount : -scrollAmount,
 			behavior: "smooth",
 		});
 	};
@@ -119,7 +132,7 @@ export default function RelatedServicesCarousel({
 				className="flex max-w-full snap-x snap-mandatory gap-5 overflow-x-auto overflow-y-hidden scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 			>
 				{Children.map(children, (child) => (
-					<div className="min-w-0 shrink-0 basis-[88%] snap-start sm:basis-[calc((100%_-_1.25rem)_/_2)] lg:basis-[calc((100%_-_2.5rem)_/_3)]">
+					<div className="min-w-0 shrink-0 basis-full snap-start sm:basis-[calc((100%_-_1.25rem)_/_2)] lg:basis-[calc((100%_-_2.5rem)_/_3)]">
 						{child}
 					</div>
 				))}

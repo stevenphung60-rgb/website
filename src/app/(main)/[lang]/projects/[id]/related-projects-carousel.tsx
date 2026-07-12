@@ -20,6 +20,17 @@ function getVisibleCount() {
 	return 1;
 }
 
+function getScrollAmount(carouselElement: HTMLDivElement) {
+	const firstItem = carouselElement.firstElementChild;
+	const itemWidth =
+		firstItem instanceof HTMLElement
+			? firstItem.getBoundingClientRect().width
+			: carouselElement.clientWidth;
+	const gap = Number.parseFloat(window.getComputedStyle(carouselElement).columnGap) || 0;
+
+	return itemWidth + gap;
+}
+
 export default function RelatedProjectsCarousel({
 	locale,
 	title,
@@ -71,11 +82,13 @@ export default function RelatedProjectsCarousel({
 
 		if (!carouselElement) return;
 
+		const scrollAmount =
+			window.innerWidth < 640
+				? getScrollAmount(carouselElement)
+				: carouselElement.clientWidth;
+
 		carouselElement.scrollBy({
-			left:
-				direction === "next"
-					? carouselElement.clientWidth
-					: -carouselElement.clientWidth,
+			left: direction === "next" ? scrollAmount : -scrollAmount,
 			behavior: "smooth",
 		});
 	};
@@ -154,7 +167,7 @@ export default function RelatedProjectsCarousel({
 						return (
 							<div
 								key={project.id}
-								className="min-w-0 shrink-0 basis-[88%] snap-start sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]"
+								className="min-w-0 shrink-0 basis-full snap-start sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]"
 							>
 								<LocaleLink
 									href={`/projects/${project.id}`}
@@ -166,7 +179,7 @@ export default function RelatedProjectsCarousel({
 											alt={projectName}
 											fill
 											className="object-cover transition duration-700 ease-out group-hover:scale-[1.045]"
-											sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 88vw"
+											sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc(100vw - 2rem)"
 										/>
 
 										<div className="absolute inset-0 bg-gradient-to-t from-[#342312] via-[#342312]/70 to-transparent transition duration-500 group-hover:via-[#342312]/78" />

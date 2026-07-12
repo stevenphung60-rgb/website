@@ -414,11 +414,11 @@ export default function AboutCoreValuesSection({
 					className="about-core-reveal-left"
 					style={{ animationDelay: "240ms" }}
 				>
-					<div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
-						<div className="mx-auto w-full min-w-[420px] max-w-[620px]">
+					<div className="w-full min-w-0">
+						<div className="mx-auto w-full max-w-[620px]">
 							<svg
 								viewBox="0 0 540 540"
-								className="h-auto w-full"
+								className="block h-auto w-full"
 								role="img"
 								aria-label={
 									isEnglish

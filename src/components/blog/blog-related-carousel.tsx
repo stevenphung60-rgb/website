@@ -24,6 +24,17 @@ interface BlogRelatedCarouselProps {
 	countLabel: string;
 }
 
+function getScrollAmount(list: HTMLDivElement) {
+	const firstItem = list.firstElementChild;
+	const itemWidth =
+		firstItem instanceof HTMLElement
+			? firstItem.getBoundingClientRect().width
+			: list.clientWidth;
+	const gap = Number.parseFloat(window.getComputedStyle(list).columnGap) || 0;
+
+	return itemWidth + gap;
+}
+
 /**
  * Smooth related blog carousel with stable editorial cards.
  * @param props - Carousel props
@@ -55,7 +66,10 @@ export function BlogRelatedCarousel({
 
 		if (!list) return;
 
-		const scrollAmount = Math.max(list.clientWidth - 48, 260);
+		const scrollAmount =
+			window.innerWidth < 640
+				? getScrollAmount(list)
+				: Math.max(list.clientWidth - 48, 260);
 
 		list.scrollBy({
 			left: direction === "next" ? scrollAmount : -scrollAmount,
@@ -107,7 +121,7 @@ export function BlogRelatedCarousel({
 							key={item.id}
 							href={item.href}
 							scroll
-							className="group flex min-h-[470px] shrink-0 basis-[88%] snap-start flex-col border border-[#E7D0AF] bg-white shadow-sm transition-colors duration-300 hover:border-[#A87E3C]/70 sm:basis-[48%] lg:basis-[calc((100%-2.5rem)/3)]"
+							className="group flex min-h-[470px] shrink-0 basis-full snap-start flex-col border border-[#E7D0AF] bg-white shadow-sm transition-colors duration-300 hover:border-[#A87E3C]/70 sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]"
 						>
 							<div className="relative aspect-[16/9] overflow-hidden border-b border-[#E7D0AF] bg-[#F7F1E6]">
 								{item.image ? (
@@ -115,7 +129,7 @@ export function BlogRelatedCarousel({
 										src={item.image}
 										alt={item.title}
 										fill
-										sizes="(max-width: 768px) 88vw, (max-width: 1024px) 48vw, 33vw"
+										sizes="(max-width: 639px) calc(100vw - 2rem), (max-width: 1023px) 50vw, 33vw"
 										className="object-cover"
 									/>
 								) : null}

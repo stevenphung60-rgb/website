@@ -187,7 +187,12 @@ export default async function BlogListPage({ params, searchParams }: BlogListPag
 								)}
 							</section>
 
-							<section className="blog-reveal" style={{ animationDelay: "180ms" }}>
+							{/* biome-ignore lint/correctness/useUniqueElementIds: This page renders one stable anchor for pagination. */}
+							<section
+								id="blog-list"
+								className="blog-reveal scroll-mt-28 sm:scroll-mt-32"
+								style={{ animationDelay: "180ms" }}
+							>
 								<SectionHeading
 									count={`${blogData.listBlogCount} ${text.blogCount}`}
 									title={text.list}
@@ -623,11 +628,11 @@ function BlogPagination({
 		<div className="mt-10 flex items-center justify-center gap-2">
 			<PaginationButton
 				disabled={currentPage <= 1}
-				href={createBlogHref(locale, {
+				href={`${createBlogHref(locale, {
 					categoryId: selectedCategoryId,
 					page: currentPage - 1,
 					tag: selectedTag,
-				})}
+				})}#blog-list`}
 			>
 				‹
 			</PaginationButton>
@@ -635,22 +640,22 @@ function BlogPagination({
 				<PaginationButton
 					key={page}
 					active={page === currentPage}
-					href={createBlogHref(locale, {
+					href={`${createBlogHref(locale, {
 						categoryId: selectedCategoryId,
 						page,
 						tag: selectedTag,
-					})}
+					})}#blog-list`}
 				>
 					{page}
 				</PaginationButton>
 			))}
 			<PaginationButton
 				disabled={currentPage >= totalPages}
-				href={createBlogHref(locale, {
+				href={`${createBlogHref(locale, {
 					categoryId: selectedCategoryId,
 					page: currentPage + 1,
 					tag: selectedTag,
-				})}
+				})}#blog-list`}
 			>
 				›
 			</PaginationButton>

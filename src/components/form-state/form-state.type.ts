@@ -13,6 +13,10 @@ export interface FormState {
 	 */
 	error: string | null;
 	/**
+	 * Current success message, null until a submission succeeds
+	 */
+	successMessage: string | null;
+	/**
 	 * Field-specific validation errors
 	 */
 	fieldErrors: Record<string, string>;
@@ -31,6 +35,7 @@ export enum FormActionType {
 	StartSubmitting = "START_SUBMITTING",
 	FinishSubmitting = "FINISH_SUBMITTING",
 	SetError = "SET_ERROR",
+	SetSuccess = "SET_SUCCESS",
 	SetFieldError = "SET_FIELD_ERROR",
 	ClearFieldError = "CLEAR_FIELD_ERROR",
 	ClearAllFieldErrors = "CLEAR_ALL_FIELD_ERRORS",
@@ -43,6 +48,7 @@ export type FormAction =
 	| { type: FormActionType.StartSubmitting }
 	| { type: FormActionType.FinishSubmitting }
 	| { type: FormActionType.SetError; payload: string | null }
+	| { type: FormActionType.SetSuccess; payload: string | null }
 	| { type: FormActionType.SetFieldError; payload: { fieldName: string; error: string } }
 	| { type: FormActionType.ClearFieldError; payload: string }
 	| { type: FormActionType.ClearAllFieldErrors }
@@ -53,30 +59,39 @@ export type FormAction =
 interface RedirectResult {
 	success: true;
 	redirect: string;
+	message?: string;
+	reset?: true;
 }
 
 interface RefreshResult {
 	success: true;
 	refresh: true;
+	message?: string;
+	reset?: true;
+}
+
+interface MessageResult {
+	success: true;
+	message: string;
+	reset?: true;
 }
 
 interface ErrorResult {
 	success: false;
 	error: string;
+	fieldErrors?: Record<string, string>;
 }
 
-export type SuccessResult = RedirectResult | RefreshResult;
+export type SuccessResult = RedirectResult | RefreshResult | MessageResult;
 
 export type FormResult = SuccessResult | ErrorResult;
 
-export interface FormSubmitHandler {
-	/**
-	 * Handle form submission
-	 * @param formData - Form data from the form submission
-	 * @returns Promise that resolves to success/error result
-	 */
-	(formData: FormData): Promise<FormResult>;
-}
+/**
+ * Handle form submission
+ * @param formData - Form data from the form submission
+ * @returns Promise that resolves to success/error result
+ */
+export type FormSubmitHandler = (formData: FormData) => Promise<FormResult>;
 
 export interface FormProps {
 	/**
@@ -91,4 +106,8 @@ export interface FormProps {
 	 * Whether to show confirm dialog before submit
 	 */
 	confirmBeforeSubmit?: boolean;
+	/**
+	 * Disable browser validation so field errors can be rendered consistently in the form
+	 */
+	noValidate?: boolean;
 }

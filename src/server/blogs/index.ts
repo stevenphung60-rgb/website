@@ -2,11 +2,19 @@ export * from "./blog.types";
 export { createBlogPost } from "./create-blogpost.mutation";
 export { deleteBlogCategory } from "./delete-blogcategory.mutation";
 export { deleteBlogPost } from "./delete-blogpost.mutation";
+export type {
+	BlogCategorySummary,
+	BlogListPageData,
+	BlogTagSummary,
+} from "./get-blog-list-page.query";
+export {
+	BLOG_LIST_PAGE_SIZE,
+	BLOG_MOBILE_LIST_PAGE_SIZE,
+	getBlogListPageData,
+} from "./get-blog-list-page.query";
 export { getBlogCategories } from "./get-blogcategories.query";
 export { getBlogCategoryById } from "./get-blogcategory-by-id.query";
 export { getBlogCategoryIds } from "./get-blogcategory-ids.query";
-export { getBlogListPageData, BLOG_LIST_PAGE_SIZE } from "./get-blog-list-page.query";
-export type { BlogCategorySummary, BlogListPageData, BlogTagSummary } from "./get-blog-list-page.query";
 export { getBlogPostById } from "./get-blogpost-by-id.query";
 export { getBlogPostBySlug } from "./get-blogpost-by-slug.query";
 export { getBlogPostIds } from "./get-blogpost-ids.query";

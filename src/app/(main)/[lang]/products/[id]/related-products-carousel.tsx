@@ -1,18 +1,34 @@
 "use client";
 
-import { Children, type ReactNode, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Children, isValidElement, type ReactNode, useRef } from "react";
+import {
+	RelatedContentMobilePageIndicator,
+	RelatedContentMobilePaginationControls,
+	useRelatedContentMobilePagination,
+} from "src/components/related-content-mobile-pagination";
+import type { Locale } from "src/lib/i18n/config";
 
 interface RelatedProductsCarouselProps {
 	children: ReactNode;
+	contentKey: string;
 	itemCount: number;
+	locale: Locale;
 }
 
 export function RelatedProductsCarousel({
 	children,
+	contentKey,
 	itemCount,
+	locale,
 }: RelatedProductsCarouselProps) {
 	const carouselRef = useRef<HTMLDivElement>(null);
+	const childItems = Children.toArray(children);
+	const { currentPage, goToPage, isItemVisible, isMobile, isReady, totalPages } =
+		useRelatedContentMobilePagination({
+			contentKey,
+			itemCount,
+		});
 
 	const scrollCarousel = (direction: "left" | "right") => {
 		const carouselElement = carouselRef.current;
@@ -20,23 +36,20 @@ export function RelatedProductsCarousel({
 		if (!carouselElement) return;
 
 		carouselElement.scrollBy({
-			left:
-				direction === "left"
-					? -carouselElement.clientWidth
-					: carouselElement.clientWidth,
+			left: direction === "left" ? -carouselElement.clientWidth : carouselElement.clientWidth,
 			behavior: "smooth",
 		});
 	};
 
-	return (
+	const desktopCarousel = (
 		<div className="relative">
 			<div
 				ref={carouselRef}
 				className="flex snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto scroll-smooth pb-4 sm:gap-5 lg:gap-6 lg:overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
 			>
-				{Children.map(children, (child, index) => (
+				{childItems.map((child) => (
 					<div
-						key={index}
+						key={isValidElement(child) ? child.key : String(child)}
 						className="shrink-0 basis-[calc((100%_-_12px)/2)] snap-start sm:basis-[calc((100%_-_20px)/2)] lg:basis-[calc((100%_-_72px)/4)]"
 					>
 						{child}
@@ -67,4 +80,48 @@ export function RelatedProductsCarousel({
 			)}
 		</div>
 	);
+
+	if (!isReady) {
+		return (
+			<div aria-hidden="true" className="invisible">
+				{desktopCarousel}
+			</div>
+		);
+	}
+
+	if (isMobile) {
+		return (
+			// biome-ignore lint/correctness/useUniqueElementIds: The detail page contains one related-products list used as a stable pagination scroll target.
+			<div id="related-products-list-start">
+				<RelatedContentMobilePageIndicator
+					currentPage={currentPage}
+					locale={locale}
+					totalPages={totalPages}
+				/>
+
+				<div className="grid grid-cols-2 gap-3">
+					{childItems.map((child, index) =>
+						isItemVisible(index) ? (
+							<div
+								key={isValidElement(child) ? child.key : String(child)}
+								className="h-full min-w-0"
+							>
+								{child}
+							</div>
+						) : null,
+					)}
+				</div>
+
+				<RelatedContentMobilePaginationControls
+					currentPage={currentPage}
+					locale={locale}
+					onPageChange={goToPage}
+					scrollTargetId="related-products-list-start"
+					totalPages={totalPages}
+				/>
+			</div>
+		);
+	}
+
+	return desktopCarousel;
 }

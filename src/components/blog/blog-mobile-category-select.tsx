@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { MobileFilterSelect } from "src/components/mobile-filter-select";
 import type { Locale } from "src/lib/i18n/config";
 import type { BlogCategorySummary } from "src/server/blogs";
 
@@ -17,7 +18,10 @@ function getLocalizedText(value: { vi: string; en: string }, locale: "vi" | "en"
 	return value[locale] || value.vi || value.en || "";
 }
 
-function createBlogPath(locale: Locale, input: { categoryId?: string | null; tag?: string | null }) {
+function createBlogPath(
+	locale: Locale,
+	input: { categoryId?: string | null; tag?: string | null },
+) {
 	const params = new URLSearchParams();
 
 	if (input.categoryId) {
@@ -48,30 +52,23 @@ export function BlogMobileCategorySelect({
 	const lang = locale === "en" ? "en" : "vi";
 
 	return (
-		<label className="block rounded-none border border-[#E7D0AF] bg-white px-4 py-4 shadow-sm lg:hidden">
-			<span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-[#A87E3C]">
-				{label}
-			</span>
-
-			<select
-				value={selectedCategoryId || ""}
-				onChange={(event) => {
-					router.push(
-						createBlogPath(locale, {
-							categoryId: event.target.value || null,
-							tag: selectedTag,
-						}),
-					);
-				}}
-				className="h-11 w-full rounded-none border border-[#E7D0AF] bg-[#FAF7F1] px-3 text-sm font-semibold text-[#342312] outline-none transition focus:border-[#A87E3C]"
-			>
-				<option value="">{allLabel}</option>
-				{categories.map(({ category, count }) => (
-					<option key={category.id} value={category.id}>
-						{getLocalizedText(category.name, lang)} ({count})
-					</option>
-				))}
-			</select>
-		</label>
+		<MobileFilterSelect
+			allLabel={allLabel}
+			className="lg:hidden"
+			label={label}
+			value={selectedCategoryId}
+			options={categories.map(({ category, count }) => ({
+				value: category.id,
+				label: `${getLocalizedText(category.name, lang)} (${count})`,
+			}))}
+			onValueChange={(categoryId) => {
+				router.push(
+					createBlogPath(locale, {
+						categoryId,
+						tag: selectedTag,
+					}),
+				);
+			}}
+		/>
 	);
 }

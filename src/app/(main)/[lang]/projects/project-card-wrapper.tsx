@@ -36,7 +36,7 @@ export function ProjectCardWrapper({
 
 	return (
 		<div
-			className="animate-project-card-reveal opacity-0"
+			className="animate-project-card-reveal h-full min-w-0 opacity-0 md:h-auto"
 			style={{
 				animationDelay,
 				animationFillMode: "forwards",

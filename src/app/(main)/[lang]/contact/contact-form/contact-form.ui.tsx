@@ -1,13 +1,15 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import { useId } from "react";
+import { FieldError, FormField, FormInput, FormLabel } from "src/components/form-field";
 import {
-	FieldError,
-	FormField,
-	FormInput,
-	FormLabel,
-} from "src/components/form-field";
-import { Form, FormErrorDisplay, SubmitButton } from "src/components/form-state";
+	Form,
+	FormErrorDisplay,
+	FormSuccessDisplay,
+	SubmitButton,
+	useForm,
+} from "src/components/form-state";
 import { Textarea } from "src/components/ui/textarea";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
@@ -17,12 +19,36 @@ interface ContactFormProps {
 	locale: Locale;
 }
 
+const fieldErrorClassName = "text-xs leading-5";
+
+/**
+ * Keep field-level validation concise while preserving real submission failures.
+ */
+function ContactFormErrorDisplay() {
+	const { fieldErrors } = useForm();
+
+	if (Object.keys(fieldErrors).length > 0) {
+		return null;
+	}
+
+	return <FormErrorDisplay />;
+}
+
 export function ContactForm({ locale }: ContactFormProps) {
 	const dictionary = getDictionary(locale);
+	const honeypotId = useId();
 
 	return (
-		<Form action={handleContactFormSubmission}>
-			<FormErrorDisplay />
+		<Form action={handleContactFormSubmission} noValidate>
+			<FormSuccessDisplay />
+			<ContactFormErrorDisplay />
+
+			<input type="hidden" name="locale" value={locale} />
+
+			<div className="absolute -left-[10000px] top-auto size-px overflow-hidden" aria-hidden="true">
+				<label htmlFor={honeypotId}>Website</label>
+				<input id={honeypotId} name="website" type="text" tabIndex={-1} autoComplete="off" />
+			</div>
 
 			<div className="space-y-5 sm:space-y-6">
 				<div className="grid gap-5 sm:gap-6 md:grid-cols-2">
@@ -31,10 +57,11 @@ export function ContactForm({ locale }: ContactFormProps) {
 
 						<FormInput
 							type="text"
+							maxLength={120}
 							placeholder={dictionary.contact.form.fields.name.placeholder}
 						/>
 
-						<FieldError />
+						<FieldError className={fieldErrorClassName} />
 					</FormField>
 
 					<FormField
@@ -48,10 +75,11 @@ export function ContactForm({ locale }: ContactFormProps) {
 
 						<FormInput
 							type="tel"
+							maxLength={30}
 							placeholder={dictionary.contact.form.fields.phone.placeholder}
 						/>
 
-						<FieldError />
+						<FieldError className={fieldErrorClassName} />
 					</FormField>
 				</div>
 
@@ -60,46 +88,52 @@ export function ContactForm({ locale }: ContactFormProps) {
 
 					<FormInput
 						type="email"
+						maxLength={254}
 						placeholder={dictionary.contact.form.fields.email.placeholder}
 					/>
 
-					<FieldError />
+					<FieldError className={fieldErrorClassName} />
 				</FormField>
 
-				<FormField fieldId="subject" name="subject">
+				<FormField fieldId="subject" name="subject" required>
 					<FormLabel>{dictionary.contact.form.fields.subject.label}</FormLabel>
 
 					<FormInput
 						type="text"
+						maxLength={200}
 						placeholder={dictionary.contact.form.fields.subject.placeholder}
 					/>
 
-					<FieldError />
+					<FieldError className={fieldErrorClassName} />
 				</FormField>
 
 				<FormField fieldId="message" name="message" required>
 					<FormLabel>{dictionary.contact.form.fields.message.label}</FormLabel>
 
-					<Textarea
-						placeholder={dictionary.contact.form.fields.message.placeholder}
-						rows={6}
-						className="
-							min-h-[130px] w-full resize-y rounded-sm border border-[#E7D0AF]
-							bg-[#FAF7F0] px-4 py-3
-							text-[14px] leading-7 text-[#342312]
-							shadow-none transition-colors duration-300
-							placeholder:text-[#342312]/40
-							hover:border-[#A87E3C]
-							focus:border-[#A87E3C] focus:bg-[#F7F1E6]
-							focus:ring-2 focus:ring-[#A87E3C]/20
-							sm:min-h-[150px] sm:text-[15px]
-						"
-					/>
+					<FormInput asChild>
+						<Textarea
+							placeholder={dictionary.contact.form.fields.message.placeholder}
+							rows={6}
+							maxLength={5000}
+							className="
+								min-h-[130px] w-full resize-y rounded-sm border border-[#E7D0AF]
+								bg-[#FAF7F0] px-4 py-3
+								text-[14px] leading-7 text-[#342312]
+								shadow-none transition-colors duration-300
+								placeholder:text-[#342312]/40
+								hover:border-[#A87E3C]
+								focus:border-[#A87E3C] focus:bg-[#F7F1E6]
+								focus:ring-2 focus:ring-[#A87E3C]/20
+								sm:min-h-[150px] sm:text-[15px]
+							"
+						/>
+					</FormInput>
 
-					<FieldError />
+					<FieldError className={fieldErrorClassName} />
 				</FormField>
 
 				<SubmitButton
+					type="button"
 					className="
 						group relative mt-2 inline-flex h-12 w-full items-center justify-center
 						overflow-hidden rounded-sm border border-[#342312]
@@ -118,9 +152,7 @@ export function ContactForm({ locale }: ContactFormProps) {
 					<span className="absolute inset-0 origin-left scale-x-0 bg-[#A87E3C] transition-transform duration-500 ease-out group-hover:scale-x-100" />
 
 					<span className="relative z-10 flex min-w-0 items-center justify-center gap-3">
-						<span className="min-w-0 break-words">
-							{dictionary.contact.form.submit}
-						</span>
+						<span className="min-w-0 break-words">{dictionary.contact.form.submit}</span>
 
 						<ArrowRight className="size-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
 					</span>

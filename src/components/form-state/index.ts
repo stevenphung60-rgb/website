@@ -34,5 +34,6 @@ export {
 	FormPendingMessage,
 	FormResetButton,
 	FormSubmitMessage,
+	FormSuccessDisplay,
 	SubmitButton,
 } from "./form-state.ui";

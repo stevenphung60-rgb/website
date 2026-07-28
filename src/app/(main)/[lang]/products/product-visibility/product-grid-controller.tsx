@@ -12,14 +12,9 @@ import { PRODUCT_OTHER_ID } from "../product-filter/product-filter.type";
 import { ProductVisibilityContext } from "./product-visibility.state";
 
 const DESKTOP_PAGE_SIZE = 12;
-const MOBILE_PAGE_SIZE = 8;
+const MOBILE_PAGE_SIZE = 12;
 const PRODUCT_STAGGER_DELAY = 110;
 const PRODUCT_MAX_DELAY = 770;
-
-function getColumns(width: number): number {
-	if (width >= 1024) return 3;
-	return 2;
-}
 
 function getPageSize(width: number): number {
 	if (width < 768) return MOBILE_PAGE_SIZE;
@@ -38,7 +33,6 @@ export function ProductGridController({
 	children,
 }: ProductGridControllerProps) {
 	const { selectedCategory } = useProductFilterState();
-	const [columns, setColumns] = useState(3);
 	const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE);
 	const [isReady, setIsReady] = useState(false);
 	const [animationKey, setAnimationKey] = useState(0);
@@ -49,7 +43,6 @@ export function ProductGridController({
 
 	useLayoutEffect(() => {
 		const updateLayoutState = () => {
-			setColumns(getColumns(window.innerWidth));
 			setPageSize(getPageSize(window.innerWidth));
 			setIsReady(true);
 		};
@@ -60,6 +53,7 @@ export function ProductGridController({
 		return () => window.removeEventListener("resize", updateLayoutState);
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: A category or breakpoint change must reset pagination even though their values are not read inside the effect.
 	useEffect(() => {
 		setCurrentPage(1);
 		setAnimationKey((prev) => prev + 1);

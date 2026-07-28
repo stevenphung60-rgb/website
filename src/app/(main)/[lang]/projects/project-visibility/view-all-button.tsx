@@ -24,19 +24,22 @@ export function ViewAllButton() {
 		return 72;
 	};
 
-	const scrollToProjectsFilter = () => {
+	const scrollToProjectsList = () => {
 		window.requestAnimationFrame(() => {
+			const listStartElement = document.getElementById("projects-list-start");
 			const filterElement = document.getElementById("projects-filter");
 			const projectsElement = document.getElementById("projects");
 
-			const targetElement = filterElement || projectsElement;
+			const targetElement =
+				listStartElement || filterElement || projectsElement;
 
 			if (!targetElement) return;
 
 			const elementTop =
 				targetElement.getBoundingClientRect().top + window.scrollY;
 
-			const scrollOffset = getHeaderOffset() + getTopGap();
+			const scrollOffset =
+				getHeaderOffset() + (listStartElement ? 16 : getTopGap());
 
 			window.scrollTo({
 				top: Math.max(elementTop - scrollOffset, 0),
@@ -47,7 +50,7 @@ export function ViewAllButton() {
 
 	const handlePageChange = (page: number) => {
 		goToPage(page);
-		scrollToProjectsFilter();
+		scrollToProjectsList();
 	};
 
 	const buttonClassName =

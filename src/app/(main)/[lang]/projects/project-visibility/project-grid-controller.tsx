@@ -10,16 +10,16 @@ import {
 import { useProjectFilterState } from "../project-filter/project-filter.state";
 import { ProjectVisibilityContext } from "./project-visibility.state";
 
-const PAGE_SIZE = 5;
+const DESKTOP_PAGE_SIZE = 5;
+const MOBILE_PAGE_SIZE = 12;
 
 /**
  * Get number of columns based on window width
  * Matches Tailwind breakpoints: md:grid-cols-2 lg:grid-cols-3
  */
-function getColumns(width: number): number {
-	if (width >= 1024) return 3; // lg
-	if (width >= 768) return 2; // md
-	return 1;
+function getPageSize(width: number): number {
+	if (width < 768) return MOBILE_PAGE_SIZE;
+	return DESKTOP_PAGE_SIZE;
 }
 
 interface ProjectGridControllerProps {
@@ -42,26 +42,28 @@ export function ProjectGridController({
 }: ProjectGridControllerProps) {
 	const { selectedCategory } = useProjectFilterState();
 	const [isReady, setIsReady] = useState(false);
+	const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [loadedProjects, setLoadedProjects] = useState<
 		Map<string, string | null>
 	>(new Map());
 
 	useLayoutEffect(() => {
-		const updateReady = () => {
-			getColumns(window.innerWidth);
+		const updateLayoutState = () => {
+			setPageSize(getPageSize(window.innerWidth));
 			setIsReady(true);
 		};
 
-		updateReady();
-		window.addEventListener("resize", updateReady);
+		updateLayoutState();
+		window.addEventListener("resize", updateLayoutState);
 
-		return () => window.removeEventListener("resize", updateReady);
+		return () => window.removeEventListener("resize", updateLayoutState);
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: A category or breakpoint change must reset pagination even though their values are not read inside the effect.
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [selectedCategory]);
+	}, [selectedCategory, pageSize]);
 
 	const registerProject = useCallback((id: string, categoryId: string | null) => {
 		setLoadedProjects((prev) => {
@@ -92,17 +94,30 @@ export function ProjectGridController({
 			};
 		}
 
-		const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+		const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
 		const safePage = Math.min(currentPage, pageCount);
-		const startIndex = (safePage - 1) * PAGE_SIZE;
-		const visible = new Set(filtered.slice(startIndex, startIndex + PAGE_SIZE));
+		const startIndex = (safePage - 1) * pageSize;
+		const visible = new Set(filtered.slice(startIndex, startIndex + pageSize));
 
 		return {
 			visibleIds: visible,
 			hasMore: pageCount > 1,
 			totalPages: pageCount,
 		};
-	}, [projectIds, loadedProjects, selectedCategory, limitRows, currentPage]);
+	}, [
+		projectIds,
+		loadedProjects,
+		selectedCategory,
+		limitRows,
+		currentPage,
+		pageSize,
+	]);
+
+	useEffect(() => {
+		setCurrentPage((previousPage) =>
+			Math.min(Math.max(previousPage, 1), totalPages),
+		);
+	}, [totalPages]);
 
 	const goToPage = useCallback(
 		(page: number) => {

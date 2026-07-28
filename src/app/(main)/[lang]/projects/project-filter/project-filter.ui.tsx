@@ -3,14 +3,13 @@ import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getProjectCategoryById } from "src/server/projectcategories";
 import { getActiveProjectCategoryIds } from "src/server/projectcategories/get-projectcategory-ids.query";
 import { ActiveFilterButton, InactiveFilterButton } from "./project-filter-button";
+import { ProjectMobileCategorySelect } from "./project-filter-select";
 
 interface ProjectFilterButtonsProps {
 	locale: Locale;
 }
 
-export async function ProjectFilterButtons({
-	locale,
-}: ProjectFilterButtonsProps) {
+export async function ProjectFilterButtons({ locale }: ProjectFilterButtonsProps) {
 	const categoryIds = await getActiveProjectCategoryIds();
 
 	const categoriesData = await Promise.all(
@@ -19,10 +18,7 @@ export async function ProjectFilterButtons({
 
 	const categories = categoriesData
 		.filter(
-			(
-				category,
-			): category is NonNullable<(typeof categoriesData)[number]> =>
-				category !== null,
+			(category): category is NonNullable<(typeof categoriesData)[number]> => category !== null,
 		)
 		.map((category) => ({
 			id: category.id,
@@ -31,6 +27,15 @@ export async function ProjectFilterButtons({
 		.filter((category) => category.name.en || category.name.vi);
 
 	const dictionary = getDictionary(locale);
+	const mobileCategories = categories.map((category) => ({
+		id: category.id,
+		label:
+			category.name[locale] ||
+			category.name.vi ||
+			category.name.en ||
+			dictionary.projects.filter.all,
+	}));
+	const mobileFilterLabel = locale === "vi" ? "Danh mục dự án" : "Project category";
 
 	const activeButtonClassName =
 		"flex min-h-[48px] w-full items-center justify-center rounded-none border border-[#342312] bg-[#342312] px-4 py-3 text-center text-[16px] font-bold uppercase leading-snug tracking-[0.01em] text-[#E7D0AF] transition-colors duration-300 hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF] lg:w-auto lg:px-5";
@@ -40,11 +45,17 @@ export async function ProjectFilterButtons({
 
 	return (
 		<div className="relative z-20">
-			<div className="mx-auto w-full max-w-full border border-[#E7D0AF] bg-[#F7F1E6] p-2 lg:w-fit lg:max-w-[980px]">
+			<ProjectMobileCategorySelect
+				allLabel={dictionary.projects.filter.all}
+				categories={mobileCategories}
+				label={mobileFilterLabel}
+			/>
+
+			<div className="mx-auto hidden w-full max-w-full border border-[#E7D0AF] bg-[#F7F1E6] p-2 md:block lg:w-fit lg:max-w-[980px]">
 				<div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-center">
 					<div className="min-w-0">
 						<ActiveFilterButton id={null}>
-							<button type="button" className={activeButtonClassName}>
+							<button type="button" aria-pressed="true" className={activeButtonClassName}>
 								<span className="block max-w-full whitespace-normal break-words">
 									{dictionary.projects.filter.all}
 								</span>
@@ -52,7 +63,7 @@ export async function ProjectFilterButtons({
 						</ActiveFilterButton>
 
 						<InactiveFilterButton id={null}>
-							<button type="button" className={inactiveButtonClassName}>
+							<button type="button" aria-pressed="false" className={inactiveButtonClassName}>
 								<span className="block max-w-full whitespace-normal break-words">
 									{dictionary.projects.filter.all}
 								</span>
@@ -63,7 +74,7 @@ export async function ProjectFilterButtons({
 					{categories.map((category) => (
 						<div key={category.id} className="min-w-0">
 							<ActiveFilterButton id={category.id}>
-								<button type="button" className={activeButtonClassName}>
+								<button type="button" aria-pressed="true" className={activeButtonClassName}>
 									<span className="block max-w-full whitespace-normal break-words">
 										{category.name[locale]}
 									</span>
@@ -71,7 +82,7 @@ export async function ProjectFilterButtons({
 							</ActiveFilterButton>
 
 							<InactiveFilterButton id={category.id}>
-								<button type="button" className={inactiveButtonClassName}>
+								<button type="button" aria-pressed="false" className={inactiveButtonClassName}>
 									<span className="block max-w-full whitespace-normal break-words">
 										{category.name[locale]}
 									</span>

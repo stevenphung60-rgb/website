@@ -13,8 +13,8 @@ import {
 	Roboto,
 	Source_Sans_3,
 } from "next/font/google";
-import type { CSSProperties } from "react";
 import type React from "react";
+import type { CSSProperties } from "react";
 import { getSiteFontFamilyValue } from "src/lib/font-presets";
 import { getSiteAppearance } from "src/server/site-appearance";
 import "./globals.css";
@@ -121,9 +121,9 @@ export const metadata: Metadata = {
 	publisher: "Nghiệp Hưng",
 	generator: "v0.app",
 	icons: {
-		icon: "/nghiep_hung_logo_no_bg.svg",
-		shortcut: "/nghiep_hung_logo_no_bg.svg",
-		apple: "/nghiep_hung_logo_no_bg.svg",
+		icon: "/favicon.ico",
+		shortcut: "/favicon.ico",
+		apple: "/favicon.ico",
 	},
 	openGraph: {
 		type: "website",

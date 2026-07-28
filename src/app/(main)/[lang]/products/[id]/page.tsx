@@ -171,7 +171,11 @@ export default async function ProductDetailPage({
 							{dictionary.header.relatedcontent}
 						</h2>
 
-						<RelatedProductsCarousel itemCount={relatedProducts.length}>
+						<RelatedProductsCarousel
+							contentKey={`${id}:${relatedProducts.map((relatedProduct) => relatedProduct.id).join("\u0000")}`}
+							itemCount={relatedProducts.length}
+							locale={locale}
+						>
 							{relatedProducts.map((relatedProduct) => (
 								<div
 									key={relatedProduct.id}

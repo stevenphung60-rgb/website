@@ -1,7 +1,7 @@
 "use client";
 
 import { Slot } from "@radix-ui/react-slot";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CircleCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useRef } from "react";
 import { Button } from "src/components/ui/button";
@@ -23,7 +23,7 @@ import { FormActionType } from "./form-state.type";
  * Form submission handler component
  * Manages form submission state and error handling
  */
-function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormProps) {
+function FormSubmissionHandler({ action, children, confirmBeforeSubmit, noValidate }: FormProps) {
 	const dispatch = useFormActions();
 	const router = useRouter();
 	const resetFormBoundary = useResetFormBoundary();
@@ -47,6 +47,7 @@ function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormPr
 
 		// Start submission - this automatically resets error state
 		dispatch({ type: FormActionType.StartSubmitting });
+		dispatch({ type: FormActionType.ClearAllFieldErrors });
 
 		// Create FormData from the form
 		const formData = new FormData(event.currentTarget);
@@ -56,6 +57,19 @@ function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormPr
 				const result = await action(formData);
 
 				if (result.success) {
+					if ("message" in result) {
+						startTransition(() => {
+							dispatch({
+								type: FormActionType.SetSuccess,
+								payload: result.message,
+							});
+						});
+					}
+
+					if ("reset" in result && result.reset) {
+						formRef?.current?.reset();
+					}
+
 					if ("redirect" in result) {
 						router.push(result.redirect);
 						return;
@@ -72,6 +86,13 @@ function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormPr
 					const errorMessage = result.error || "An unexpected error occurred";
 					startTransition(() => {
 						dispatch({ type: FormActionType.SetError, payload: errorMessage });
+
+						for (const [fieldName, error] of Object.entries(result.fieldErrors ?? {})) {
+							dispatch({
+								type: FormActionType.SetFieldError,
+								payload: { fieldName, error },
+							});
+						}
 					});
 				}
 			} catch (err) {
@@ -90,7 +111,7 @@ function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormPr
 	}
 
 	return (
-		<form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+		<form ref={formRef} onSubmit={handleSubmit} noValidate={noValidate} className="space-y-6">
 			{children}
 		</form>
 	);
@@ -100,12 +121,16 @@ function FormSubmissionHandler({ action, children, confirmBeforeSubmit }: FormPr
  * Form component with state management
  * Provides FormProvider and injects action into context
  */
-export function Form({ action, children, confirmBeforeSubmit }: FormProps) {
+export function Form({ action, children, confirmBeforeSubmit, noValidate }: FormProps) {
 	const formRef = useRef<HTMLFormElement>(null);
 
 	return (
 		<FormProvider formRef={formRef}>
-			<FormSubmissionHandler action={action} confirmBeforeSubmit={confirmBeforeSubmit}>
+			<FormSubmissionHandler
+				action={action}
+				confirmBeforeSubmit={confirmBeforeSubmit}
+				noValidate={noValidate}
+			>
 				{children}
 			</FormSubmissionHandler>
 		</FormProvider>
@@ -131,6 +156,29 @@ export function FormErrorDisplay({ className }: { className?: string }) {
 			<AlertCircle className="size-4 flex-shrink-0" />
 			<span className="text-sm">{error}</span>
 		</div>
+	);
+}
+
+/**
+ * Form success display component
+ * Shows a confirmation message after a successful submission
+ */
+export function FormSuccessDisplay({ className }: { className?: string }) {
+	const { successMessage } = useForm();
+
+	if (!successMessage) return null;
+
+	return (
+		<output
+			aria-live="polite"
+			className={cn(
+				"flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-800",
+				className,
+			)}
+		>
+			<CircleCheck className="size-4 shrink-0" />
+			<span className="text-sm">{successMessage}</span>
+		</output>
 	);
 }
 

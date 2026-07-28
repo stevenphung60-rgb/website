@@ -8,9 +8,20 @@ import { createTestDatabase, type TestDatabase } from "../utils/test-database";
 // Create isolated database for this test file
 const testDb: TestDatabase = createTestDatabase("services-row-limit");
 
+Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+	configurable: true,
+	value: vi.fn(),
+});
+
 // vi.mock is hoisted - must be at file level
 vi.mock("src/lib/database", () => ({
 	getDatabase: async () => testDb.getDb(),
+}));
+
+vi.mock("next/cache", () => ({
+	cacheTag: vi.fn(),
+	revalidatePath: vi.fn(),
+	revalidateTag: vi.fn(),
 }));
 
 // Mock window.innerWidth for column calculation
@@ -69,6 +80,17 @@ describe("Services Row Limiting", () => {
 
 			// View All should not appear when viewAll is true
 			expect(screen.queryByRole("link", { name: /view all/i })).not.toBeInTheDocument();
+		});
+
+		it("keeps the service navigation available from the md layout upward", async () => {
+			await renderAsync(<ServicesSectionDatabase locale="en" viewAll />);
+
+			expect(screen.getByTestId("service-list-navigation")).toHaveClass("hidden", "md:block");
+			expect(screen.getByTestId("service-list-grid")).toHaveClass(
+				"grid",
+				"grid-cols-2",
+				"md:block",
+			);
 		});
 	});
 

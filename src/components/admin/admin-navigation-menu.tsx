@@ -9,6 +9,7 @@ import {
 	FolderOpen,
 	Home,
 	ImageIcon,
+	Inbox,
 	Info,
 	LayoutDashboard,
 	Package,
@@ -41,9 +42,17 @@ interface AdminNavigationMenuProps {
 
 const dashboardItem: NavigationItem = {
 	href: "/admin",
-	label: "TỔNG QUAN",
+	label: "DASHBOARD",
 	icon: LayoutDashboard,
 };
+
+const contactSubmissionsItem: NavigationItem = {
+	href: "/admin/contact-submissions",
+	label: "KHÁCH HÀNG LIÊN HỆ",
+	icon: Inbox,
+};
+
+const topLevelItems = [dashboardItem, contactSubmissionsItem];
 
 const navigationGroups: NavigationGroup[] = [
 	{
@@ -178,10 +187,7 @@ function isRouteActive(pathname: string, href: string): boolean {
  * @param props - Admin navigation menu props
  * @returns Sidebar menu grouped by content area
  */
-export function AdminNavigationMenu({
-	isCollapsed,
-	onRequestExpand,
-}: AdminNavigationMenuProps) {
+export function AdminNavigationMenu({ isCollapsed, onRequestExpand }: AdminNavigationMenuProps) {
 	const pathname = usePathname();
 
 	const activeGroupLabel = useMemo(() => {
@@ -192,48 +198,46 @@ export function AdminNavigationMenu({
 		return activeGroup?.label ?? null;
 	}, [pathname]);
 
-	const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(
-		activeGroupLabel,
-	);
+	const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(activeGroupLabel);
 
 	useEffect(() => {
 		setOpenGroupLabel(activeGroupLabel);
 	}, [activeGroupLabel]);
 
-	const DashboardIcon = dashboardItem.icon;
-	const isDashboardActive = isRouteActive(pathname, dashboardItem.href);
-
 	return (
 		<nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
-			<Link
-				href={dashboardItem.href}
-				title={dashboardItem.label}
-				className={[
-					"group relative flex items-center rounded-xl py-2.5 text-[14px] font-bold leading-5 tracking-[0.01em] transition-colors duration-200",
-					isCollapsed ? "justify-center px-0" : "gap-2 px-3",
-					isDashboardActive
-						? "bg-[#342312] text-[#E7D0AF]"
-						: "text-[#E7D0AF] hover:bg-[#2B190B]",
-				].join(" ")}
-			>
-				{isDashboardActive && !isCollapsed ? (
-					<span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#A87E3C]" />
-				) : null}
+			{topLevelItems.map((item) => {
+				const ItemIcon = item.icon;
+				const isActive = isRouteActive(pathname, item.href);
 
-				<DashboardIcon className="size-4 shrink-0 text-[#A87E3C]" />
-
-				{!isCollapsed ? (
-					<>
-						<span className="min-w-0 flex-1 truncate">
-							{dashboardItem.label}
-						</span>
-
-						{isDashboardActive ? (
-							<ChevronsRight className="size-4 shrink-0 text-[#A87E3C]" />
+				return (
+					<Link
+						key={item.href}
+						href={item.href}
+						title={item.label}
+						aria-current={isActive ? "page" : undefined}
+						className={[
+							"group relative flex items-center rounded-xl py-2.5 text-[14px] font-bold leading-5 tracking-[0.01em] transition-colors duration-200",
+							isCollapsed ? "justify-center px-0" : "gap-2 px-3",
+							isActive ? "bg-[#342312] text-[#E7D0AF]" : "text-[#E7D0AF] hover:bg-[#2B190B]",
+						].join(" ")}
+					>
+						{isActive && !isCollapsed ? (
+							<span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#A87E3C]" />
 						) : null}
-					</>
-				) : null}
-			</Link>
+
+						<ItemIcon className="size-4 shrink-0 text-[#A87E3C]" />
+
+						{!isCollapsed ? (
+							<>
+								<span className="min-w-0 flex-1 truncate">{item.label}</span>
+
+								{isActive ? <ChevronsRight className="size-4 shrink-0 text-[#A87E3C]" /> : null}
+							</>
+						) : null}
+					</Link>
+				);
+			})}
 
 			{navigationGroups.map((group) => {
 				const GroupIcon = group.icon;
@@ -274,9 +278,7 @@ export function AdminNavigationMenu({
 							>
 								<GroupIcon className="size-4 shrink-0 text-[#A87E3C]" />
 
-								{!isCollapsed ? (
-									<span className="truncate">{group.label}</span>
-								) : null}
+								{!isCollapsed ? <span className="truncate">{group.label}</span> : null}
 							</span>
 
 							{!isCollapsed ? (
@@ -293,9 +295,7 @@ export function AdminNavigationMenu({
 							<div
 								className={[
 									"grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
-									isGroupOpen
-										? "grid-rows-[1fr] opacity-100"
-										: "grid-rows-[0fr] opacity-0",
+									isGroupOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
 								].join(" ")}
 							>
 								<div className="overflow-hidden">
@@ -320,15 +320,11 @@ export function AdminNavigationMenu({
 														<ItemIcon
 															className={[
 																"size-4 shrink-0",
-																isActive
-																	? "text-[#A87E3C]"
-																	: "text-[#A87E3C]/80",
+																isActive ? "text-[#A87E3C]" : "text-[#A87E3C]/80",
 															].join(" ")}
 														/>
 
-														<span className="min-w-0 truncate">
-															{item.label}
-														</span>
+														<span className="min-w-0 truncate">{item.label}</span>
 													</span>
 
 													{isActive ? (

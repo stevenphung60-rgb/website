@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import {
 	ArrowRight,
 	Building2,
@@ -6,6 +5,7 @@ import {
 	FolderOpen,
 	Home,
 	ImageIcon,
+	Inbox,
 	LayoutDashboard,
 	Package,
 	Palette,
@@ -15,17 +15,15 @@ import {
 	Wrench,
 } from "lucide-react";
 import Link from "next/link";
+import type { ComponentType } from "react";
 import { AdminPageHeader } from "src/components/admin/admin-page-header";
 import { Button } from "src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "src/components/ui/card";
+import { getContactSubmissionMetrics } from "src/server/contact";
 import { getProductCategoryCount } from "src/server/productcategories";
 import { getProductCounts, getProductIds, ProductStatus } from "src/server/products";
 import { getProjectCategoryCount } from "src/server/projectcategories";
-import {
-	getProjectCounts,
-	getProjectIds,
-	ProjectVisibilityStatus,
-} from "src/server/projects";
+import { getProjectCounts, getProjectIds, ProjectVisibilityStatus } from "src/server/projects";
 import { getServiceCounts, getServiceIds, ServiceStatus } from "src/server/services";
 
 interface MetricCardProps {
@@ -33,6 +31,13 @@ interface MetricCardProps {
 	value: number | string;
 	description: string;
 	icon: ComponentType<{ className?: string }>;
+}
+
+interface CustomerCareSummaryProps {
+	total: number;
+	newCount: number;
+	contacted: number;
+	resolved: number;
 }
 
 interface MainTaskProps {
@@ -74,6 +79,7 @@ export default async function AdminPage() {
 		projectIds,
 		projectCounts,
 		projectCategoryCount,
+		contactSubmissionMetrics,
 	] = await Promise.all([
 		getProductIds(),
 		getProductCounts(),
@@ -83,6 +89,7 @@ export default async function AdminPage() {
 		getProjectIds(),
 		getProjectCounts(),
 		getProjectCategoryCount(),
+		getContactSubmissionMetrics(),
 	]);
 
 	const activeProducts = productCounts[ProductStatus.Active] ?? 0;
@@ -91,25 +98,20 @@ export default async function AdminPage() {
 	const activeServices = serviceCounts[ServiceStatus.Active] ?? 0;
 	const draftServices = serviceCounts[ServiceStatus.Draft] ?? 0;
 
-	const activeProjects =
-		projectCounts.visibility[ProjectVisibilityStatus.Active] ?? 0;
-	const draftProjects =
-		projectCounts.visibility[ProjectVisibilityStatus.Draft] ?? 0;
+	const activeProjects = projectCounts.visibility[ProjectVisibilityStatus.Active] ?? 0;
+	const draftProjects = projectCounts.visibility[ProjectVisibilityStatus.Draft] ?? 0;
 
 	const totalCategories = productCategoryCount + projectCategoryCount;
 
 	return (
 		<div className="w-full space-y-6">
 			<AdminPageHeader
-				title="Tổng quan"
+				title="Dashboard"
 				eyebrow="NH - DUCT Admin"
 				description="Theo dõi nhanh dữ liệu chính và đi tới khu vực cần quản trị."
 				icon={LayoutDashboard}
 				actions={
-					<Button
-						asChild
-						className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]"
-					>
+					<Button asChild className="bg-[#342312] text-[#E7D0AF] hover:bg-[#23160B]">
 						<Link href="/">
 							<ExternalLink className="mr-2 size-4" />
 							Xem website
@@ -118,7 +120,17 @@ export default async function AdminPage() {
 				}
 			/>
 
-			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+			<CustomerCareSummary
+				total={contactSubmissionMetrics.total}
+				newCount={contactSubmissionMetrics.new}
+				contacted={contactSubmissionMetrics.contacted}
+				resolved={contactSubmissionMetrics.resolved}
+			/>
+
+			<section
+				data-testid="dashboard-content-metrics"
+				className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+			>
 				<MetricCard
 					title="Sản phẩm"
 					value={productIds.length}
@@ -171,6 +183,15 @@ export default async function AdminPage() {
 					<CardContent className="p-0">
 						<div className="divide-y divide-[#E7D0AF]/70">
 							<MainTask
+								title="Khách hàng liên hệ"
+								description="Xem và chăm sóc khách hàng đã gửi biểu mẫu liên hệ trên website."
+								href="/admin/contact-submissions"
+								icon={Inbox}
+								countLabel={`${contactSubmissionMetrics.total} khách hàng`}
+								metaLabel={`${contactSubmissionMetrics.new} liên hệ mới`}
+							/>
+
+							<MainTask
 								title="Sản phẩm"
 								description="Thêm, sửa thông tin, hình ảnh và trạng thái sản phẩm."
 								href="/admin/products"
@@ -211,9 +232,7 @@ export default async function AdminPage() {
 
 				<Card className="border-[#E7D0AF] bg-white shadow-sm">
 					<CardHeader className="border-b border-[#E7D0AF]/70 px-5 py-5">
-						<CardTitle className="font-serif text-xl text-[#342312]">
-							Trạng thái xuất bản
-						</CardTitle>
+						<CardTitle className="font-serif text-xl text-[#342312]">Trạng thái xuất bản</CardTitle>
 
 						<p className="mt-1 text-sm leading-6 text-[#342312]/65">
 							Tỷ lệ nội dung đang hiển thị ngoài website.
@@ -296,13 +315,9 @@ export default async function AdminPage() {
 
 				<Card className="border-[#E7D0AF] bg-white shadow-sm">
 					<CardHeader className="border-b border-[#E7D0AF]/70 px-5 py-5">
-						<CardTitle className="font-serif text-xl text-[#342312]">
-							Banner các trang
-						</CardTitle>
+						<CardTitle className="font-serif text-xl text-[#342312]">Banner các trang</CardTitle>
 
-						<p className="mt-1 text-sm leading-6 text-[#342312]/65">
-							Ảnh và nội dung đầu trang.
-						</p>
+						<p className="mt-1 text-sm leading-6 text-[#342312]/65">Ảnh và nội dung đầu trang.</p>
 					</CardHeader>
 
 					<CardContent className="space-y-3 px-5 py-5">
@@ -331,9 +346,7 @@ export default async function AdminPage() {
 
 				<Card className="border-[#E7D0AF] bg-white shadow-sm">
 					<CardHeader className="border-b border-[#E7D0AF]/70 px-5 py-5">
-						<CardTitle className="font-serif text-xl text-[#342312]">
-							Phân loại nội dung
-						</CardTitle>
+						<CardTitle className="font-serif text-xl text-[#342312]">Phân loại nội dung</CardTitle>
 
 						<p className="mt-1 text-sm leading-6 text-[#342312]/65">
 							Danh mục dùng để nhóm sản phẩm và dự án.
@@ -369,6 +382,109 @@ export default async function AdminPage() {
 }
 
 /**
+ * Priority customer-care summary shown before the general dashboard metrics.
+ */
+function CustomerCareSummary({ total, newCount, contacted, resolved }: CustomerCareSummaryProps) {
+	const hasNewCustomers = newCount > 0;
+
+	return (
+		<section
+			data-testid="customer-care-summary"
+			data-tone={hasNewCustomers ? "attention" : "clear"}
+			aria-label="Khách hàng liên hệ"
+			className={[
+				"relative overflow-hidden rounded-2xl border shadow-[0_16px_40px_rgba(14,116,144,0.14)]",
+				hasNewCustomers
+					? "border-sky-300 bg-gradient-to-br from-[#F0FAFF] via-[#EAF9FF] to-[#ECFDF5]"
+					: "border-emerald-300 bg-gradient-to-br from-[#F0FDF4] via-[#ECFDF5] to-[#ECFEFF]",
+			].join(" ")}
+		>
+			<div
+				aria-hidden="true"
+				className={[
+					"absolute -right-16 -top-20 size-64 rounded-full blur-3xl",
+					hasNewCustomers ? "bg-sky-300/35" : "bg-emerald-300/30",
+				].join(" ")}
+			/>
+
+			<div
+				aria-hidden="true"
+				className="absolute -bottom-32 left-1/3 size-64 rounded-full bg-emerald-300/25 blur-3xl"
+			/>
+
+			<div className="relative flex flex-col gap-5 p-5 sm:p-6 xl:flex-row xl:items-center xl:justify-between">
+				<div className="flex min-w-0 items-start gap-4">
+					<div
+						className={[
+							"flex size-12 shrink-0 items-center justify-center rounded-xl text-white shadow-lg sm:size-14",
+							hasNewCustomers
+								? "bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-900/15"
+								: "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-900/15",
+						].join(" ")}
+					>
+						<Inbox className="size-6 sm:size-7" />
+					</div>
+
+					<div className="min-w-0">
+						<p
+							className={[
+								"text-xs font-bold uppercase tracking-[0.14em]",
+								hasNewCustomers ? "text-sky-700" : "text-emerald-700",
+							].join(" ")}
+						>
+							Chăm sóc khách hàng
+						</p>
+
+						<h2 className="mt-2 font-serif text-2xl font-bold text-[#123B4A] sm:text-3xl">
+							Khách hàng liên hệ
+						</h2>
+					</div>
+				</div>
+
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-center xl:justify-end">
+					<div className="grid grid-cols-2 gap-2 text-center sm:min-w-[430px] sm:grid-cols-4">
+						<div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white/90 px-3 py-3 shadow-sm backdrop-blur-sm">
+							<p className="text-2xl font-bold leading-none text-sky-700">{total}</p>
+							<p className="mt-1 text-[11px] font-semibold text-slate-600">Tổng liên hệ</p>
+						</div>
+
+						<div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white/90 px-3 py-3 shadow-sm backdrop-blur-sm">
+							<p className="text-2xl font-bold leading-none text-orange-600">{newCount}</p>
+							<p className="mt-1 text-[11px] font-semibold text-slate-600">Liên hệ mới</p>
+						</div>
+
+						<div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white/90 px-3 py-3 shadow-sm backdrop-blur-sm">
+							<p className="text-2xl font-bold leading-none text-amber-700">{contacted}</p>
+							<p className="mt-1 text-[11px] font-semibold text-slate-600">Đã liên hệ</p>
+						</div>
+
+						<div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white/90 px-3 py-3 shadow-sm backdrop-blur-sm">
+							<p className="text-2xl font-bold leading-none text-emerald-700">{resolved}</p>
+							<p className="mt-1 text-[11px] font-semibold text-slate-600">Đã xử lý</p>
+						</div>
+					</div>
+
+					<Button
+						asChild
+						className={[
+							"h-11 shrink-0 font-bold text-white shadow-sm",
+							hasNewCustomers
+								? "bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700"
+								: "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
+						].join(" ")}
+					>
+						<Link href="/admin/contact-submissions">
+							Xem khách hàng liên hệ
+							<ArrowRight className="ml-2 size-4" />
+						</Link>
+					</Button>
+				</div>
+			</div>
+		</section>
+	);
+}
+
+/**
  * Metric card
  * @param props - Metric card props
  * @returns Metric card
@@ -381,13 +497,9 @@ function MetricCard({ title, value, description, icon: Icon }: MetricCardProps) 
 					<div className="min-w-0">
 						<p className="text-sm font-semibold text-[#342312]/70">{title}</p>
 
-						<p className="mt-3 text-3xl font-bold leading-none text-[#342312]">
-							{value}
-						</p>
+						<p className="mt-3 text-3xl font-bold leading-none text-[#342312]">{value}</p>
 
-						<p className="mt-3 text-xs leading-5 text-[#342312]/55">
-							{description}
-						</p>
+						<p className="mt-3 text-xs leading-5 text-[#342312]/55">{description}</p>
 					</div>
 
 					<div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#342312]/10 text-[#342312]">
@@ -404,14 +516,7 @@ function MetricCard({ title, value, description, icon: Icon }: MetricCardProps) 
  * @param props - Main task props
  * @returns Main task link row
  */
-function MainTask({
-	title,
-	description,
-	href,
-	icon: Icon,
-	countLabel,
-	metaLabel,
-}: MainTaskProps) {
+function MainTask({ title, description, href, icon: Icon, countLabel, metaLabel }: MainTaskProps) {
 	return (
 		<Link
 			href={href}
@@ -424,9 +529,7 @@ function MainTask({
 			<div className="min-w-0 flex-1">
 				<p className="text-base font-semibold text-[#342312]">{title}</p>
 
-				<p className="mt-1 text-sm leading-6 text-[#342312]/65">
-					{description}
-				</p>
+				<p className="mt-1 text-sm leading-6 text-[#342312]/65">{description}</p>
 			</div>
 
 			<div className="hidden shrink-0 text-right md:block">
@@ -445,14 +548,7 @@ function MainTask({
  * @param props - Publish status props
  * @returns Publish status link
  */
-function PublishStatus({
-	title,
-	total,
-	active,
-	draft,
-	href,
-	icon: Icon,
-}: PublishStatusProps) {
+function PublishStatus({ title, total, active, draft, href, icon: Icon }: PublishStatusProps) {
 	const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
 
 	return (
@@ -479,10 +575,7 @@ function PublishStatus({
 			</div>
 
 			<div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
-				<div
-					className="h-full rounded-full bg-[#A87E3C]"
-					style={{ width: `${activePercent}%` }}
-				/>
+				<div className="h-full rounded-full bg-[#A87E3C]" style={{ width: `${activePercent}%` }} />
 			</div>
 		</Link>
 	);
@@ -507,9 +600,7 @@ function ContentLink({ title, description, href, icon: Icon }: ContentLinkProps)
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-semibold text-[#342312]">{title}</p>
 
-					<p className="mt-1 text-xs leading-5 text-[#342312]/60">
-						{description}
-					</p>
+					<p className="mt-1 text-xs leading-5 text-[#342312]/60">{description}</p>
 				</div>
 
 				<ArrowRight className="mt-1 size-4 shrink-0 text-[#A87E3C] transition group-hover:translate-x-1" />

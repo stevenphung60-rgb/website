@@ -1,16 +1,11 @@
 import { cacheTag } from "next/cache";
 import { CACHE_TAGS } from "src/lib/cache-tags";
 import { getDatabase } from "src/lib/database";
-import type {
-	BlogCategory,
-	BlogCategoryDocument,
-	BlogPost,
-	BlogPostDocument,
-} from "./blog.types";
+import type { BlogCategory, BlogCategoryDocument, BlogPost, BlogPostDocument } from "./blog.types";
 import { normalizeBlogPostDocument } from "./normalize-blogpost";
 
 export const BLOG_LIST_PAGE_SIZE = 6;
-
+export const BLOG_MOBILE_LIST_PAGE_SIZE = 12;
 
 interface GetBlogListPageDataInput {
 	categoryId?: string | null;
@@ -33,6 +28,7 @@ export interface BlogListPageData {
 	featuredPosts: BlogPost[];
 	latestPost: BlogPost | null;
 	posts: BlogPost[];
+	mobilePosts: BlogPost[];
 	tags: BlogTagSummary[];
 	totalBlogCount: number;
 	filteredBlogCount: number;
@@ -40,6 +36,9 @@ export interface BlogListPageData {
 	currentPage: number;
 	totalPages: number;
 	pageSize: number;
+	mobileCurrentPage: number;
+	mobileTotalPages: number;
+	mobilePageSize: number;
 	selectedCategoryId: string | null;
 	selectedTag: string | null;
 }
@@ -54,10 +53,7 @@ function normalizeTag(value?: string | null): string | null {
 	return tag || null;
 }
 
-function createPublishedBlogQuery(input: {
-	categoryId?: string | null;
-	tag?: string | null;
-}) {
+function createPublishedBlogQuery(input: { categoryId?: string | null; tag?: string | null }) {
 	const query: Record<string, unknown> = {
 		status: "published",
 	};
@@ -193,6 +189,9 @@ export async function getBlogListPageData(
 	const totalPages = Math.max(1, Math.ceil(listBlogCount / BLOG_LIST_PAGE_SIZE));
 	const currentPage = Math.min(requestedPage, totalPages);
 	const skip = (currentPage - 1) * BLOG_LIST_PAGE_SIZE;
+	const mobileTotalPages = Math.max(1, Math.ceil(listBlogCount / BLOG_MOBILE_LIST_PAGE_SIZE));
+	const mobileCurrentPage = Math.min(requestedPage, mobileTotalPages);
+	const mobileSkip = (mobileCurrentPage - 1) * BLOG_MOBILE_LIST_PAGE_SIZE;
 	const listQuery = latestPost
 		? {
 				...baseQuery,
@@ -200,19 +199,29 @@ export async function getBlogListPageData(
 			}
 		: baseQuery;
 
-	const postDocuments = await db
-		.collection<BlogPostDocument>("blogPosts")
-		.find(listQuery)
-		.sort(publicBlogSort)
-		.skip(skip)
-		.limit(BLOG_LIST_PAGE_SIZE)
-		.toArray();
+	const [postDocuments, mobilePostDocuments] = await Promise.all([
+		db
+			.collection<BlogPostDocument>("blogPosts")
+			.find(listQuery)
+			.sort(publicBlogSort)
+			.skip(skip)
+			.limit(BLOG_LIST_PAGE_SIZE)
+			.toArray(),
+		db
+			.collection<BlogPostDocument>("blogPosts")
+			.find(listQuery)
+			.sort(publicBlogSort)
+			.skip(mobileSkip)
+			.limit(BLOG_MOBILE_LIST_PAGE_SIZE)
+			.toArray(),
+	]);
 
 	return {
 		categories,
 		featuredPosts,
 		latestPost,
 		posts: postDocuments.map(normalizeBlogPostDocument),
+		mobilePosts: mobilePostDocuments.map(normalizeBlogPostDocument),
 		tags,
 		totalBlogCount,
 		filteredBlogCount,
@@ -220,6 +229,9 @@ export async function getBlogListPageData(
 		currentPage,
 		totalPages,
 		pageSize: BLOG_LIST_PAGE_SIZE,
+		mobileCurrentPage,
+		mobileTotalPages,
+		mobilePageSize: BLOG_MOBILE_LIST_PAGE_SIZE,
 		selectedCategoryId,
 		selectedTag,
 	};

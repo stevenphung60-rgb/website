@@ -22,7 +22,11 @@ import { getActiveProductIds, getProductById } from "src/server/products";
 import { ProductCardWrapper } from "./product-card-wrapper";
 import ProductDialog from "./product-dialog";
 import { ProductFilterButtons, ProductFilterProvider } from "./product-filter";
-import { ProductGridController, ViewAllButton } from "./product-visibility";
+import {
+	ProductGridController,
+	ProductMobilePageIndicator,
+	ViewAllButton,
+} from "./product-visibility";
 
 interface ProductsSectionDatabaseProps {
 	locale: Locale;
@@ -125,6 +129,11 @@ export default async function ProductsSectionDatabase({
 
 								<div className="min-w-0 flex-1">
 									<ProductGridController productIds={displayIds} limitRows>
+										{/* biome-ignore lint/correctness/useUniqueElementIds: Stable target for pagination scroll restoration. */}
+										<div id="products-list-start" className="scroll-mt-24">
+											<ProductMobilePageIndicator locale={locale} />
+										</div>
+
 										<div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
 											{displayIds.map((productId) => (
 												<Suspense key={productId} fallback={null}>

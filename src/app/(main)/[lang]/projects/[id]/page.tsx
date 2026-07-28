@@ -70,7 +70,7 @@ export default async function ProjectDetailPage({
 				)
 				.map((relatedProject) => [relatedProject.id, relatedProject]),
 		).values(),
-	).slice(0, 8);
+	);
 
 	return (
 		<section className="w-full overflow-x-hidden bg-[#FAF7F0]">

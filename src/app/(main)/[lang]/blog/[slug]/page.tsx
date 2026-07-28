@@ -374,6 +374,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 				title={text.relatedArticles}
 				items={relatedArticleItems}
 				countLabel={`${relatedArticleItems.length} ${text.articles}`}
+				locale={locale}
 			/>
 		</main>
 	);

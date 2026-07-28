@@ -6,9 +6,9 @@ import { Skeleton } from "src/components/ui/skeleton";
  */
 export function ProjectCardSkeleton() {
 	return (
-		<Card className="py-0">
-			<Skeleton className="aspect-video rounded-t-lg" />
-			<CardContent className="pb-6">
+		<Card className="h-[310px] overflow-hidden py-0 md:h-auto">
+			<Skeleton className="h-full rounded-none md:aspect-video md:h-auto md:rounded-t-lg" />
+			<CardContent className="hidden pb-6 md:block">
 				<Skeleton className="h-6 w-3/4" />
 			</CardContent>
 		</Card>

@@ -4,6 +4,11 @@ import { Calendar, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LocaleLink from "src/components/behaviors/LocaleLink";
+import {
+	RelatedContentMobilePageIndicator,
+	RelatedContentMobilePaginationControls,
+	useRelatedContentMobilePagination,
+} from "src/components/related-content-mobile-pagination";
 import type { Locale } from "src/lib/i18n/config";
 import type { Project } from "src/server/projects";
 
@@ -16,8 +21,7 @@ interface RelatedProjectsCarouselProps {
 
 function getVisibleCount() {
 	if (window.innerWidth >= 1024) return 3;
-	if (window.innerWidth >= 640) return 2;
-	return 1;
+	return 2;
 }
 
 function getScrollAmount(carouselElement: HTMLDivElement) {
@@ -41,16 +45,23 @@ export default function RelatedProjectsCarousel({
 	const [visibleCount, setVisibleCount] = useState(3);
 	const [canScrollPrev, setCanScrollPrev] = useState(false);
 	const [canScrollNext, setCanScrollNext] = useState(false);
+	const contentKey = projects.map((project) => project.id).join("|");
+	const { currentPage, goToPage, isItemVisible, isMobile, isReady, totalPages } =
+		useRelatedContentMobilePagination({
+			contentKey,
+			itemCount: projects.length,
+		});
+	const displayedProjects = projects.filter((_, index) => isItemVisible(index));
+	const scrollTargetId = "related-projects-list";
 
-	const shouldShowControls = projects.length > visibleCount;
+	const shouldShowControls = isReady && !isMobile && projects.length > visibleCount;
 
 	const updateScrollState = useCallback(() => {
 		const carouselElement = carouselRef.current;
 
 		if (!carouselElement) return;
 
-		const maxScrollLeft =
-			carouselElement.scrollWidth - carouselElement.clientWidth;
+		const maxScrollLeft = carouselElement.scrollWidth - carouselElement.clientWidth;
 
 		setCanScrollPrev(carouselElement.scrollLeft > 4);
 		setCanScrollNext(carouselElement.scrollLeft < maxScrollLeft - 4);
@@ -69,6 +80,7 @@ export default function RelatedProjectsCarousel({
 		return () => window.removeEventListener("resize", updateVisibleCount);
 	}, [updateScrollState]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Project and visible counts change the carousel bounds even though updateScrollState reads the resulting DOM dimensions.
 	useEffect(() => {
 		updateScrollState();
 	}, [projects.length, visibleCount, updateScrollState]);
@@ -83,9 +95,7 @@ export default function RelatedProjectsCarousel({
 		if (!carouselElement) return;
 
 		const scrollAmount =
-			window.innerWidth < 640
-				? getScrollAmount(carouselElement)
-				: carouselElement.clientWidth;
+			window.innerWidth < 640 ? getScrollAmount(carouselElement) : carouselElement.clientWidth;
 
 		carouselElement.scrollBy({
 			left: direction === "next" ? scrollAmount : -scrollAmount,
@@ -100,7 +110,10 @@ export default function RelatedProjectsCarousel({
 		"inline-flex size-10 items-center justify-center border border-[#342312]/20 bg-transparent text-[#342312] transition-colors duration-300 hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF] disabled:pointer-events-none disabled:border-[#342312]/10 disabled:text-[#342312]/25 sm:size-11";
 
 	return (
-		<section className="w-full overflow-hidden bg-[#FAF7F0] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
+		<section
+			className="w-full overflow-hidden bg-[#FAF7F0] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24"
+			style={{ visibility: isReady ? "visible" : "hidden" }}
+		>
 			<div className="mx-auto w-full max-w-7xl">
 				<div className="mb-6 flex flex-col gap-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
 					<div className="min-w-0">
@@ -142,110 +155,127 @@ export default function RelatedProjectsCarousel({
 					) : null}
 				</div>
 
-				<div
-					ref={carouselRef}
-					onScroll={updateScrollState}
-					className="flex max-w-full snap-x snap-mandatory gap-5 overflow-x-auto overflow-y-hidden scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-				>
-					{projects.map((project) => {
-						const projectName =
-							project.name?.[locale] ?? project.name?.en ?? "";
+				<div id={scrollTargetId}>
+					{isMobile ? (
+						<RelatedContentMobilePageIndicator
+							currentPage={currentPage}
+							locale={locale}
+							totalPages={totalPages}
+						/>
+					) : null}
 
-						const projectDescription =
-							project.description?.[locale] ?? project.description?.en ?? "";
+					<div
+						ref={carouselRef}
+						onScroll={updateScrollState}
+						className={
+							isMobile
+								? "grid max-w-full grid-cols-2 gap-3"
+								: "flex max-w-full flex-nowrap snap-x snap-mandatory gap-5 overflow-x-auto overflow-y-hidden scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+						}
+					>
+						{displayedProjects.map((project) => {
+							const projectName = project.name?.[locale] ?? project.name?.en ?? "";
 
-						const projectLocation =
-							project.location?.[locale] ?? project.location?.en ?? "";
+							const projectDescription =
+								project.description?.[locale] ?? project.description?.en ?? "";
 
-						const projectYear =
-							project.year?.[locale] ?? project.year?.en ?? "";
+							const projectLocation = project.location?.[locale] ?? project.location?.en ?? "";
 
-						const mainImage =
-							project.gallery?.find((image) => image.isMain) ??
-							project.gallery?.[0];
+							const projectYear = project.year?.[locale] ?? project.year?.en ?? "";
 
-						return (
-							<div
-								key={project.id}
-								className="min-w-0 shrink-0 basis-full snap-start sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]"
-							>
-								<LocaleLink
-									href={`/projects/${project.id}`}
-									className="group block h-full"
+							const mainImage =
+								project.gallery?.find((image) => image.isMain) ?? project.gallery?.[0];
+
+							return (
+								<div
+									key={project.id}
+									className={
+										isMobile
+											? "min-w-0"
+											: "min-w-0 shrink-0 basis-[calc((100%-1.25rem)/2)] snap-start lg:basis-[calc((100%_-_2.5rem)_/_3)]"
+									}
 								>
-									<article className="relative h-[420px] overflow-hidden border border-[#342312]/15 bg-[#342312] sm:h-[450px] lg:h-[480px]">
-										<Image
-											src={mainImage?.url || "/placeholder.svg"}
-											alt={projectName}
-											fill
-											className="object-cover transition duration-700 ease-out group-hover:scale-[1.045]"
-											sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc(100vw - 2rem)"
-										/>
+									<LocaleLink href={`/projects/${project.id}`} className="group block h-full">
+										<article className="relative h-[340px] overflow-hidden border border-[#342312]/15 bg-[#342312] md:h-[450px] lg:h-[480px]">
+											<Image
+												src={mainImage?.url || "/placeholder.svg"}
+												alt={projectName}
+												fill
+												className="object-cover transition duration-700 ease-out group-hover:scale-[1.045]"
+												sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc((100vw - 2.75rem) / 2)"
+											/>
 
-										<div className="absolute inset-0 bg-gradient-to-t from-[#342312] via-[#342312]/70 to-transparent transition duration-500 group-hover:via-[#342312]/78" />
+											<div className="absolute inset-0 bg-gradient-to-t from-[#342312] via-[#342312]/70 to-transparent transition duration-500 group-hover:via-[#342312]/78" />
 
-										<div className="absolute inset-0 border border-[#E7D0AF]/14 transition duration-500 group-hover:border-[#E7D0AF]/55" />
+											<div className="absolute inset-0 border border-[#E7D0AF]/14 transition duration-500 group-hover:border-[#E7D0AF]/55" />
 
-										<div className="absolute left-5 top-5 flex max-w-[calc(100%-2.5rem)] items-center gap-3 sm:left-6 sm:top-6">
-											<span className="h-px w-8 shrink-0 bg-[#E7D0AF]" />
+											<div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 md:left-6 md:top-6 md:max-w-[calc(100%-2.5rem)] md:gap-3">
+												<span className="h-px w-4 shrink-0 bg-[#E7D0AF] md:w-8" />
 
-											<p className="line-clamp-1 min-w-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#E7D0AF] sm:text-[12px]">
-												{categoryName}
-											</p>
-										</div>
-
-										<div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-											<h3 className="line-clamp-3 break-words text-[28px] font-black uppercase leading-[1.03] tracking-[-0.04em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] sm:text-[34px] lg:text-[38px]">
-												{projectName}
-											</h3>
-
-											{projectLocation || projectYear ? (
-												<div className="mt-5 space-y-2.5 border-y border-[#E7D0AF]/18 py-4">
-													{projectLocation ? (
-														<div className="flex min-w-0 items-start gap-3">
-															<MapPin className="mt-1 size-4 shrink-0 text-[#E7D0AF]" />
-
-															<p className="min-w-0 text-[13px] leading-6 text-[#F7F1E6]/82 sm:text-[14px]">
-																<span className="font-light text-[#E7D0AF]/72">
-																	{locationLabel}:{" "}
-																</span>
-
-																<span className="font-bold">
-																	{projectLocation}
-																</span>
-															</p>
-														</div>
-													) : null}
-
-													{projectYear ? (
-														<div className="flex min-w-0 items-start gap-3">
-															<Calendar className="mt-1 size-4 shrink-0 text-[#E7D0AF]" />
-
-															<p className="min-w-0 text-[13px] leading-6 text-[#F7F1E6]/82 sm:text-[14px]">
-																<span className="font-light text-[#E7D0AF]/72">
-																	{timeLabel}:{" "}
-																</span>
-
-																<span className="font-bold">
-																	{projectYear}
-																</span>
-															</p>
-														</div>
-													) : null}
-												</div>
-											) : null}
-
-											{projectDescription ? (
-												<p className="mt-4 line-clamp-2 text-[14px] leading-[1.75] text-[#F7F1E6]/68">
-													{projectDescription}
+												<p className="line-clamp-1 min-w-0 text-[8px] font-bold uppercase tracking-[0.12em] text-[#E7D0AF] md:text-[12px] md:tracking-[0.2em]">
+													{categoryName}
 												</p>
-											) : null}
-										</div>
-									</article>
-								</LocaleLink>
-							</div>
-						);
-					})}
+											</div>
+
+											<div className="absolute inset-x-0 bottom-0 p-3 md:p-6">
+												<h3 className="line-clamp-3 break-words text-[17px] font-black uppercase leading-[1.08] tracking-[-0.02em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] md:text-[34px] md:leading-[1.03] md:tracking-[-0.04em] lg:text-[38px]">
+													{projectName}
+												</h3>
+
+												{projectLocation || projectYear ? (
+													<div className="mt-3 space-y-1.5 border-y border-[#E7D0AF]/18 py-2 md:mt-5 md:space-y-2.5 md:py-4">
+														{projectLocation ? (
+															<div className="flex min-w-0 items-start gap-1.5 md:gap-3">
+																<MapPin className="mt-0.5 size-3 shrink-0 text-[#E7D0AF] md:mt-1 md:size-4" />
+
+																<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/82 md:line-clamp-none md:text-[14px] md:leading-6">
+																	<span className="hidden font-light text-[#E7D0AF]/72 md:inline">
+																		{locationLabel}:{" "}
+																	</span>
+
+																	<span className="font-bold">{projectLocation}</span>
+																</p>
+															</div>
+														) : null}
+
+														{projectYear ? (
+															<div className="flex min-w-0 items-start gap-1.5 md:gap-3">
+																<Calendar className="mt-0.5 size-3 shrink-0 text-[#E7D0AF] md:mt-1 md:size-4" />
+
+																<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/82 md:line-clamp-none md:text-[14px] md:leading-6">
+																	<span className="hidden font-light text-[#E7D0AF]/72 md:inline">
+																		{timeLabel}:{" "}
+																	</span>
+
+																	<span className="font-bold">{projectYear}</span>
+																</p>
+															</div>
+														) : null}
+													</div>
+												) : null}
+
+												{projectDescription ? (
+													<p className="mt-4 hidden text-[14px] leading-[1.75] text-[#F7F1E6]/68 md:line-clamp-2">
+														{projectDescription}
+													</p>
+												) : null}
+											</div>
+										</article>
+									</LocaleLink>
+								</div>
+							);
+						})}
+					</div>
+
+					{isMobile ? (
+						<RelatedContentMobilePaginationControls
+							currentPage={currentPage}
+							locale={locale}
+							onPageChange={goToPage}
+							scrollTargetId={scrollTargetId}
+							totalPages={totalPages}
+						/>
+					) : null}
 				</div>
 			</div>
 		</section>

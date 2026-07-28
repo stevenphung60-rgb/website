@@ -1,3 +1,18 @@
+const BLOG_LOADING_CARD_KEYS = [
+	"blog-loading-1",
+	"blog-loading-2",
+	"blog-loading-3",
+	"blog-loading-4",
+	"blog-loading-5",
+	"blog-loading-6",
+	"blog-loading-7",
+	"blog-loading-8",
+	"blog-loading-9",
+	"blog-loading-10",
+	"blog-loading-11",
+	"blog-loading-12",
+];
+
 export default function BlogLoading() {
 	return (
 		<main className="bg-[#FAF7F1] px-4 py-10 text-[#342312] sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
@@ -6,9 +21,17 @@ export default function BlogLoading() {
 				<div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
 					<div className="space-y-10">
 						<div className="h-[360px] border border-[#E7D0AF] bg-white" />
-						<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-							{Array.from({ length: 6 }).map((_, index) => (
-								<div key={index} className="h-[380px] border border-[#E7D0AF] bg-white" />
+						<div className="grid grid-cols-2 gap-3 md:gap-6 xl:grid-cols-3">
+							{BLOG_LOADING_CARD_KEYS.map((key, index) => (
+								<div
+									key={key}
+									className={[
+										"h-[310px] border border-[#E7D0AF] bg-white md:h-[380px]",
+										index >= 6 ? "lg:hidden" : "",
+									]
+										.filter(Boolean)
+										.join(" ")}
+								/>
 							))}
 						</div>
 					</div>

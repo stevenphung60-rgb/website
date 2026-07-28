@@ -5,6 +5,7 @@
 
 import { cacheTag } from "next/cache";
 import Link from "next/link";
+import { Fragment, type CSSProperties } from "react";
 import {
 	EmptyStateCard,
 	EmptyStateDescription,
@@ -23,6 +24,12 @@ import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getActiveServiceIds, getServiceById } from "src/server/services";
 import ServiceDialog from "./service-dialog";
 import { ServiceListNavigation } from "./service-list-navigation";
+import {
+	ServiceMobilePageIndicator,
+	ServiceMobilePaginationController,
+	ServiceMobilePaginationControls,
+	ServiceMobilePaginationItem,
+} from "./service-mobile-pagination";
 
 interface ServicesSectionDatabaseProps {
 	locale: Locale;
@@ -45,12 +52,14 @@ export default async function ServicesSectionDatabase({
 	const serviceIds: string[] = await getActiveServiceIds();
 	const dictionary = getDictionary(locale);
 
-	const services = await Promise.all(
-		serviceIds.map((serviceId) => getServiceById(serviceId)),
-	);
+	const services = await Promise.all(serviceIds.map((serviceId) => getServiceById(serviceId)));
 
-	const serviceNavigationItems = services
-		.filter((service) => service !== null)
+	const availableServices = services.filter(
+		(service): service is NonNullable<(typeof services)[number]> => service !== null,
+	);
+	const availableServiceIds = availableServices.map((service) => service.id);
+
+	const serviceNavigationItems = availableServices
 		.map((service) => ({
 			id: service.id,
 			name: service.name?.[locale] ?? service.name?.en ?? "",
@@ -59,64 +68,69 @@ export default async function ServicesSectionDatabase({
 
 	return (
 		// biome-ignore lint/correctness/useUniqueElementIds: Fixed ID needed for navigation anchor links
-		<section
-			id="services"
-			className="w-full bg-muted/30 py-12 sm:py-16 lg:py-20"
-		>
+		<section id="services" className="w-full bg-muted/30 py-12 sm:py-16 lg:py-20">
 			<div className="w-full max-w-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-				{serviceIds.length > 0 ? (
-					<StandardGridVisibilityController
-						itemIds={serviceIds}
-						limitRows={!viewAll}
-					>
-					{viewAll ? (
-						<div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-							<div className="w-full lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-[300px] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:pr-2">
-								<ServiceListNavigation
-									locale={locale}
-									items={serviceNavigationItems}
-								/>
-							</div>
+				{availableServiceIds.length > 0 ? (
+					viewAll ? (
+						<ServiceMobilePaginationController serviceIds={availableServiceIds}>
+							<div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+								<div
+									data-testid="service-list-navigation"
+									className="hidden w-full md:block lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-[300px] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:pr-2"
+								>
+									<ServiceListNavigation locale={locale} items={serviceNavigationItems} />
+								</div>
 
-							<div className="min-w-0 flex-1">
-								<div className="space-y-8 lg:space-y-10">
-									{serviceIds.map((serviceId, index) => (
-										<ItemWrapper key={serviceId} id={serviceId}>
-											<div
-												id={`service-card-${serviceId}`}
-												data-service-id={serviceId}
-												className="scroll-mt-[120px] service-card-reveal sm:scroll-mt-[140px] lg:scroll-mt-[180px]"
-												style={{
-													animationDelay: `${index * 140}ms`,
-												}}
-											>
-												<ServiceDialog
-													serviceId={serviceId}
-													locale={locale}
-													index={index}
-												/>
-											</div>
-										</ItemWrapper>
-									))}
+								{/* biome-ignore lint/correctness/useUniqueElementIds: Stable target for mobile pagination scroll restoration. */}
+								<div id="services-list-start" className="min-w-0 flex-1">
+									<ServiceMobilePageIndicator locale={locale} />
+
+									<div
+										data-testid="service-list-grid"
+										className="grid grid-cols-2 gap-3 md:block md:space-y-8 lg:space-y-10"
+									>
+										{availableServiceIds.map((serviceId, index) => (
+											<ServiceMobilePaginationItem key={serviceId} id={serviceId}>
+												<div
+													id={`service-card-${serviceId}`}
+													data-service-id={serviceId}
+													className="service-card-reveal h-full min-w-0 scroll-mt-[120px] [animation-delay:var(--service-mobile-animation-delay)] md:scroll-mt-[140px] md:[animation-delay:var(--service-desktop-animation-delay)] lg:scroll-mt-[180px]"
+													style={
+														{
+															"--service-mobile-animation-delay": `${(index % 12) * 140}ms`,
+															"--service-desktop-animation-delay": `${index * 140}ms`,
+														} as CSSProperties
+													}
+												>
+													<ServiceDialog serviceId={serviceId} locale={locale} index={index} />
+												</div>
+											</ServiceMobilePaginationItem>
+										))}
+									</div>
+
+									<ServiceMobilePaginationControls locale={locale} />
 								</div>
 							</div>
-						</div>
+						</ServiceMobilePaginationController>
 					) : (
-							<>
-								<div className="space-y-8 lg:space-y-10">
-									{serviceIds.map((serviceId, index) => (
+						<StandardGridVisibilityController
+							itemIds={availableServiceIds}
+							limitRows
+						>
+							<Fragment key="service-list-preview">
+								<div
+									data-testid="service-list-grid"
+									className="grid grid-cols-2 gap-3 md:block md:space-y-8 lg:space-y-10"
+								>
+									{availableServiceIds.map((serviceId, index) => (
 										<ItemWrapper key={serviceId} id={serviceId}>
 											<div
-												className="service-card-reveal"
+												className="service-card-reveal h-full min-w-0"
 												style={{
 													animationDelay: `${index * 140}ms`,
 												}}
 											>
-												<ServiceDialog
-													serviceId={serviceId}
-													locale={locale}
-													index={index}
-												/>
+												<ServiceDialog serviceId={serviceId} locale={locale} index={index} />
 											</div>
 										</ItemWrapper>
 									))}
@@ -124,23 +138,19 @@ export default async function ServicesSectionDatabase({
 
 								<ViewAllButton>
 									<Button asChild variant="outline" size="lg">
-										<Link href={`/${locale}/services`}>
-											{dictionary.services.viewAll}
-										</Link>
+										<Link href={`/${locale}/services`}>{dictionary.services.viewAll}</Link>
 									</Button>
 								</ViewAllButton>
-							</>
-						)}
-					</StandardGridVisibilityController>
+							</Fragment>
+						</StandardGridVisibilityController>
+					)
 				) : (
 					<EmptyStateCard>
 						<EmptyStateIcon>🔧</EmptyStateIcon>
 
 						<EmptyStateTitle>{dictionary.services.empty.title}</EmptyStateTitle>
 
-						<EmptyStateDescription>
-							{dictionary.services.empty.description}
-						</EmptyStateDescription>
+						<EmptyStateDescription>{dictionary.services.empty.description}</EmptyStateDescription>
 					</EmptyStateCard>
 				)}
 			</div>

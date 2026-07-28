@@ -37,6 +37,7 @@ export function useResetFormBoundary() {
 const initialState: FormState = {
 	isSubmitting: false,
 	error: null,
+	successMessage: null,
 	fieldErrors: {},
 	formRef: null,
 	isConfirmDialogOpen: false,
@@ -57,6 +58,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
 				isSubmitting: true,
 				// Automatically reset error when starting submission
 				error: null,
+				successMessage: null,
 			};
 		case FormActionType.FinishSubmitting:
 			return {
@@ -67,6 +69,11 @@ function formReducer(state: FormState, action: FormAction): FormState {
 			return {
 				...state,
 				error: action.payload,
+			};
+		case FormActionType.SetSuccess:
+			return {
+				...state,
+				successMessage: action.payload,
 			};
 		case FormActionType.SetFieldError:
 			return {

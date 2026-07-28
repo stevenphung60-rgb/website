@@ -113,6 +113,8 @@ export function FormInput({ children, asChild = false, className, ...inputProps 
 	const { id, name, value, disabled, readOnly, required, invalid, pattern, title } =
 		useFormFieldContext();
 	const formState = useForm();
+	const fieldError = useFieldError(name);
+	const isInvalid = invalid || Boolean(fieldError);
 
 	const inputElementProps = {
 		id,
@@ -123,8 +125,8 @@ export function FormInput({ children, asChild = false, className, ...inputProps 
 		required,
 		pattern,
 		title,
-		"aria-invalid": invalid,
-		"aria-describedby": invalid ? `${id}-error` : undefined,
+		"aria-invalid": isInvalid,
+		"aria-describedby": isInvalid ? `${id}-error` : undefined,
 		...inputProps,
 	};
 

@@ -1,15 +1,16 @@
+import { ArrowRight, CalendarDays, Clock3 } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Clock3 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BlogMobileCategorySelect } from "src/components/blog/blog-mobile-category-select";
+import { MobilePageIndicator } from "src/components/mobile-page-indicator";
 import type { Locale } from "src/lib/i18n/config";
 import {
-	getBlogListPageData,
 	type BlogCategorySummary,
-	type BlogTagSummary,
 	type BlogPost,
+	type BlogTagSummary,
+	getBlogListPageData,
 } from "src/server/blogs";
 import {
 	getBlogReadingTime,
@@ -198,31 +199,68 @@ export default async function BlogListPage({ params, searchParams }: BlogListPag
 									title={text.list}
 								/>
 
-								{blogData.posts.length > 0 ? (
-									<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-										{blogData.posts.map((post, index) => (
-											<BlogCard
-												key={post.id}
-												categoryMap={categoryMap}
-												index={index}
-												locale={locale}
-												post={post}
-												readBlogLabel={text.readBlog}
-												readMinuteLabel={text.readMinute}
-											/>
-										))}
-									</div>
-								) : (
-									<EmptyBlogState>{text.empty}</EmptyBlogState>
-								)}
+								<div data-blog-list-layout="mobile" className="lg:hidden">
+									<MobilePageIndicator
+										className="mb-4"
+										currentPage={blogData.mobileCurrentPage}
+										locale={locale}
+										totalPages={blogData.mobileTotalPages}
+									/>
 
-								<BlogPagination
-									currentPage={blogData.currentPage}
-									locale={locale}
-									selectedCategoryId={blogData.selectedCategoryId}
-									selectedTag={blogData.selectedTag}
-									totalPages={blogData.totalPages}
-								/>
+									{blogData.mobilePosts.length > 0 ? (
+										<div className="grid grid-cols-2 gap-3 md:gap-6">
+											{blogData.mobilePosts.map((post, index) => (
+												<BlogCard
+													key={post.id}
+													categoryMap={categoryMap}
+													index={index}
+													locale={locale}
+													post={post}
+													readBlogLabel={text.readBlog}
+													readMinuteLabel={text.readMinute}
+												/>
+											))}
+										</div>
+									) : (
+										<EmptyBlogState>{text.empty}</EmptyBlogState>
+									)}
+
+									<BlogPagination
+										currentPage={blogData.mobileCurrentPage}
+										locale={locale}
+										selectedCategoryId={blogData.selectedCategoryId}
+										selectedTag={blogData.selectedTag}
+										totalPages={blogData.mobileTotalPages}
+									/>
+								</div>
+
+								<div data-blog-list-layout="desktop" className="hidden lg:block">
+									{blogData.posts.length > 0 ? (
+										<div className="grid grid-cols-2 gap-6 xl:grid-cols-3">
+											{blogData.posts.map((post, index) => (
+												<BlogCard
+													key={post.id}
+													categoryMap={categoryMap}
+													index={index}
+													locale={locale}
+													post={post}
+													readBlogLabel={text.readBlog}
+													readMinuteLabel={text.readMinute}
+												/>
+											))}
+										</div>
+									) : (
+										<EmptyBlogState>{text.empty}</EmptyBlogState>
+									)}
+
+									<BlogPagination
+										currentPage={blogData.currentPage}
+										locale={locale}
+										selectedCategoryId={blogData.selectedCategoryId}
+										selectedTag={blogData.selectedTag}
+										totalPages={blogData.totalPages}
+									/>
+								</div>
 							</section>
 						</div>
 
@@ -376,7 +414,7 @@ function BlogCard({
 	return (
 		<Link
 			href={`/${locale}/blog/${slug}`}
-			className="blog-reveal group flex min-h-[460px] flex-col overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/70"
+			className="blog-reveal group flex min-h-[310px] flex-col overflow-hidden border border-[#E7D0AF] bg-white shadow-sm transition hover:border-[#A87E3C]/70 md:min-h-[460px]"
 			style={{ animationDelay: `${260 + index * 70}ms` }}
 		>
 			<div className="relative aspect-[16/10] bg-[#F7F1E6]">
@@ -385,34 +423,34 @@ function BlogCard({
 						src={image.url}
 						alt={image.alt?.[lang] || title}
 						fill
-						sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 24vw"
+						sizes="(max-width: 767px) 50vw, (max-width: 1280px) 50vw, 24vw"
 						className="object-cover"
 					/>
 				) : null}
 			</div>
 
-			<div className="flex flex-1 flex-col px-5 py-5">
-				<p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A87E3C]">
+			<div className="flex flex-1 flex-col px-3 py-4 md:px-5 md:py-5">
+				<p className="line-clamp-1 text-[9px] font-semibold uppercase leading-4 tracking-[0.1em] text-[#A87E3C] md:line-clamp-none md:text-[11px] md:leading-normal md:tracking-[0.16em]">
 					{categoryName}
 				</p>
-				<h3 className="mt-3 line-clamp-2 font-heading text-xl font-semibold leading-tight text-[#342312] transition group-hover:text-[#A87E3C]">
+				<h3 className="mt-2 line-clamp-2 font-heading text-[15px] font-semibold leading-[1.3] text-[#342312] transition group-hover:text-[#A87E3C] md:mt-3 md:text-xl md:leading-tight">
 					{title}
 				</h3>
-				<p className="mt-3 line-clamp-3 text-sm leading-7 text-[#342312]/65">
+				<p className="mt-3 hidden line-clamp-3 text-sm leading-7 text-[#342312]/65 md:block">
 					{excerpt}
 				</p>
 
-				<div className="mt-auto pt-5">
-					<div className="flex items-center justify-between gap-3 text-xs text-[#342312]/55">
+				<div className="mt-auto pt-4 md:pt-5">
+					<div className="flex flex-col items-start gap-1 text-[10px] text-[#342312]/55 md:flex-row md:items-center md:justify-between md:gap-3 md:text-xs">
 						{publishedDate ? <span>{publishedDate}</span> : <span />}
 						<span>
 							{readTime} {readMinuteLabel}
 						</span>
 					</div>
-					<div className="mt-4 flex justify-end text-xs font-bold uppercase tracking-[0.14em] text-[#A87E3C]">
+					<div className="mt-3 flex justify-start text-[10px] font-bold uppercase tracking-[0.1em] text-[#A87E3C] md:mt-4 md:justify-end md:text-xs md:tracking-[0.14em]">
 						<span className="inline-flex items-center gap-2">
 							{readBlogLabel}
-							<ArrowRight className="size-4 transition group-hover:translate-x-1" />
+							<ArrowRight className="size-3.5 transition group-hover:translate-x-1 md:size-4" />
 						</span>
 					</div>
 				</div>

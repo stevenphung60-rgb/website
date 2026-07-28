@@ -206,7 +206,11 @@ export default async function ServiceDetailPage({
 							</h2>
 						</div>
 
-						<RelatedServicesCarousel itemCount={relatedServiceIds.length}>
+						<RelatedServicesCarousel
+							contentKey={`${id}:${relatedServiceIds.join("\u0000")}`}
+							itemCount={relatedServiceIds.length}
+							locale={locale}
+						>
 							{relatedServiceIds.map((serviceId) => (
 								<RelatedServiceCard
 									key={serviceId}

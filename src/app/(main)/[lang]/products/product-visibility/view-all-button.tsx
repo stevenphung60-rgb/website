@@ -24,18 +24,25 @@ export function ViewAllButton() {
 		return 72;
 	};
 
-	const scrollToProductsFilter = () => {
+	const scrollToProductsList = () => {
 		window.requestAnimationFrame(() => {
+			const productsListStartElement = document.getElementById(
+				"products-list-start",
+			);
 			const productsFilterElement = document.getElementById("products-filter");
 			const productsSectionElement = document.getElementById("products");
-			const targetElement = productsFilterElement || productsSectionElement;
+			const targetElement =
+				productsListStartElement ||
+				productsFilterElement ||
+				productsSectionElement;
 
 			if (!targetElement) return;
 
 			const elementTop =
 				targetElement.getBoundingClientRect().top + window.scrollY;
 
-			const scrollOffset = getHeaderOffset() + getTopGap();
+			const scrollOffset =
+				getHeaderOffset() + (productsListStartElement ? 16 : getTopGap());
 
 			window.scrollTo({
 				top: Math.max(elementTop - scrollOffset, 0),
@@ -46,7 +53,7 @@ export function ViewAllButton() {
 
 	const handlePageChange = (page: number) => {
 		goToPage(page);
-		scrollToProductsFilter();
+		scrollToProductsList();
 	};
 
 	return (

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import LocaleLink from "src/components/behaviors/LocaleLink";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
+import styles from "./header-mega-menu.module.css";
 
 type MegaProduct = {
 	id?: string;
@@ -143,7 +144,7 @@ export function HeaderMegaMenu({
 							<LocaleLink
 								href={activeItem?.href ?? href}
 								onClick={onClose}
-								className="group/service block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78 transition-all duration-300 hover:-translate-y-1 hover:bg-[#F7F1E6] hover:shadow-[0_18px_44px_rgba(52,35,18,0.1)]"
+								className={`${styles.card} block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78`}
 							>
 								<div className="relative h-[300px] w-full overflow-hidden bg-[#F7F1E6]">
 									<Image
@@ -151,12 +152,14 @@ export function HeaderMegaMenu({
 										alt={activeName}
 										fill
 										sizes="420px"
-										className="object-cover transition-transform duration-500 group-hover/service:scale-105"
+										className={`${styles.cardImage} object-cover`}
 									/>
 								</div>
 
 								<div className="flex min-h-[76px] items-center justify-center bg-[#F7F1E6]/80 px-5 py-4">
-									<h4 className="line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312] transition-colors duration-300 group-hover/service:text-[#A87E3C]">
+									<h4
+										className={`${styles.cardTitle} line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312]`}
+									>
 										{activeName}
 									</h4>
 								</div>
@@ -172,7 +175,7 @@ export function HeaderMegaMenu({
 									}
 									href={product.href}
 									onClick={onClose}
-									className="group/product block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78 transition-all duration-300 hover:-translate-y-1 hover:bg-[#F7F1E6] hover:shadow-[0_18px_44px_rgba(52,35,18,0.1)]"
+									className={`${styles.card} block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78`}
 								>
 									<div className="relative h-[230px] w-full overflow-hidden bg-[#F7F1E6]">
 										<Image
@@ -180,12 +183,14 @@ export function HeaderMegaMenu({
 											alt={product.name}
 											fill
 											sizes="420px"
-											className="object-cover transition-transform duration-500 group-hover/product:scale-105"
+											className={`${styles.cardImage} object-cover`}
 										/>
 									</div>
 
 									<div className="flex min-h-[74px] items-center justify-center bg-[#F7F1E6]/80 px-5 py-4">
-										<h4 className="line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312] transition-colors duration-300 group-hover/product:text-[#A87E3C]">
+										<h4
+											className={`${styles.cardTitle} line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312]`}
+										>
 											{product.name}
 										</h4>
 									</div>
@@ -197,7 +202,7 @@ export function HeaderMegaMenu({
 							<LocaleLink
 								href={activeItem?.href ?? href}
 								onClick={onClose}
-								className="group/feature block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78 transition-all duration-300 hover:-translate-y-1 hover:bg-[#F7F1E6] hover:shadow-[0_18px_44px_rgba(52,35,18,0.1)]"
+								className={`${styles.card} block overflow-hidden rounded-[4px] bg-[#F7F1E6]/78`}
 							>
 								<div className="relative h-[230px] w-full overflow-hidden bg-[#F7F1E6]">
 									<Image
@@ -205,12 +210,14 @@ export function HeaderMegaMenu({
 										alt={activeName}
 										fill
 										sizes="420px"
-										className="object-cover transition-transform duration-500 group-hover/feature:scale-105"
+										className={`${styles.cardImage} object-cover`}
 									/>
 								</div>
 
 								<div className="flex min-h-[74px] items-center justify-center bg-[#F7F1E6]/80 px-5 py-4">
-									<h4 className="line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312] transition-colors duration-300 group-hover/feature:text-[#A87E3C]">
+									<h4
+										className={`${styles.cardTitle} line-clamp-2 text-center text-[16px] font-bold uppercase leading-6 tracking-[0.045em] text-[#342312]`}
+									>
 										{activeName}
 									</h4>
 								</div>

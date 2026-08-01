@@ -193,7 +193,7 @@ describe("detail related-content responsive pagination", () => {
 		expect(screen.getByRole("status")).toHaveTextContent("Page 2 / 2");
 	});
 
-	it("paginates related projects into a 12-card, two-column mobile grid", async () => {
+	it("paginates related projects into a 12-card, one-column mobile grid", async () => {
 		const user = userEvent.setup();
 		const { container } = render(
 			<RelatedProjectsCarousel
@@ -207,7 +207,10 @@ describe("detail related-content responsive pagination", () => {
 		await waitFor(() => {
 			expect(container.querySelectorAll('a[href^="/projects/project-"]')).toHaveLength(12);
 		});
-		expect(container.querySelector("#related-projects-list > .grid")).toHaveClass("grid-cols-2");
+		expect(container.querySelector("#related-projects-list > .grid")).toHaveClass("grid-cols-1");
+		expect(container.querySelector('a[href="/projects/project-1"] article')).toHaveClass(
+			"bg-[#F7F1E6]",
+		);
 		expect(screen.getByRole("status")).toHaveTextContent("Page 1 / 2");
 
 		await user.click(screen.getByRole("button", { name: "Next page" }));

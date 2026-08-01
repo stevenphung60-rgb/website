@@ -1,38 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import LocaleLink from "src/components/behaviors/LocaleLink";
 import { HeaderMegaMenu } from "src/components/header-mega-menu";
 import type { Locale } from "src/lib/i18n/config";
-
-type MegaProduct = {
-	id?: string;
-	name: string;
-	href: string;
-	image?: string;
-};
-
-type MegaChild = {
-	name: string;
-	href: string;
-	image?: string;
-	products?: MegaProduct[];
-};
-
-type NavigationItem = {
-	name: string;
-	href: string;
-	children?: MegaChild[];
-};
+import type { HeaderNavigationItem } from "./header-navigation.types";
 
 export function HeaderNavClient({
 	navigation,
 	dictionary,
 	locale,
 }: {
-	navigation: NavigationItem[];
+	navigation: HeaderNavigationItem[];
 	dictionary: any;
 	locale: Locale;
 }) {

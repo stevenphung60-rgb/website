@@ -1,4 +1,5 @@
 import { Skeleton } from "src/components/ui/skeleton";
+import { ProjectCardSkeleton } from "./project-card-skeleton";
 
 /**
  * Loading skeleton for the projects page component
@@ -17,31 +18,9 @@ export default function ProjectsPageLoading() {
 					</div>
 
 					{/* Projects Grid */}
-					<div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-3">
+					<div className="grid grid-cols-1 gap-6 md:block md:space-y-10 lg:space-y-12">
 						{["mall", "factory", "hospital", "residential", "hotel", "university"].map(
-							(project) => (
-								<div key={`project-${project}`} className="group min-w-0">
-									<div className="bg-card overflow-hidden rounded-lg shadow-sm">
-										<Skeleton className="h-[310px] w-full rounded-t-lg md:h-auto md:aspect-video" />
-										<div className="hidden p-6 md:block">
-											<div className="flex items-center justify-between mb-3">
-												<Skeleton className="h-6 w-20" />
-												<Skeleton className="h-4 w-12" />
-											</div>
-											<Skeleton className="h-6 w-48 mb-2" />
-											<div className="flex items-center mb-3">
-												<Skeleton className="h-4 w-4 mr-1" />
-												<Skeleton className="h-4 w-24" />
-											</div>
-											<div className="space-y-2">
-												<Skeleton className="h-4 w-full" />
-												<Skeleton className="h-4 w-full" />
-												<Skeleton className="h-4 w-3/4" />
-											</div>
-										</div>
-									</div>
-								</div>
-							),
+							(project) => <ProjectCardSkeleton key={`project-${project}`} />,
 						)}
 					</div>
 				</div>

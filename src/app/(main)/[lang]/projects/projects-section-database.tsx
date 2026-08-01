@@ -80,7 +80,7 @@ export default async function ProjectsSectionDatabase({
 									<ProjectMobilePageIndicator locale={locale} />
 								</div>
 
-								<div className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 md:mt-10 md:block md:space-y-10 lg:mt-12 lg:space-y-12">
+								<div className="mt-4 grid grid-cols-1 gap-6 sm:mt-5 md:mt-10 md:block md:space-y-10 lg:mt-12 lg:space-y-12">
 									{projectIds.map((id) => (
 										<Suspense key={id} fallback={<ProjectCardSkeleton />}>
 											<ProjectCard id={id} locale={locale} />

@@ -88,32 +88,32 @@ export default async function ProjectDetailPage({
 					style={{ animationDelay: "150ms" }}
 				>
 					<div className="grid overflow-hidden border border-[#E7D0AF] bg-[#F7F1E6] shadow-[0_20px_60px_rgba(52,35,18,0.15)] sm:grid-cols-3">
-						<div className="border-b border-[#E7D0AF] px-5 py-6 text-center sm:border-b-0 sm:border-r sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-							<p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
+						<div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 border-b border-[#E7D0AF] px-5 py-4 text-left sm:block sm:border-b-0 sm:border-r sm:px-6 sm:py-7 sm:text-center lg:px-8 lg:py-8">
+							<p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
 								{locale === "vi" ? "Địa điểm" : "Location"}
 							</p>
 
-							<p className="break-words text-[15px] font-semibold leading-7 text-[#342312] sm:text-[16px]">
+							<p className="break-words text-right text-[14px] font-semibold leading-6 text-[#342312] sm:text-center sm:text-[16px] sm:leading-7">
 								{projectLocation || "-"}
 							</p>
 						</div>
 
-						<div className="border-b border-[#E7D0AF] px-5 py-6 text-center sm:border-b-0 sm:border-r sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-							<p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
+						<div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 border-b border-[#E7D0AF] px-5 py-4 text-left sm:block sm:border-b-0 sm:border-r sm:px-6 sm:py-7 sm:text-center lg:px-8 lg:py-8">
+							<p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
 								{locale === "vi" ? "Thời gian" : "Year"}
 							</p>
 
-							<p className="break-words text-[15px] font-semibold leading-7 text-[#342312] sm:text-[16px]">
+							<p className="break-words text-right text-[14px] font-semibold leading-6 text-[#342312] sm:text-center sm:text-[16px] sm:leading-7">
 								{projectYear || "-"}
 							</p>
 						</div>
 
-						<div className="px-5 py-6 text-center sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-							<p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
+						<div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 px-5 py-4 text-left sm:block sm:px-6 sm:py-7 sm:text-center lg:px-8 lg:py-8">
+							<p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.14em] text-[#A87E3C] sm:mb-3 sm:text-[13px]">
 								{locale === "vi" ? "Loại dự án" : "Project Type"}
 							</p>
 
-							<p className="break-words text-[15px] font-semibold leading-7 text-[#342312] sm:text-[16px]">
+							<p className="break-words text-right text-[14px] font-semibold leading-6 text-[#342312] sm:text-center sm:text-[16px] sm:leading-7">
 								{categoryName || "-"}
 							</p>
 						</div>

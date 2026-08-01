@@ -93,7 +93,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 
 		return {
 			name: service.name?.[locale] || "",
-			href: `/services#${service.id}`,
+			href: `/services/${service.id}`,
 			image: mainImage?.url || "/placeholder.svg",
 		};
 	});
@@ -242,6 +242,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 								phone={contactInfo.phone1}
 								email={contactInfo.email1}
 								searchPlaceholder={dictionary.header.searchPlaceholder}
+								viewAllText={dictionary.header.viewAll}
 							/>
 						</div>
 					</div>

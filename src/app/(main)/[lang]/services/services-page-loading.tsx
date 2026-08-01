@@ -51,7 +51,7 @@ function ServiceCardSkeleton({ reversed }: { reversed: boolean }) {
 		<div className="grid h-full min-w-0 overflow-hidden border border-[#342312]/10 bg-[#FAF7F0] shadow-[0_12px_36px_rgba(52,35,18,0.08)] md:h-auto md:border-[#342312]/15 md:bg-[#F7F1E6] md:shadow-sm lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
 			<Skeleton
 				className={[
-					"m-4 mb-0 aspect-[16/10] h-auto w-[calc(100%-2rem)] rounded-none sm:aspect-[16/9] md:m-0 md:aspect-[16/8] md:w-full lg:h-full lg:aspect-auto",
+					"aspect-[16/10] h-auto w-full rounded-none sm:aspect-[16/9] md:aspect-[16/8] lg:h-full lg:aspect-auto",
 					reversed ? "lg:order-2" : "lg:order-1",
 				].join(" ")}
 			/>

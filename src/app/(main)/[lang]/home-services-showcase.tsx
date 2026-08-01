@@ -58,6 +58,7 @@ export default function HomeServicesShowcase({
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [isPaused, setIsPaused] = useState(false);
 	const [isVisible, setIsVisible] = useState(false);
+	const [canAutoSlide, setCanAutoSlide] = useState(false);
 
 	const activeService = services[activeIndex] || services[0];
 
@@ -70,14 +71,26 @@ export default function HomeServicesShowcase({
 	}, [services.length]);
 
 	useEffect(() => {
-		if (isPaused || services.length <= 1) return;
+		const mediaQuery = window.matchMedia(
+			"(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)",
+		);
+		const updateAutoSlide = () => setCanAutoSlide(mediaQuery.matches);
+
+		updateAutoSlide();
+		mediaQuery.addEventListener("change", updateAutoSlide);
+
+		return () => mediaQuery.removeEventListener("change", updateAutoSlide);
+	}, []);
+
+	useEffect(() => {
+		if (!canAutoSlide || isPaused || services.length <= 1) return;
 
 		const timer = window.setInterval(() => {
 			setActiveIndex((currentIndex) => (currentIndex + 1) % services.length);
 		}, AUTO_SLIDE_DELAY);
 
 		return () => window.clearInterval(timer);
-	}, [isPaused, services.length]);
+	}, [canAutoSlide, isPaused, services.length]);
 
 	useEffect(() => {
 		const currentSection = sectionRef.current;
@@ -112,9 +125,7 @@ export default function HomeServicesShowcase({
 						{text.emptyTitle}
 					</p>
 
-					<p className="mt-3 text-sm leading-7 text-white">
-						{text.emptyDescription}
-					</p>
+					<p className="mt-3 text-sm leading-7 text-white">{text.emptyDescription}</p>
 				</div>
 			</section>
 		);
@@ -211,7 +222,7 @@ export default function HomeServicesShowcase({
 						/>
 
 						<h2
-							className="home-service-reveal-up mt-8 text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#FFF8EC] sm:text-5xl lg:text-[54px]"
+							className="home-service-reveal-up mt-8 text-balance break-words text-[clamp(1.875rem,9vw,2.25rem)] font-extrabold uppercase leading-[1.08] tracking-[0.05em] text-[#FFF8EC] sm:text-5xl sm:tracking-[0.08em] lg:text-[54px]"
 							style={{ animationDelay: "180ms" }}
 						>
 							{displayTitleLines.map((line, index) => (
@@ -226,7 +237,7 @@ export default function HomeServicesShowcase({
 					<div className="flex flex-col items-start lg:items-end">
 						<Link
 							href={`/${locale}/services`}
-							className="home-service-reveal-up group relative isolate inline-flex items-center justify-center overflow-hidden bg-[#E7D0AF] px-6 py-4 text-[14px] font-extrabold uppercase tracking-[0.16em] text-[#342312]"
+							className="home-service-reveal-up group relative isolate inline-flex w-full items-center justify-center overflow-hidden bg-[#E7D0AF] px-4 py-4 text-[14px] font-extrabold uppercase tracking-[0.16em] text-[#342312] md:w-auto md:px-6"
 							style={{ animationDelay: "300ms" }}
 						>
 							<span className="absolute inset-y-0 left-0 z-0 w-full origin-left scale-x-0 bg-[#A87E3C] transition-transform duration-500 ease-out group-hover:scale-x-100" />
@@ -253,7 +264,7 @@ export default function HomeServicesShowcase({
 			<div className="grid grid-cols-1 gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)]">
 				<Link
 					href={`/${locale}/services/${activeService.id}`}
-					className="home-service-reveal-up group/image relative block h-[420px] w-full overflow-hidden bg-[#24180D] sm:h-[500px] lg:h-[660px]"
+					className="home-service-reveal-up group/image relative block h-[clamp(360px,112vw,420px)] w-full overflow-hidden bg-[#24180D] sm:h-[500px] lg:h-[660px]"
 					style={{ animationDelay: "540ms" }}
 					aria-label={activeService.name}
 					onMouseEnter={() => setIsPaused(true)}
@@ -297,7 +308,7 @@ export default function HomeServicesShowcase({
 							{text.imageLabel}
 						</p>
 
-						<h3 className="mt-4 max-w-[760px] text-3xl font-extrabold uppercase leading-[1.12] tracking-[0.06em] text-[#FFF8EC] transition-colors duration-300 group-hover/image:text-[#E7D0AF] sm:text-4xl lg:text-5xl">
+						<h3 className="mt-4 max-w-[760px] break-words text-[clamp(1.5rem,7.5vw,1.875rem)] font-extrabold uppercase leading-[1.12] tracking-[0.04em] text-[#FFF8EC] transition-colors duration-300 group-hover/image:text-[#E7D0AF] sm:text-4xl sm:tracking-[0.06em] lg:text-5xl">
 							{activeService.name}
 						</h3>
 					</div>
@@ -330,28 +341,22 @@ export default function HomeServicesShowcase({
 									<span
 										className={[
 											"absolute inset-y-0 left-0 w-[4px] bg-[#C79A58] transition-all duration-500 ease-out",
-											isActive
-												? "opacity-100"
-												: "opacity-0 group-hover:opacity-100",
+											isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
 										].join(" ")}
 									/>
 
 									<span
 										className={[
 											"absolute inset-0 origin-left bg-[#E7D0AF]/10 transition-transform duration-500 ease-out",
-											isActive
-												? "scale-x-100"
-												: "scale-x-0 group-hover:scale-x-100",
+											isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
 										].join(" ")}
 									/>
 
 									<span className="relative z-10 flex w-full items-center justify-between gap-5">
 										<span
 											className={[
-												"block text-[15px] font-extrabold uppercase leading-6 tracking-[0.08em] transition-colors duration-500 ease-out",
-												isActive
-													? "text-[#FFF8EC]"
-													: "text-[#E7D0AF] group-hover:text-[#FFF8EC]",
+												"block min-w-0 flex-1 break-words text-[15px] font-extrabold uppercase leading-6 tracking-[0.08em] transition-colors duration-500 ease-out",
+												isActive ? "text-[#FFF8EC]" : "text-[#E7D0AF] group-hover:text-[#FFF8EC]",
 											].join(" ")}
 										>
 											{service.name}

@@ -99,40 +99,34 @@ export default function HomeMachineryTechnologySection({
 	const defaultItems = defaultMachineryItems[lang];
 
 	const sectionTitle = heroInfo?.machinetitle?.[lang] || text.heading;
-	const sectionDescription =
-		heroInfo?.machinedescription?.[lang] || text.description;
+	const sectionDescription = heroInfo?.machinedescription?.[lang] || text.description;
 
 	const items: MachineryItem[] = [
 		{
 			name: heroInfo?.machine1title?.[lang] || defaultItems[0].name,
 			role: heroInfo?.machine1subtitle?.[lang] || defaultItems[0].role,
-			description:
-				heroInfo?.machine1description?.[lang] || defaultItems[0].description,
+			description: heroInfo?.machine1description?.[lang] || defaultItems[0].description,
 			imageUrl: heroInfo?.machine1image?.url || defaultItems[0].imageUrl,
 			imageAlt: heroInfo?.machine1title?.[lang] || defaultItems[0].imageAlt,
 		},
 		{
 			name: heroInfo?.machine2title?.[lang] || defaultItems[1].name,
 			role: heroInfo?.machine2subtitle?.[lang] || defaultItems[1].role,
-			description:
-				heroInfo?.machine2description?.[lang] || defaultItems[1].description,
+			description: heroInfo?.machine2description?.[lang] || defaultItems[1].description,
 			imageUrl: heroInfo?.machine2image?.url || defaultItems[1].imageUrl,
 			imageAlt: heroInfo?.machine2title?.[lang] || defaultItems[1].imageAlt,
 		},
 		{
 			name: heroInfo?.machine3title?.[lang] || defaultItems[2].name,
 			role: heroInfo?.machine3subtitle?.[lang] || defaultItems[2].role,
-			description:
-				heroInfo?.machine3description?.[lang] || defaultItems[2].description,
+			description: heroInfo?.machine3description?.[lang] || defaultItems[2].description,
 			imageUrl: heroInfo?.machine3image?.url || defaultItems[2].imageUrl,
 			imageAlt: heroInfo?.machine3title?.[lang] || defaultItems[2].imageAlt,
 		},
 	];
 
 	const sectionBackgroundImage =
-		heroInfo?.machinebackgroundimage?.url ||
-		items[0]?.imageUrl ||
-		"/autoline7.png";
+		heroInfo?.machinebackgroundimage?.url || items[0]?.imageUrl || "/autoline7.png";
 
 	const sectionRef = useRef<HTMLElement | null>(null);
 
@@ -251,22 +245,22 @@ export default function HomeMachineryTechnologySection({
 			<div className="absolute inset-0 bg-gradient-to-b from-[#342312]/24 via-[#342312]/8 to-[#342312]/46" />
 
 			<div className="relative z-10">
-				<div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-[0.5fr_0.5fr] lg:items-end">
+				<div className="mb-8 grid grid-cols-1 gap-5 sm:mb-10 sm:gap-8 lg:grid-cols-[0.5fr_0.5fr] lg:items-end">
 					<div>
 						<p
-							className="home-machinery-reveal-up text-[13px] font-bold uppercase tracking-[0.24em] text-[#E7D0AF] sm:text-[14px]"
+							className="home-machinery-reveal-up break-words text-[12px] font-bold uppercase tracking-[0.18em] text-[#E7D0AF] [overflow-wrap:anywhere] sm:text-[14px] sm:tracking-[0.24em] lg:[overflow-wrap:normal]"
 							style={{ animationDelay: "0ms" }}
 						>
 							{text.eyebrow}
 						</p>
 
 						<div
-							className="home-machinery-reveal-up mt-5 h-px w-20 bg-[#A87E3C]"
+							className="home-machinery-reveal-up mt-4 h-px w-16 bg-[#A87E3C] sm:mt-5 sm:w-20"
 							style={{ animationDelay: "100ms" }}
 						/>
 
 						<h2
-							className="home-machinery-reveal-up mt-8 whitespace-pre-line text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#F7F1E6] sm:text-5xl lg:text-[54px]"
+							className="home-machinery-reveal-up mt-6 whitespace-pre-line break-words text-[32px] font-extrabold uppercase leading-[1.1] tracking-[0.04em] text-[#F7F1E6] [overflow-wrap:anywhere] sm:mt-8 sm:text-[40px] sm:tracking-[0.06em] md:text-5xl lg:text-[54px] lg:leading-[1.08] lg:tracking-[0.08em] lg:[overflow-wrap:normal]"
 							style={{ animationDelay: "180ms" }}
 						>
 							{sectionTitle}
@@ -274,23 +268,24 @@ export default function HomeMachineryTechnologySection({
 					</div>
 
 					<p
-						className="home-machinery-reveal-up max-w-[640px] text-sm leading-7 text-[#F7F1E6]/90 sm:text-base lg:ml-auto lg:text-right"
+						className="home-machinery-reveal-up max-w-[640px] break-words text-sm leading-7 text-[#F7F1E6]/90 [overflow-wrap:anywhere] sm:text-base lg:ml-auto lg:text-right lg:[overflow-wrap:normal]"
 						style={{ animationDelay: "300ms" }}
 					>
 						{sectionDescription}
 					</p>
 				</div>
 
-				<div className="grid w-full grid-cols-1 items-stretch gap-5 md:grid-cols-3">
+				<div className="grid w-full grid-cols-1 items-stretch gap-5 lg:grid-cols-3">
 					{items.map((item, index) => (
 						<button
 							key={`${item.name}-${index}`}
 							type="button"
 							onClick={() => setSelectedItem(item)}
-							className="home-machinery-reveal-right group relative flex h-auto min-h-[560px] w-full flex-col overflow-hidden bg-[#FAF7F0] text-left text-[#342312] outline-none transition-colors duration-300 hover:bg-[#FAF7F0] focus-visible:ring-2 focus-visible:ring-[#A87E3C] md:min-h-[540px] lg:min-h-[600px]"
+							aria-haspopup="dialog"
+							className="home-machinery-reveal-right group relative flex min-h-0 w-full flex-col overflow-hidden bg-[#FAF7F0] text-left text-[#342312] outline-none transition-colors duration-300 hover:bg-[#FAF7F0] focus-visible:ring-2 focus-visible:ring-[#A87E3C] lg:min-h-[600px]"
 							style={{ animationDelay: `${420 + index * 140}ms` }}
 						>
-							<div className="relative h-[250px] w-full shrink-0 overflow-hidden bg-[#FAF7F0] sm:h-[300px] lg:h-[350px]">
+							<div className="relative h-[clamp(210px,60vw,320px)] w-full shrink-0 overflow-hidden bg-[#FAF7F0] lg:h-[350px]">
 								<img
 									src={item.imageUrl}
 									alt={item.imageAlt}
@@ -300,23 +295,23 @@ export default function HomeMachineryTechnologySection({
 								<div className="absolute inset-0 bg-gradient-to-t from-[#342312]/18 via-transparent to-transparent" />
 							</div>
 
-							<div className="flex flex-1 flex-col justify-between p-6 sm:p-7 lg:p-8">
+							<div className="flex flex-1 flex-col justify-between p-5 sm:p-6 lg:p-8">
 								<div>
-									<p className="line-clamp-2 text-[12px] font-bold uppercase leading-6 tracking-[0.18em] text-[#A87E3C]">
+									<p className="line-clamp-3 text-[11px] font-bold uppercase leading-5 tracking-[0.14em] text-[#A87E3C] [overflow-wrap:anywhere] sm:text-[12px] sm:leading-6 sm:tracking-[0.18em] lg:line-clamp-2 lg:[overflow-wrap:normal]">
 										{item.role}
 									</p>
 
-									<h3 className="mt-5 line-clamp-2 text-2xl font-extrabold uppercase leading-[1.12] tracking-[0.06em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] sm:text-[28px]">
+									<h3 className="mt-4 line-clamp-3 text-[22px] font-extrabold uppercase leading-[1.15] tracking-[0.03em] text-[#342312] transition-colors duration-300 [overflow-wrap:anywhere] group-hover:text-[#A87E3C] sm:mt-5 sm:text-2xl sm:tracking-[0.05em] lg:line-clamp-2 lg:text-[28px] lg:leading-[1.12] lg:tracking-[0.06em] lg:[overflow-wrap:normal]">
 										{item.name}
 									</h3>
 								</div>
 
-								<div className="mt-6">
-									<p className="line-clamp-3 text-sm leading-7 text-[#342312]/72 transition-colors duration-300 group-hover:text-[#A87E3C]">
+								<div className="mt-5 sm:mt-6">
+									<p className="line-clamp-2 break-words text-sm leading-7 text-[#342312]/72 transition-colors duration-300 [overflow-wrap:anywhere] group-hover:text-[#A87E3C] lg:line-clamp-3 lg:[overflow-wrap:normal]">
 										{item.description}
 									</p>
 
-									<div className="mt-6 border-t border-[#E7D0AF] pt-5">
+									<div className="mt-5 border-t border-[#E7D0AF] pt-4 sm:mt-6 sm:pt-5">
 										<span className="block h-px w-12 bg-[#A87E3C] transition-[width] duration-300 ease-out group-hover:w-20" />
 									</div>
 								</div>
@@ -330,10 +325,13 @@ export default function HomeMachineryTechnologySection({
 
 			{selectedItem ? (
 				<div
-					className="fixed inset-0 z-[100] flex items-center justify-center bg-transparent p-4 sm:p-6 lg:p-10"
+					className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-[#342312]/70 px-3 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] sm:px-6 sm:pb-6 sm:pt-20 lg:items-center lg:overflow-visible lg:bg-transparent lg:p-10"
 					onClick={() => setSelectedItem(null)}
 				>
 					<div
+						role="dialog"
+						aria-modal="true"
+						aria-label={selectedItem.name}
 						className="relative w-full max-w-6xl"
 						onClick={(event) => event.stopPropagation()}
 					>
@@ -341,7 +339,7 @@ export default function HomeMachineryTechnologySection({
 							type="button"
 							aria-label={text.close}
 							onClick={() => setSelectedItem(null)}
-							className="absolute -top-14 right-0 flex h-11 w-11 items-center justify-center border border-[#342312]/35 bg-[#FAF7F0] text-[#342312] transition-colors duration-300 hover:border-[#A87E3C] hover:bg-[#A87E3C] hover:text-white"
+							className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center border border-[#342312]/25 bg-[#FAF7F0]/95 text-[#342312] shadow-md transition-colors duration-300 hover:border-[#A87E3C] hover:bg-[#A87E3C] hover:text-white lg:-top-14 lg:right-0 lg:h-11 lg:w-11 lg:shadow-none"
 						>
 							<X className="h-5 w-5" />
 						</button>
@@ -350,16 +348,16 @@ export default function HomeMachineryTechnologySection({
 							<img
 								src={selectedItem.imageUrl}
 								alt={selectedItem.imageAlt}
-								className="max-h-[78vh] w-full object-contain"
+								className="max-h-[48dvh] w-full object-contain sm:max-h-[60dvh] lg:max-h-[78vh]"
 							/>
 						</div>
 
 						<div className="mt-4 border-l-2 border-[#A87E3C] bg-[#FAF7F0] px-4 py-3 shadow-xl">
-							<p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#A87E3C]">
+							<p className="text-[11px] font-bold uppercase leading-5 tracking-[0.14em] text-[#A87E3C] [overflow-wrap:anywhere] sm:text-[12px] sm:tracking-[0.18em] lg:[overflow-wrap:normal]">
 								{selectedItem.role}
 							</p>
 
-							<p className="mt-2 text-xl font-extrabold uppercase tracking-[0.08em] text-[#342312]">
+							<p className="mt-2 text-lg font-extrabold uppercase leading-tight tracking-[0.04em] text-[#342312] [overflow-wrap:anywhere] sm:text-xl sm:tracking-[0.08em] lg:[overflow-wrap:normal]">
 								{selectedItem.name}
 							</p>
 						</div>

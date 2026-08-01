@@ -17,15 +17,12 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 	const lang = locale.startsWith("vi") ? "vi" : "en";
 
 	const heroTitle = heroInfo.title?.[lang] || dictionary.hero.title;
-	const heroDescription =
-		heroInfo.description?.[lang] || dictionary.hero.description;
+	const heroDescription = heroInfo.description?.[lang] || dictionary.hero.description;
 
 	const fireResistanceStandards = ["EI30", "EI45", "EI60", "EI120"];
 
 	const standardLabel =
-		lang === "en"
-			? "Fire-rated duct standards"
-			: "Tiêu chuẩn ống gió chống cháy";
+		lang === "en" ? "Fire-rated duct standards" : "Tiêu chuẩn ống gió chống cháy";
 
 	const defaultHeroImages = [
 		{ src: "/Hero-Image.png", alt: dictionary.hero.imageAlt },
@@ -128,14 +125,14 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 
 				<div className="relative z-10 flex min-h-[540px] items-center sm:min-h-[600px] lg:min-h-[680px]">
 					<div className="w-full max-w-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-						<div className="grid w-full grid-cols-1 gap-10 py-20 sm:py-24 lg:grid-cols-[minmax(0,0.64fr)_minmax(240px,0.36fr)] lg:items-center lg:gap-8 lg:py-28 xl:gap-12">
+						<div className="grid w-full grid-cols-1 gap-8 py-14 sm:gap-10 sm:py-16 md:py-24 lg:grid-cols-[minmax(0,0.64fr)_minmax(240px,0.36fr)] lg:items-center lg:gap-8 lg:py-28 xl:gap-12">
 							<div className="max-w-3xl">
-								<div className="hero-reveal hero-delay-1 mb-5 flex w-fit items-center gap-2 rounded-full border border-[#E7D0AF]/45 bg-transparent px-4 py-2 text-[13px] font-semibold text-[#F7F1E6] backdrop-blur-sm sm:mb-6 sm:text-sm">
-									<span className="h-2.5 w-2.5 rounded-full bg-[#A87E3C]" />
-									<span>{dictionary.hero.badge}</span>
+								<div className="hero-reveal hero-delay-1 mb-5 flex w-fit max-w-full items-center gap-2 rounded-full border border-[#E7D0AF]/45 bg-transparent px-4 py-2 text-[13px] font-semibold text-[#F7F1E6] backdrop-blur-sm sm:mb-6 sm:text-sm">
+									<span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#A87E3C]" />
+									<span className="min-w-0 break-words">{dictionary.hero.badge}</span>
 								</div>
 
-								<h1 className="font-heading mb-5 max-w-4xl text-[34px] font-black leading-[1.06] text-white sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl">
+								<h1 className="font-heading mb-5 min-w-0 max-w-4xl break-words text-[34px] font-black leading-[1.06] text-white [overflow-wrap:anywhere] sm:mb-6 sm:text-5xl md:text-6xl md:[overflow-wrap:normal] lg:text-7xl">
 									{heroTitle.split("\n").map((line, index) => (
 										<span key={index} className="hero-line-mask">
 											<span
@@ -150,20 +147,14 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 
 								<div className="mb-8 max-w-2xl text-[15px] leading-7 text-white/86 sm:mb-10 sm:text-lg sm:leading-relaxed md:text-xl">
 									<span className="hero-line-mask">
-										<span
-											className="hero-line-reveal"
-											style={{ animationDelay: "740ms" }}
-										>
+										<span className="hero-line-reveal" style={{ animationDelay: "740ms" }}>
 											{heroDescription}
 										</span>
 									</span>
 								</div>
 
 								<div className="mb-8 overflow-visible sm:mb-10">
-									<div
-										className="hero-line-reveal"
-										style={{ animationDelay: "900ms" }}
-									>
+									<div className="hero-line-reveal" style={{ animationDelay: "900ms" }}>
 										<div className="flex w-full max-w-[420px] flex-col gap-4 sm:max-w-none sm:flex-row sm:items-center sm:gap-6">
 											<LocaleLink
 												href="/products"
@@ -227,7 +218,7 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 									{standardLabel}
 								</p>
 
-								<div className="flex w-full flex-col gap-2 sm:max-w-[340px] lg:ml-auto lg:max-w-[300px]">
+								<div className="grid w-full grid-cols-2 gap-2 sm:max-w-[340px] md:flex md:flex-col lg:ml-auto lg:max-w-[300px]">
 									{fireResistanceStandards.map((standard, index) => (
 										<div
 											key={standard}
@@ -246,7 +237,7 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 				</div>
 
 				{heroImages.length > 1 ? (
-					<div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2 sm:bottom-8">
+					<div className="absolute bottom-6 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:bottom-8 [&::-webkit-scrollbar]:hidden">
 						{heroImages.map((_, index) => (
 							<button
 								key={index}
@@ -254,10 +245,8 @@ export default function HeroSection({ locale, heroInfo }: HeroSectionProps) {
 								aria-label={`Go to home banner image ${index + 1}`}
 								onClick={() => setCurrentIndex(index)}
 								className={[
-									"h-2 rounded-full transition-all duration-300",
-									index === currentIndex
-										? "w-8 bg-[#DCCABA]"
-										: "w-2 bg-white/50 hover:bg-white",
+									"h-2 shrink-0 rounded-full transition-all duration-300",
+									index === currentIndex ? "w-8 bg-[#DCCABA]" : "w-2 bg-white/50 hover:bg-white",
 								].join(" ")}
 							/>
 						))}

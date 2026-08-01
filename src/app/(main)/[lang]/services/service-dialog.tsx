@@ -43,7 +43,7 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 				/>
 
 				<div
-					className={`relative z-10 m-4 mb-0 aspect-[16/10] overflow-hidden border border-[#342312]/10 sm:aspect-[16/9] md:m-0 md:aspect-[16/8] md:border-0 lg:aspect-auto lg:h-full ${
+					className={`relative z-10 aspect-[16/10] w-full overflow-hidden sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-auto lg:h-full ${
 						isReversed ? "lg:order-2" : "lg:order-1"
 					}`}
 				>

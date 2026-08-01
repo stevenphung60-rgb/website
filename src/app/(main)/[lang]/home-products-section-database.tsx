@@ -30,13 +30,7 @@ interface HomeProductsSectionDatabaseProps {
 	limit?: number;
 }
 
-async function HomeProductCard({
-	id,
-	locale,
-}: {
-	id: string;
-	locale: Locale;
-}) {
+async function HomeProductCard({ id, locale }: { id: string; locale: Locale }) {
 	const product = await getProductById(id);
 
 	if (!product) return null;
@@ -64,8 +58,7 @@ export default async function HomeProductsSectionDatabase({
 	const displayIds = productIds.slice(0, limit);
 
 	const productTitle = heroInfo?.productitle?.[lang]?.trim() || "";
-	const productDescription =
-		heroInfo?.productdescription?.[lang]?.trim() || "";
+	const productDescription = heroInfo?.productdescription?.[lang]?.trim() || "";
 
 	return (
 		<section id="products" className="bg-background py-6 sm:py-8">
@@ -74,14 +67,16 @@ export default async function HomeProductsSectionDatabase({
 					<div className="mb-10 text-center sm:mb-16">
 						{productTitle ? (
 							<h2
-								className="mb-4 flex flex-wrap items-center justify-center gap-2 font-serif text-lg font-bold !text-[#A87E3C] animate-fade-up sm:mb-6 sm:text-xl lg:text-xl"
+								className="mb-4 flex items-center justify-center gap-2 font-serif text-lg font-bold !text-[#A87E3C] animate-fade-up sm:mb-6 sm:text-xl lg:text-xl"
 								style={{ animationDelay: "0ms" }}
 							>
-								<span className="h-[2px] w-8 bg-[#A87E3C] sm:w-10" />
+								<span className="h-[2px] w-8 shrink-0 bg-[#A87E3C] sm:w-10" />
 
-								<span>{productTitle}</span>
+								<span className="min-w-0 max-w-[calc(100%-5rem)] text-balance break-words sm:max-w-[calc(100%-6rem)]">
+									{productTitle}
+								</span>
 
-								<span className="h-[2px] w-8 bg-[#A87E3C] sm:w-10" />
+								<span className="h-[2px] w-8 shrink-0 bg-[#A87E3C] sm:w-10" />
 							</h2>
 						) : null}
 
@@ -106,6 +101,7 @@ export default async function HomeProductsSectionDatabase({
 											key={productId}
 											variant="fade-up"
 											delay={index * 130}
+											className="min-w-0"
 										>
 											<Suspense fallback={null}>
 												<HomeProductCard id={productId} locale={locale} />
@@ -117,19 +113,17 @@ export default async function HomeProductsSectionDatabase({
 						</ProductFilterProvider>
 
 						<div className="mt-10 flex justify-center sm:mt-12">
-							<Link href={`/${locale}/products/`}>
-								<button
-									type="button"
-									className="group relative overflow-hidden bg-[#342312] px-5 py-3 text-sm font-semibold text-[#E7D0AF] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:px-6"
-								>
-									<span className="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
-										{dictionary.products.viewAll}
+							<Link
+								href={`/${locale}/products/`}
+								className="group relative inline-flex min-h-11 items-center overflow-hidden bg-[#342312] px-5 py-3 text-sm font-semibold text-[#E7D0AF] transition-all duration-300 active:scale-[0.98] hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A87E3C] focus-visible:ring-offset-2 sm:px-6"
+							>
+								<span className="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
+									{dictionary.products.viewAll}
 
-										<ChevronRight className="size-4 transition-all duration-300 group-hover:text-white" />
-									</span>
+									<ChevronRight className="size-4 transition-all duration-300 group-hover:text-white" />
+								</span>
 
-									<span className="absolute inset-0 translate-x-[-100%] bg-[#A87E3C] transition-transform duration-300 ease-in-out group-hover:translate-x-0" />
-								</button>
+								<span className="absolute inset-0 translate-x-[-100%] bg-[#A87E3C] transition-transform duration-300 ease-in-out group-hover:translate-x-0" />
 							</Link>
 						</div>
 					</>
@@ -139,9 +133,7 @@ export default async function HomeProductsSectionDatabase({
 
 						<EmptyStateTitle>{dictionary.products.empty.title}</EmptyStateTitle>
 
-						<EmptyStateDescription>
-							{dictionary.products.empty.description}
-						</EmptyStateDescription>
+						<EmptyStateDescription>{dictionary.products.empty.description}</EmptyStateDescription>
 					</EmptyStateCard>
 				)}
 			</div>

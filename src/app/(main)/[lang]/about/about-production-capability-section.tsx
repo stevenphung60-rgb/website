@@ -28,11 +28,9 @@ export default async function AboutProductionCapabilitySection({
 	const text = uiText[lang];
 
 	const capacityTitle =
-		heroAboutInfo.capacitytitle?.[lang]?.trim() ||
-		`${text.headingLine1}\n${text.headingLine2}`;
+		heroAboutInfo.capacitytitle?.[lang]?.trim() || `${text.headingLine1}\n${text.headingLine2}`;
 
-	const productionDescription =
-		heroAboutInfo.capacitydescription?.[lang]?.trim() || "";
+	const productionDescription = heroAboutInfo.capacitydescription?.[lang]?.trim() || "";
 
 	const productionStats = [
 		{
@@ -70,14 +68,14 @@ export default async function AboutProductionCapabilitySection({
 							>
 								<div className="absolute left-0 top-0 h-full w-0 bg-[#A87E3C] transition-all duration-300 group-hover:w-1" />
 
-								<div className="md:pl-7">
-									<p className="whitespace-nowrap text-[38px] font-extrabold leading-none tracking-tight text-[#A87E3C] transition duration-300 group-hover:text-[#A87E3C] sm:text-[48px] xl:text-[60px]">
+								<div className="min-w-0 md:pl-7">
+									<p className="break-words text-[38px] font-extrabold leading-none tracking-tight text-[#A87E3C] transition duration-300 [overflow-wrap:anywhere] group-hover:text-[#A87E3C] sm:text-[48px] md:whitespace-nowrap md:[overflow-wrap:normal] xl:text-[60px]">
 										{item.value}
 									</p>
 								</div>
 
 								<div className="md:pr-7">
-									<p className="max-w-[620px] text-sm font-semibold leading-7 text-[#342312]/78 sm:text-lg">
+									<p className="max-w-[620px] break-words text-sm font-semibold leading-7 text-[#342312]/78 [overflow-wrap:anywhere] sm:text-lg md:[overflow-wrap:normal]">
 										{item.label}
 									</p>
 								</div>
@@ -90,18 +88,18 @@ export default async function AboutProductionCapabilitySection({
 
 				<div className="order-1 border-b border-[#E7D0AF] py-8 lg:order-2 lg:pl-4 lg:py-10">
 					<AboutRevealSection variant="fade-left" delay={120}>
-						<p className="text-[14px] font-bold uppercase tracking-[0.24em] text-[#A87E3C]">
+						<p className="break-words text-[14px] font-bold uppercase tracking-[0.24em] text-[#A87E3C] [overflow-wrap:anywhere] md:[overflow-wrap:normal]">
 							{text.eyebrow}
 						</p>
 
-						<h2 className="mt-5 whitespace-pre-line text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#342312] sm:text-5xl lg:text-[54px]">
+						<h2 className="mt-5 whitespace-pre-line break-words text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#342312] [overflow-wrap:anywhere] sm:text-5xl md:[overflow-wrap:normal] lg:text-[54px]">
 							{capacityTitle}
 						</h2>
 
 						<div className="mt-8 h-px w-20 bg-[#A87E3C]" />
 
 						{productionDescription ? (
-							<p className="mt-8 max-w-[760px] text-[16px] font-normal leading-8 text-[#342312]/70 sm:leading-9">
+							<p className="mt-8 max-w-[760px] break-words text-[16px] font-normal leading-8 text-[#342312]/70 [overflow-wrap:anywhere] sm:leading-9 md:[overflow-wrap:normal]">
 								{productionDescription}
 							</p>
 						) : null}

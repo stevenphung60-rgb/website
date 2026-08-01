@@ -38,15 +38,12 @@ export default function HomeFeaturedProjectsShowcase({
 	text,
 	groups,
 }: HomeFeaturedProjectsShowcaseProps) {
-	const [activeCategoryKey, setActiveCategoryKey] = useState(
-		groups[0]?.key || "",
-	);
+	const [activeCategoryKey, setActiveCategoryKey] = useState(groups[0]?.key || "");
 
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const [isVisible, setIsVisible] = useState(false);
 
-	const activeGroup =
-		groups.find((group) => group.key === activeCategoryKey) || groups[0];
+	const activeGroup = groups.find((group) => group.key === activeCategoryKey) || groups[0];
 
 	const locationLabel = locale === "vi" ? "Địa điểm" : "Location";
 	const timeLabel = locale === "vi" ? "Thời gian" : "Time";
@@ -126,6 +123,15 @@ export default function HomeFeaturedProjectsShowcase({
 						both;
 				}
 
+				@media (max-width: 1023px) {
+					.home-project-card-reveal,
+					.home-projects-visible .home-project-card-reveal {
+						opacity: 1;
+						transform: none;
+						animation: none;
+					}
+				}
+
 				@media (prefers-reduced-motion: reduce) {
 					.home-project-reveal-up,
 					.home-project-card-reveal {
@@ -151,7 +157,7 @@ export default function HomeFeaturedProjectsShowcase({
 					/>
 
 					<h2
-						className="home-project-reveal-up mt-8 text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#342312] sm:text-5xl lg:text-[54px]"
+						className="home-project-reveal-up mt-8 text-4xl font-extrabold uppercase leading-[1.08] tracking-[0.08em] text-[#342312] [overflow-wrap:anywhere] sm:text-5xl md:[overflow-wrap:normal] lg:text-[54px]"
 						style={{ animationDelay: "180ms" }}
 					>
 						{text.heading}
@@ -159,11 +165,11 @@ export default function HomeFeaturedProjectsShowcase({
 				</div>
 
 				<div className="flex items-start lg:justify-end">
-                    <LocaleLink
-                        href="/projects"
-                        className="home-project-reveal-up group relative isolate inline-flex items-center justify-center overflow-hidden border border-[#342312] bg-[#342312] px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-[#E7D0AF] transition-colors duration-500 hover:border-[#A87E3C]"
-                        style={{ animationDelay: "300ms" }}
-                    >
+					<LocaleLink
+						href="/projects"
+						className="home-project-reveal-up group relative isolate inline-flex items-center justify-center overflow-hidden border border-[#342312] bg-[#342312] px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-[#E7D0AF] transition-colors duration-500 hover:border-[#A87E3C]"
+						style={{ animationDelay: "300ms" }}
+					>
 						<span className="absolute inset-y-0 left-0 z-0 w-full origin-left scale-x-0 bg-[#A87E3C] transition-transform duration-500 ease-out group-hover:scale-x-100" />
 
 						<span className="relative z-10 transition-colors duration-300 group-hover:text-white">
@@ -192,9 +198,7 @@ export default function HomeFeaturedProjectsShowcase({
 								onClick={() => setActiveCategoryKey(group.key)}
 								className={[
 									"relative flex min-w-[150px] items-center justify-center px-3 pb-4 text-center text-[16px] font-extrabold uppercase leading-6 tracking-[0.04em] transition-colors duration-300 sm:min-w-[180px] lg:min-w-0 lg:flex-1",
-									isActive
-										? "text-[#A87E3C]"
-										: "text-[#342312]/42 hover:text-[#342312]",
+									isActive ? "text-[#A87E3C]" : "text-[#342312]/42 hover:text-[#342312]",
 								].join(" ")}
 							>
 								<span className="block w-full text-center">{group.label}</span>
@@ -213,63 +217,65 @@ export default function HomeFeaturedProjectsShowcase({
 
 			<div
 				key={activeGroup.key}
-				className="grid grid-cols-1 gap-5 md:grid-cols-3"
+				className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:none] lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 lg:snap-none [&::-webkit-scrollbar]:hidden"
 			>
 				{activeGroup.projects.map((project, index) => (
 					<LocaleLink
 						key={project.id}
 						href={`/projects/${project.id}`}
-						className="home-project-card-reveal group block h-full"
+						className="home-project-card-reveal group flex h-[460px] w-[86vw] max-w-[420px] shrink-0 snap-start sm:h-[510px] lg:block lg:h-full lg:w-auto lg:max-w-none"
 						style={{ animationDelay: `${560 + index * 150}ms` }}
 					>
-						<article className="relative h-[390px] overflow-hidden bg-[#342312] sm:h-[430px] lg:h-[480px]">
-							<Image
-								src={project.imageUrl}
-								alt={project.name}
-								fill
-								className="object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
-								sizes="(min-width: 1024px) 33vw, (min-width: 768px) 33vw, 100vw"
-							/>
+						<article className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden border border-[#A87E3C]/28 bg-[#F7F1E6] lg:block lg:h-[480px] lg:border-[#342312]/15 lg:bg-[#342312]">
+							<div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#E7D0AF]/25 lg:absolute lg:inset-0 lg:aspect-auto">
+								<Image
+									src={project.imageUrl}
+									alt={project.name}
+									fill
+									className="object-cover transition duration-700 ease-out lg:group-hover:scale-[1.045] lg:group-hover:brightness-[1.04] lg:group-hover:saturate-[1.05]"
+									sizes="(min-width: 1024px) 33vw, (min-width: 768px) 420px, 86vw"
+								/>
 
-							<div className="absolute inset-0 bg-gradient-to-t from-[#342312] via-[#342312]/68 to-transparent transition duration-500 group-hover:via-[#342312]/76" />
+								<div className="absolute inset-0 bg-gradient-to-t from-[#342312]/18 via-transparent to-transparent lg:bg-gradient-to-t lg:from-[#342312]/82 lg:via-[#342312]/26 lg:transition lg:duration-500" />
+							</div>
 
-							<div className="absolute left-5 top-5 flex max-w-[calc(100%-2.5rem)] items-center gap-3 sm:left-6 sm:top-6">
-								<span className="h-px w-8 shrink-0 bg-[#A87E3C]" />
+							<div className="pointer-events-none absolute inset-0 border border-[#E7D0AF]/20 transition duration-500 lg:border-[#E7D0AF]/14 lg:group-hover:border-[#E7D0AF]/55" />
 
-								<p className="line-clamp-1 min-w-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#E7D0AF] sm:text-[12px]">
+							<div className="relative z-10 flex min-w-0 items-center gap-2 px-5 pb-0 pt-4 lg:absolute lg:left-6 lg:top-6 lg:max-w-[calc(100%-2.5rem)] lg:gap-3 lg:p-0">
+								<span className="h-px w-6 shrink-0 bg-[#A87E3C] lg:w-8 lg:bg-[#E7D0AF]" />
+
+								<p className="line-clamp-1 min-w-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#A87E3C] lg:text-[12px] lg:tracking-[0.2em] lg:text-[#F0D5AB] lg:[text-shadow:0_1px_6px_rgba(22,14,6,0.85)]">
 									{project.categoryName}
 								</p>
 							</div>
 
-							<div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-								<h3 className="line-clamp-3 break-words text-[28px] font-black uppercase leading-[1.12] tracking-[0.01em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] sm:text-[32px] lg:text-[38px]">
+							<div className="relative z-10 flex min-w-0 flex-1 flex-col bg-[#F7F1E6] p-5 pt-3 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block lg:bg-transparent lg:p-6 lg:[text-shadow:0_2px_10px_rgba(22,14,6,0.72)]">
+								<h3 className="mb-3 line-clamp-2 break-words text-[20px] font-black uppercase leading-[1.22] tracking-[-0.02em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] lg:mb-0 lg:line-clamp-3 lg:text-[38px] lg:leading-[1.03] lg:tracking-[-0.04em] lg:text-[#F7F1E6] lg:group-hover:text-[#E7D0AF]">
 									{project.name}
 								</h3>
 
 								{project.location || project.year ? (
-									<div className="mt-5 space-y-2.5 border-y border-[#E7D0AF]/18 py-4">
+									<div className="mb-3 space-y-2 border-y border-[#A87E3C]/22 py-3 lg:mb-0 lg:mt-5 lg:space-y-2.5 lg:border-[#E7D0AF]/32 lg:py-4">
 										{project.location ? (
-											<div className="flex min-w-0 items-start gap-3">
-												<MapPin className="mt-1 size-4 shrink-0 text-[#A87E3C]" />
+											<div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
+												<MapPin className="mt-0.5 size-4 shrink-0 text-[#A87E3C] lg:mt-1 lg:text-[#F0D5AB]" />
 
-												<p className="min-w-0 text-[13px] leading-6 text-[#F7F1E6]/82 sm:text-[14px]">
-													<span className="font-light text-[#E7D0AF]/72">
+												<p className="min-w-0 flex-1 truncate text-[14px] font-semibold leading-5 text-[#5A3719] lg:line-clamp-none lg:overflow-visible lg:text-clip lg:whitespace-normal lg:leading-6 lg:text-[#F7F1E6]/95">
+													<span className="font-medium text-[#A87E3C] lg:font-light lg:text-[#F0D5AB]/88">
 														{locationLabel}:{" "}
 													</span>
 
-													<span className="font-bold">
-														{project.location}
-													</span>
+													<span className="font-bold">{project.location}</span>
 												</p>
 											</div>
 										) : null}
 
 										{project.year ? (
-											<div className="flex min-w-0 items-start gap-3">
-												<Calendar className="mt-1 size-4 shrink-0 text-[#A87E3C]" />
+											<div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
+												<Calendar className="mt-0.5 size-4 shrink-0 text-[#A87E3C] lg:mt-1 lg:text-[#F0D5AB]" />
 
-												<p className="min-w-0 text-[13px] leading-6 text-[#F7F1E6]/82 sm:text-[14px]">
-													<span className="font-light text-[#E7D0AF]/72">
+												<p className="min-w-0 flex-1 truncate text-[14px] font-semibold leading-5 text-[#5A3719] lg:line-clamp-none lg:overflow-visible lg:text-clip lg:whitespace-normal lg:leading-6 lg:text-[#F7F1E6]/95">
+													<span className="font-medium text-[#A87E3C] lg:font-light lg:text-[#F0D5AB]/88">
 														{timeLabel}:{" "}
 													</span>
 
@@ -281,13 +287,11 @@ export default function HomeFeaturedProjectsShowcase({
 								) : null}
 
 								{project.description ? (
-									<p className="mt-4 line-clamp-2 text-[14px] leading-[1.75] text-[#F7F1E6]/68">
+									<p className="line-clamp-2 text-[14px] leading-[1.65] text-[#6B5137] lg:mt-4 lg:leading-[1.75] lg:text-[#F7F1E6]/92">
 										{project.description}
 									</p>
 								) : null}
 							</div>
-
-							<span className="absolute bottom-0 left-0 h-[4px] w-full origin-left scale-x-0 bg-[#A87E3C] transition-transform duration-500 ease-out group-hover:scale-x-100" />
 						</article>
 					</LocaleLink>
 				))}

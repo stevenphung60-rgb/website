@@ -73,9 +73,9 @@ export default function HomepageLoading() {
 								alt="Hệ thống ống gió chuyên nghiệp"
 								width={600}
 								height={400}
-								className="rounded-lg shadow-2xl"
+								className="h-auto w-full max-w-[600px] rounded-lg shadow-2xl"
 							/>
-							<div className="absolute -bottom-6 -left-6 bg-primary text-primary-foreground p-6 rounded-lg shadow-lg">
+							<div className="absolute -bottom-4 -left-3 rounded-lg bg-primary p-4 text-primary-foreground shadow-lg sm:-bottom-6 sm:-left-6 sm:p-6">
 								<div className="text-3xl font-bold">{"10+"}</div>
 								<div className="text-sm">{"Năm kinh nghiệm"}</div>
 							</div>
@@ -195,7 +195,7 @@ export default function HomepageLoading() {
 									alt="Đội ngũ chuyên nghiệp"
 									width={600}
 									height={400}
-									className="rounded-lg shadow-lg"
+									className="h-auto w-full max-w-[600px] rounded-lg shadow-lg"
 								/>
 							</div>
 						</div>

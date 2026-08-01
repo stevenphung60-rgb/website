@@ -40,8 +40,7 @@ export default function HomeFeaturedClientsSection({
 	const [isVisible, setIsVisible] = useState(false);
 
 	const clientTitle = heroInfo?.clienttitle?.[lang] || text.heading;
-	const clientDescription =
-		heroInfo?.clientdescription?.[lang] || text.description;
+	const clientDescription = heroInfo?.clientdescription?.[lang] || text.description;
 
 	const clients: FeaturedClient[] =
 		heroInfo?.clientimagegallery && heroInfo.clientimagegallery.length > 0
@@ -145,14 +144,14 @@ export default function HomeFeaturedClientsSection({
 				</p>
 
 				<h2
-					className="home-clients-reveal-up mt-4 text-3xl font-extrabold uppercase leading-[1.1] tracking-[0.08em] text-[#342312] sm:text-4xl lg:text-[44px]"
+					className="home-clients-reveal-up mt-4 text-3xl font-extrabold uppercase leading-[1.1] tracking-[0.08em] text-[#342312] [overflow-wrap:anywhere] sm:text-4xl md:[overflow-wrap:normal] lg:text-[44px]"
 					style={{ animationDelay: "120ms" }}
 				>
 					{clientTitle}
 				</h2>
 
 				<p
-					className="home-clients-reveal-up mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#342312]/70 sm:text-base"
+					className="home-clients-reveal-up mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#342312]/70 [overflow-wrap:anywhere] sm:text-base md:[overflow-wrap:normal]"
 					style={{ animationDelay: "240ms" }}
 				>
 					{clientDescription}
@@ -160,11 +159,11 @@ export default function HomeFeaturedClientsSection({
 			</div>
 
 			{clients.length > 0 ? (
-				<div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+				<div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
 					{clients.map((client, index) => (
 						<div
 							key={`${client.name}-${client.imageUrl}`}
-							className="home-clients-logo-reveal aspect-square bg-[#FAF7F0] p-4 sm:p-5 lg:p-6"
+							className="home-clients-logo-reveal aspect-square min-w-0 bg-[#FAF7F0] p-4 sm:aspect-[4/3] sm:p-5 lg:aspect-square lg:p-6"
 							style={{ animationDelay: `${360 + index * 55}ms` }}
 						>
 							<img

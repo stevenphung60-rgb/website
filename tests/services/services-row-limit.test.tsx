@@ -88,7 +88,17 @@ describe("Services Row Limiting", () => {
 			expect(screen.getByTestId("service-list-navigation")).toHaveClass("hidden", "md:block");
 			expect(screen.getByTestId("service-list-grid")).toHaveClass(
 				"grid",
-				"grid-cols-2",
+				"grid-cols-1",
+				"md:block",
+			);
+		});
+
+		it("uses the same one-column mobile card grid in the preview", async () => {
+			await renderAsync(<ServicesSectionDatabase locale="en" />);
+
+			expect(screen.getByTestId("service-list-grid")).toHaveClass(
+				"grid",
+				"grid-cols-1",
 				"md:block",
 			);
 		});

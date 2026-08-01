@@ -165,7 +165,7 @@ describe("detail related-content responsive pagination", () => {
 		expect(screen.getByRole("status")).toHaveTextContent("Page 2 / 2");
 	});
 
-	it("paginates related services into a 12-card, two-column mobile grid", async () => {
+	it("paginates related services into a 12-card, one-column mobile grid", async () => {
 		const user = userEvent.setup();
 		const { container } = render(
 			<RelatedServicesCarousel contentKey="services" itemCount={serviceIds.length} locale="en">
@@ -181,7 +181,7 @@ describe("detail related-content responsive pagination", () => {
 			expect(screen.getAllByTestId("related-service-card")).toHaveLength(12);
 		});
 		expect(container.querySelector("#related-services-list-start > .grid")).toHaveClass(
-			"grid-cols-2",
+			"grid-cols-1",
 		);
 		expect(screen.getByRole("status")).toHaveTextContent("Page 1 / 2");
 

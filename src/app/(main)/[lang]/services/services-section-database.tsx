@@ -5,7 +5,7 @@
 
 import { cacheTag } from "next/cache";
 import Link from "next/link";
-import { Fragment, type CSSProperties } from "react";
+import { type CSSProperties, Fragment } from "react";
 import {
 	EmptyStateCard,
 	EmptyStateDescription,
@@ -24,6 +24,7 @@ import { getDictionary } from "src/lib/i18n/dictionaries";
 import { getActiveServiceIds, getServiceById } from "src/server/services";
 import ServiceDialog from "./service-dialog";
 import { ServiceListNavigation } from "./service-list-navigation";
+import { ServiceMobileNavigation } from "./service-mobile-navigation";
 import {
 	ServiceMobilePageIndicator,
 	ServiceMobilePaginationController,
@@ -60,10 +61,15 @@ export default async function ServicesSectionDatabase({
 	const availableServiceIds = availableServices.map((service) => service.id);
 
 	const serviceNavigationItems = availableServices
-		.map((service) => ({
-			id: service.id,
-			name: service.name?.[locale] ?? service.name?.en ?? "",
-		}))
+		.map((service) => {
+			const mainImage = service.gallery?.find((image) => image.isMain) ?? service.gallery?.[0];
+
+			return {
+				id: service.id,
+				imageUrl: mainImage?.url,
+				name: service.name?.[locale] ?? service.name?.en ?? "",
+			};
+		})
 		.filter((service) => service.name);
 
 	return (
@@ -73,6 +79,8 @@ export default async function ServicesSectionDatabase({
 				{availableServiceIds.length > 0 ? (
 					viewAll ? (
 						<ServiceMobilePaginationController serviceIds={availableServiceIds}>
+							<ServiceMobileNavigation locale={locale} items={serviceNavigationItems} />
+
 							<div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
 								<div
 									data-testid="service-list-navigation"
@@ -87,7 +95,7 @@ export default async function ServicesSectionDatabase({
 
 									<div
 										data-testid="service-list-grid"
-										className="grid grid-cols-2 gap-3 md:block md:space-y-8 lg:space-y-10"
+										className="grid grid-cols-1 gap-6 md:block md:space-y-8 lg:space-y-10"
 									>
 										{availableServiceIds.map((serviceId, index) => (
 											<ServiceMobilePaginationItem key={serviceId} id={serviceId}>
@@ -113,14 +121,11 @@ export default async function ServicesSectionDatabase({
 							</div>
 						</ServiceMobilePaginationController>
 					) : (
-						<StandardGridVisibilityController
-							itemIds={availableServiceIds}
-							limitRows
-						>
+						<StandardGridVisibilityController itemIds={availableServiceIds} limitRows>
 							<Fragment key="service-list-preview">
 								<div
 									data-testid="service-list-grid"
-									className="grid grid-cols-2 gap-3 md:block md:space-y-8 lg:space-y-10"
+									className="grid grid-cols-1 gap-6 md:block md:space-y-8 lg:space-y-10"
 								>
 									{availableServiceIds.map((serviceId, index) => (
 										<ItemWrapper key={serviceId} id={serviceId}>

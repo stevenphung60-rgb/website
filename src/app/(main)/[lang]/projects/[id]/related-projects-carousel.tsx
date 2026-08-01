@@ -275,35 +275,35 @@ export default function RelatedProjectsCarousel({
 													src={mainImage?.url || "/placeholder.svg"}
 													alt={projectName}
 													fill
-													className="object-cover transition duration-700 ease-out group-hover:scale-[1.045]"
+													className="object-cover transition duration-700 ease-out group-hover:scale-[1.045] group-hover:brightness-[1.04] group-hover:saturate-[1.05]"
 													sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc((100vw - 2.75rem) / 2)"
 												/>
 
-												<div className="absolute inset-0 bg-gradient-to-t from-[#342312] via-[#342312]/70 to-transparent transition duration-500 group-hover:via-[#342312]/78" />
+												<div className="absolute inset-0 bg-gradient-to-t from-[#342312]/82 via-[#342312]/26 to-transparent transition duration-500" />
 
-												<div className="absolute inset-0 border border-[#E7D0AF]/14 transition duration-500 group-hover:border-[#E7D0AF]/55" />
+												<div className="pointer-events-none absolute inset-0 border border-[#E7D0AF]/14 transition duration-500 group-hover:border-[#E7D0AF]/55" />
 
 												<div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 md:left-6 md:top-6 md:max-w-[calc(100%-2.5rem)] md:gap-3">
 													<span className="h-px w-4 shrink-0 bg-[#E7D0AF] md:w-8" />
 
-													<p className="line-clamp-1 min-w-0 text-[8px] font-bold uppercase tracking-[0.12em] text-[#E7D0AF] md:text-[12px] md:tracking-[0.2em]">
+													<p className="line-clamp-1 min-w-0 text-[8px] font-bold uppercase tracking-[0.12em] text-[#F0D5AB] [text-shadow:0_1px_6px_rgba(22,14,6,0.85)] md:text-[12px] md:tracking-[0.2em]">
 														{categoryName}
 													</p>
 												</div>
 
-												<div className="absolute inset-x-0 bottom-0 p-3 md:p-6">
+												<div className="absolute inset-x-0 bottom-0 p-3 [text-shadow:0_2px_10px_rgba(22,14,6,0.72)] md:p-6">
 													<h3 className="line-clamp-3 break-words text-[17px] font-black uppercase leading-[1.08] tracking-[-0.02em] text-[#F7F1E6] transition-colors duration-300 group-hover:text-[#E7D0AF] md:text-[34px] md:leading-[1.03] md:tracking-[-0.04em] lg:text-[38px]">
 														{projectName}
 													</h3>
 
 													{projectLocation || projectYear ? (
-														<div className="mt-3 space-y-1.5 border-y border-[#E7D0AF]/18 py-2 md:mt-5 md:space-y-2.5 md:py-4">
+														<div className="mt-3 space-y-1.5 border-y border-[#E7D0AF]/32 py-2 md:mt-5 md:space-y-2.5 md:py-4">
 															{projectLocation ? (
 																<div className="flex min-w-0 items-start gap-1.5 md:gap-3">
-																	<MapPin className="mt-0.5 size-3 shrink-0 text-[#E7D0AF] md:mt-1 md:size-4" />
+																	<MapPin className="mt-0.5 size-3 shrink-0 text-[#F0D5AB] md:mt-1 md:size-4" />
 
-																	<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/82 md:line-clamp-none md:text-[14px] md:leading-6">
-																		<span className="hidden font-light text-[#E7D0AF]/72 md:inline">
+																	<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/95 md:line-clamp-none md:text-[14px] md:leading-6">
+																		<span className="hidden font-light text-[#F0D5AB]/88 md:inline">
 																			{locationLabel}:{" "}
 																		</span>
 
@@ -314,10 +314,10 @@ export default function RelatedProjectsCarousel({
 
 															{projectYear ? (
 																<div className="flex min-w-0 items-start gap-1.5 md:gap-3">
-																	<Calendar className="mt-0.5 size-3 shrink-0 text-[#E7D0AF] md:mt-1 md:size-4" />
+																	<Calendar className="mt-0.5 size-3 shrink-0 text-[#F0D5AB] md:mt-1 md:size-4" />
 
-																	<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/82 md:line-clamp-none md:text-[14px] md:leading-6">
-																		<span className="hidden font-light text-[#E7D0AF]/72 md:inline">
+																	<p className="line-clamp-2 min-w-0 text-[10px] leading-4 text-[#F7F1E6]/95 md:line-clamp-none md:text-[14px] md:leading-6">
+																		<span className="hidden font-light text-[#F0D5AB]/88 md:inline">
 																			{timeLabel}:{" "}
 																		</span>
 
@@ -329,7 +329,7 @@ export default function RelatedProjectsCarousel({
 													) : null}
 
 													{projectDescription ? (
-														<p className="mt-4 hidden text-[14px] leading-[1.75] text-[#F7F1E6]/68 md:line-clamp-2">
+														<p className="mt-4 hidden text-[14px] leading-[1.75] text-[#F7F1E6]/92 md:line-clamp-2">
 															{projectDescription}
 														</p>
 													) : null}

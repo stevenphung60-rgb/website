@@ -1,15 +1,9 @@
 "use client";
 
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "src/components/ui/select";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Check, ChevronRight, ListFilter, X } from "lucide-react";
+import { useState } from "react";
 import { cn } from "src/lib/utils";
-
-const ALL_OPTION_VALUE = "__all__";
 
 interface MobileFilterOption {
 	value: string;
@@ -33,6 +27,53 @@ export function MobileFilterSelect({
 	options,
 	value,
 }: MobileFilterSelectProps) {
+	const [open, setOpen] = useState(false);
+	const selectedLabel = options.find((option) => option.value === value)?.label ?? allLabel;
+
+	const handleSelect = (nextValue: string | null) => {
+		setOpen(false);
+		onValueChange(nextValue);
+	};
+
+	const renderOption = (optionValue: string | null, optionLabel: string) => {
+		const active = value === optionValue;
+
+		return (
+			<button
+				key={optionValue ?? "__all__"}
+				type="button"
+				aria-pressed={active}
+				className={cn(
+					"group relative flex w-full items-center gap-3 border-b px-4 py-4 text-left text-[15px] font-medium leading-6 transition-colors duration-200",
+					active
+						? "border-[#A87E3C]/35 bg-[#F1E5D2] text-[#342312]"
+						: "border-[#E7D0AF]/85 bg-transparent text-[#342312]/85 hover:bg-[#F7F1E6] hover:text-[#342312]",
+				)}
+				onClick={() => handleSelect(optionValue)}
+			>
+				<span
+					className={cn(
+						"h-8 w-[3px] shrink-0 bg-[#A87E3C] transition-opacity",
+						active ? "opacity-100" : "opacity-0 group-hover:opacity-45",
+					)}
+				/>
+
+				<span className="min-w-0 flex-1 break-words">{optionLabel}</span>
+
+				<span
+					className={cn(
+						"flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors",
+						active
+							? "border-[#A87E3C] bg-[#A87E3C] text-[#FAF7F0]"
+							: "border-[#E7D0AF] text-[#A87E3C] group-hover:border-[#A87E3C]",
+					)}
+				>
+					{active ? <Check className="size-4" /> : <ChevronRight className="size-4" />}
+				</span>
+			</button>
+		);
+	};
+
 	return (
 		<div
 			className={cn("rounded-none border border-[#E7D0AF] bg-white px-4 py-4 shadow-sm", className)}
@@ -41,38 +82,73 @@ export function MobileFilterSelect({
 				{label}
 			</span>
 
-			<Select
-				value={value || ALL_OPTION_VALUE}
-				onValueChange={(nextValue) => {
-					onValueChange(nextValue === ALL_OPTION_VALUE ? null : nextValue);
-				}}
-			>
-				<SelectTrigger
-					aria-label={label}
-					className="h-11 w-full rounded-none border-[#E7D0AF] bg-[#FAF7F1] px-3 text-sm font-normal text-[#342312] shadow-none focus-visible:border-[#A87E3C] focus-visible:ring-0 [&_svg]:!text-[#A87E3C]"
-				>
-					<SelectValue />
-				</SelectTrigger>
-
-				<SelectContent className="w-[var(--radix-select-trigger-width)] rounded-none border-[#E7D0AF] bg-[#FAF7F1] text-[#342312] shadow-md">
-					<SelectItem
-						value={ALL_OPTION_VALUE}
-						className="rounded-none px-3 py-2 font-normal text-[#342312] focus:bg-[#F1E5D2] focus:text-[#342312] data-[state=checked]:bg-[#F1E5D2] [&_svg]:text-[#A87E3C]"
+			<DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+				<DialogPrimitive.Trigger asChild>
+					<button
+						type="button"
+						aria-label={label}
+						className="flex min-h-12 w-full items-center gap-3 border border-[#E7D0AF] bg-[#FAF7F1] px-3 py-2 text-left text-[#342312] transition-colors hover:border-[#A87E3C] focus-visible:border-[#A87E3C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A87E3C]/25"
 					>
-						{allLabel}
-					</SelectItem>
+						<span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F1E5D2] text-[#A87E3C]">
+							<ListFilter className="size-[18px]" />
+						</span>
 
-					{options.map((option) => (
-						<SelectItem
-							key={option.value}
-							value={option.value}
-							className="rounded-none px-3 py-2 font-normal text-[#342312] focus:bg-[#F1E5D2] focus:text-[#342312] data-[state=checked]:bg-[#F1E5D2] [&_svg]:text-[#A87E3C]"
+						<span className="min-w-0 flex-1 break-words text-[15px] font-normal leading-6">
+							{selectedLabel}
+						</span>
+
+						<ChevronRight className="size-5 shrink-0 text-[#A87E3C]" />
+					</button>
+				</DialogPrimitive.Trigger>
+
+				<DialogPrimitive.Portal>
+					<DialogPrimitive.Overlay
+						className={cn(
+							"fixed inset-0 z-[80] bg-[#1C1209]/55 backdrop-blur-[2px] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+							className,
+						)}
+					/>
+
+					<DialogPrimitive.Content
+						className={cn(
+							"fixed inset-y-0 left-0 z-[81] flex h-[100dvh] w-[min(88vw,380px)] flex-col overflow-hidden border-r border-[#A87E3C]/45 bg-[#FAF7F0] text-[#342312] shadow-[18px_0_60px_rgba(28,18,9,0.28)] outline-none duration-300 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left-full data-[state=open]:animate-in data-[state=open]:slide-in-from-left-full",
+							className,
+						)}
+					>
+						<div className="relative shrink-0 border-b border-[#E7D0AF] bg-[#F7F1E6] px-5 py-5">
+							<div className="mb-3 h-[2px] w-14 bg-[#A87E3C]" />
+
+							<DialogPrimitive.Title className="pr-12 font-serif text-[26px] font-bold leading-tight text-[#342312]">
+								{label}
+							</DialogPrimitive.Title>
+
+							<DialogPrimitive.Description className="sr-only">{label}</DialogPrimitive.Description>
+
+							<DialogPrimitive.Close asChild>
+								<button
+									type="button"
+									aria-label="Close"
+									className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-full border border-[#E7D0AF] bg-[#FAF7F0] text-[#342312] transition-colors hover:border-[#A87E3C] hover:text-[#A87E3C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A87E3C]/30"
+								>
+									<X className="size-5" />
+								</button>
+							</DialogPrimitive.Close>
+						</div>
+
+						<nav
+							aria-label={label}
+							className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
 						>
-							{option.label}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
+							{renderOption(null, allLabel)}
+							{options.map((option) => renderOption(option.value, option.label))}
+						</nav>
+
+						<div className="shrink-0 border-t border-[#E7D0AF] bg-[#F7F1E6] px-5 py-3">
+							<div className="h-[3px] w-14 bg-[#A87E3C]" />
+						</div>
+					</DialogPrimitive.Content>
+				</DialogPrimitive.Portal>
+			</DialogPrimitive.Root>
 		</div>
 	);
 }

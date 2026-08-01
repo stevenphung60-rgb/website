@@ -172,7 +172,7 @@ export default function RelatedServicesCarousel({
 					totalPages={totalPages}
 				/>
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="grid grid-cols-1 gap-6">
 					{childItems.map((child, index) =>
 						isItemVisible(index) ? (
 							<div

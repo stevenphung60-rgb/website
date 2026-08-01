@@ -34,7 +34,7 @@ export default function ServicesPageLoading() {
 					</div>
 
 					<div className="min-w-0 flex-1">
-						<div className="grid grid-cols-2 gap-3 md:block md:space-y-8 lg:space-y-10">
+						<div className="grid grid-cols-1 gap-6 md:block md:space-y-8 lg:space-y-10">
 							{loadingServiceIds.map((serviceId, index) => (
 								<ServiceCardSkeleton key={`service-${serviceId}`} reversed={index % 2 === 1} />
 							))}
@@ -48,17 +48,17 @@ export default function ServicesPageLoading() {
 
 function ServiceCardSkeleton({ reversed }: { reversed: boolean }) {
 	return (
-		<div className="grid h-full min-w-0 overflow-hidden border border-[#342312]/15 bg-[#F7F1E6] md:h-auto lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
+		<div className="grid h-full min-w-0 overflow-hidden border border-[#342312]/10 bg-[#FAF7F0] shadow-[0_12px_36px_rgba(52,35,18,0.08)] md:h-auto md:border-[#342312]/15 md:bg-[#F7F1E6] md:shadow-sm lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
 			<Skeleton
 				className={[
-					"aspect-[4/3] h-auto w-full rounded-none md:aspect-[16/8] lg:h-full lg:aspect-auto",
+					"m-4 mb-0 aspect-[16/10] h-auto w-[calc(100%-2rem)] rounded-none sm:aspect-[16/9] md:m-0 md:aspect-[16/8] md:w-full lg:h-full lg:aspect-auto",
 					reversed ? "lg:order-2" : "lg:order-1",
 				].join(" ")}
 			/>
 
 			<div
 				className={[
-					"flex min-h-[164px] min-w-0 flex-col justify-between p-3 sm:min-h-[180px] sm:p-4 md:min-h-[280px] md:p-8 lg:h-full lg:min-h-0 lg:p-10 xl:p-12",
+					"flex min-h-[200px] min-w-0 flex-col p-5 sm:min-h-[210px] sm:p-6 md:min-h-[280px] md:justify-between md:p-8 lg:h-full lg:min-h-0 lg:p-10 xl:p-12",
 					reversed ? "lg:order-1" : "lg:order-2",
 				].join(" ")}
 			>
@@ -67,12 +67,18 @@ function ServiceCardSkeleton({ reversed }: { reversed: boolean }) {
 					<Skeleton className="h-3 w-16 md:h-4 md:w-24" />
 				</div>
 
-				<div className="space-y-2 py-4 sm:py-5 md:space-y-3 md:py-10 lg:py-0">
-					<Skeleton className="h-5 w-full md:h-10" />
-					<Skeleton className="h-5 w-4/5 md:h-10" />
+				<div className="flex items-stretch gap-4 py-5 md:block md:space-y-3 md:py-10 lg:py-0">
+					<Skeleton className="w-[3px] shrink-0 rounded-none md:hidden" />
+					<div className="min-w-0 flex-1 space-y-2">
+						<Skeleton className="h-7 w-full md:h-10" />
+						<Skeleton className="h-7 w-4/5 md:h-10" />
+					</div>
 				</div>
 
-				<Skeleton className="h-3 w-20 md:h-4 md:w-32" />
+				<div className="mt-auto flex items-center justify-between border-t border-[#342312]/10 pt-4 md:border-0 md:pt-0">
+					<Skeleton className="h-3 w-24 md:h-4 md:w-32" />
+					<Skeleton className="size-9 rounded-full md:hidden" />
+				</div>
 			</div>
 		</div>
 	);

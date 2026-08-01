@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectFilterProvider } from "src/app/(main)/[lang]/projects/project-filter/project-filter.state";
 import { ProjectMobileCategorySelect } from "src/app/(main)/[lang]/projects/project-filter/project-filter-select";
@@ -41,7 +41,7 @@ describe("ProjectMobileCategorySelect", () => {
 		replaceMock.mockReset();
 	});
 
-	it("updates the selected category and keeps the other query parameters", async () => {
+	it("filters from the mobile drawer while preserving the other query parameters", async () => {
 		const user = userEvent.setup();
 
 		render(
@@ -57,32 +57,50 @@ describe("ProjectMobileCategorySelect", () => {
 			</ProjectFilterProvider>,
 		);
 
-		const select = screen.getByRole("combobox", {
-			name: "Danh mục dự án",
+		const trigger = screen.getByRole("button", {
+			name: /Danh mục dự án/i,
 		});
 
-		await user.click(select);
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+		await user.click(trigger);
+
+		const categoryDrawer = await screen.findByRole("dialog", {
+			name: /Danh mục dự án/i,
+		});
+
 		await user.click(
-			await screen.findByRole("option", {
-				name: "Thương mại",
+			within(categoryDrawer).getByRole("button", {
+				name: /Thương mại/i,
 			}),
 		);
 
-		expect(select).toHaveTextContent("Thương mại");
+		expect(trigger).toHaveTextContent(/Thương mại/i);
 		expect(replaceMock).toHaveBeenCalledWith("/vi/projects?page=2&category=commercial", {
 			scroll: false,
 		});
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
 
-		await user.click(select);
+		await user.click(trigger);
+
+		const reopenedDrawer = await screen.findByRole("dialog", {
+			name: /Danh mục dự án/i,
+		});
+
 		await user.click(
-			await screen.findByRole("option", {
-				name: "Tất cả",
+			within(reopenedDrawer).getByRole("button", {
+				name: /Tất cả/i,
 			}),
 		);
 
-		expect(select).toHaveTextContent("Tất cả");
+		expect(trigger).toHaveTextContent(/Tất cả/i);
 		expect(replaceMock).toHaveBeenLastCalledWith("/vi/projects?page=2", {
 			scroll: false,
+		});
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 		});
 	});
 });

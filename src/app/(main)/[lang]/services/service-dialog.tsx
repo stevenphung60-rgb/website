@@ -22,6 +22,8 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 
 	const dictionary = getDictionary(locale);
 	const serviceName = service.name[locale];
+	const mobileServiceLabel = locale === "vi" ? "Giải pháp kỹ thuật" : "Technical solution";
+	const mobileViewLabel = locale === "vi" ? "Xem giải pháp" : "View solution";
 
 	const mainImage = service.gallery?.find((img) => img.isMain) || service.gallery?.[0];
 
@@ -30,14 +32,18 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 	return (
 		<Link
 			href={`/${locale}/services/${serviceId}`}
-			className="group block h-full min-w-0"
+			className="group block h-full min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A87E3C] focus-visible:ring-offset-2"
 			data-testid="service-card"
 		>
-			<Card className="relative grid h-full min-w-0 gap-0 overflow-hidden rounded-none border border-[#342312]/15 bg-[#F7F1E6] py-0 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:border-[#342312]/35 hover:shadow-[0_24px_70px_rgba(0,0,0,0.16)] md:h-auto md:gap-6 lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
-				<div className="pointer-events-none absolute left-0 top-0 z-20 h-[3px] w-full origin-left scale-x-0 bg-[#342312] transition-transform duration-500 group-hover:scale-x-100" />
+			<Card className="relative grid h-full min-w-0 gap-0 overflow-hidden rounded-none border border-[#342312]/10 bg-[#FAF7F0] py-0 shadow-[0_12px_36px_rgba(52,35,18,0.08)] transition-all duration-500 motion-reduce:transition-none md:h-auto md:gap-6 md:border-[#342312]/15 md:bg-[#F7F1E6] md:shadow-sm md:hover:-translate-y-1 md:hover:border-[#342312]/35 md:hover:shadow-[0_24px_70px_rgba(0,0,0,0.16)] md:motion-reduce:hover:translate-y-0 lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
+				<div className="pointer-events-none absolute left-0 top-0 z-20 hidden h-[3px] w-full origin-left bg-[#342312] md:block md:scale-x-0 md:transition-transform md:duration-500 md:group-hover:scale-x-100 md:motion-reduce:transition-none" />
+				<div
+					aria-hidden="true"
+					className="pointer-events-none absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,#342312_1px,transparent_1px),linear-gradient(to_bottom,#342312_1px,transparent_1px)] [background-size:24px_24px] md:hidden"
+				/>
 
 				<div
-					className={`relative aspect-[4/3] overflow-hidden md:aspect-[16/8] lg:aspect-auto lg:h-full ${
+					className={`relative z-10 m-4 mb-0 aspect-[16/10] overflow-hidden border border-[#342312]/10 sm:aspect-[16/9] md:m-0 md:aspect-[16/8] md:border-0 lg:aspect-auto lg:h-full ${
 						isReversed ? "lg:order-2" : "lg:order-1"
 					}`}
 				>
@@ -46,35 +52,44 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 						alt={serviceName}
 						width={1200}
 						height={850}
-						className="h-full w-full object-cover grayscale-[12%] transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0"
+						sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(100vw - 3rem), 50vw"
+						className="h-full w-full object-cover transition-all duration-700 motion-reduce:transition-none md:grayscale-[12%] md:group-hover:scale-105 md:group-hover:grayscale-0 md:motion-reduce:group-hover:scale-100"
 					/>
 
-					<div className="absolute inset-0 bg-[#342312]/10 transition-colors duration-500 group-hover:bg-transparent" />
+					<div className="absolute inset-0 bg-gradient-to-t from-[#342312]/10 via-transparent to-transparent md:bg-[#342312]/10 md:transition-colors md:duration-500 md:group-hover:bg-transparent" />
 				</div>
 
 				<CardContent
-					className={`flex min-h-[164px] min-w-0 flex-col justify-between overflow-hidden p-3 sm:min-h-[180px] sm:p-4 md:min-h-[280px] md:p-8 lg:h-full lg:min-h-0 lg:p-10 xl:p-12 ${
+					className={`relative z-10 flex min-h-[200px] min-w-0 flex-col overflow-visible p-5 sm:min-h-[210px] sm:p-6 md:min-h-[280px] md:justify-between md:overflow-hidden md:p-8 lg:h-full lg:min-h-0 lg:p-10 xl:p-12 ${
 						isReversed ? "lg:order-1" : "lg:order-2"
 					}`}
 				>
 					<div className="flex min-w-0 items-center gap-2 md:gap-4">
-						<span className="h-px w-5 shrink-0 bg-[#A87E3C] md:w-12" />
+						<span className="h-px w-8 shrink-0 bg-[#342312]/20 md:w-12 md:bg-[#A87E3C]" />
 
-						<p className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#A87E3C] sm:text-[11px] md:text-[14px] md:tracking-[0.3em]">
-							{dictionary.services.service}
+						<p className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.2em] text-[#6B5137] md:text-[14px] md:tracking-[0.3em] md:text-[#A87E3C]">
+							<span className="md:hidden">{mobileServiceLabel}</span>
+							<span className="hidden md:inline">{dictionary.services.service}</span>
 						</p>
 					</div>
 
-					<div className="py-4 sm:py-5 md:py-10 lg:py-0">
-						<CardTitle className="line-clamp-3 max-w-2xl break-words text-[17px] font-black uppercase leading-[1.18] tracking-[0.01em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] sm:text-[22px] md:line-clamp-none md:text-[42px] md:leading-[1.12] md:tracking-[0.03em] lg:text-[48px] xl:text-[56px]">
+					<div className="flex min-w-0 items-stretch gap-4 py-5 md:block md:py-10 lg:py-0">
+						<span className="w-[2px] shrink-0 bg-[#B99354] md:hidden" />
+
+						<h2 className="min-w-0 max-w-2xl break-words text-[24px] font-black uppercase leading-[1.16] tracking-[0.01em] text-[#342312] transition-colors duration-300 md:line-clamp-none md:text-[42px] md:leading-[1.12] md:tracking-[0.03em] md:group-hover:text-[#A87E3C] lg:text-[48px] xl:text-[56px]">
 							{serviceName}
-						</CardTitle>
+						</h2>
 					</div>
 
-					<div className="inline-flex w-fit max-w-full items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#342312] sm:text-[11px] md:gap-3 md:text-sm md:tracking-[0.18em]">
-						<span className="min-w-0 truncate">{dictionary.services.viewDetail}</span>
+					<div className="mt-auto flex w-full max-w-full items-center justify-between gap-3 border-t border-[#342312]/10 pt-4 text-[12px] font-bold uppercase tracking-[0.14em] text-[#342312] md:inline-flex md:w-fit md:justify-start md:gap-3 md:border-t-0 md:pt-0 md:text-sm md:tracking-[0.18em]">
+						<span className="min-w-0 truncate">
+							<span className="md:hidden">{mobileViewLabel}</span>
+							<span className="hidden md:inline">{dictionary.services.viewDetail}</span>
+						</span>
 
-						<ArrowRight className="size-3.5 shrink-0 transition-transform duration-500 group-hover:translate-x-2 md:size-4" />
+						<span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F1E5D2]/75 text-[#8F672E] md:size-auto md:bg-transparent md:text-[#342312]">
+							<ArrowRight className="size-4 transition-transform duration-500 motion-reduce:transition-none md:group-hover:translate-x-2" />
+						</span>
 					</div>
 				</CardContent>
 			</Card>

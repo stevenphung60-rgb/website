@@ -4,13 +4,11 @@ import { createAuthClient } from "better-auth/react";
 
 /**
  * Better Auth client configuration
- * Provides client-side authentication functions
+ * Provides client-side authentication functions.
+ * No baseURL: the client calls /api/auth on the current origin, so the same build
+ * works on localhost, Vercel preview and the production domain.
  */
-const baseURL = process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
-
-export const authClient = createAuthClient({
-	baseURL,
-});
+export const authClient = createAuthClient();
 
 /**
  * Client-side authentication hooks

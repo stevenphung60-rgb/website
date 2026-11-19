@@ -1,6 +1,4 @@
-import type { CSSProperties } from "react";
-import { getSiteFontFamilyValue, type SiteFontId } from "src/lib/font-presets";
-import type { BlogAppearanceSettings, BlogFontSelection } from "src/server/blogs";
+import type { BlogAppearanceSettings } from "src/server/blogs";
 
 const bodySizeClass = {
 	compact: "text-[16px]",
@@ -21,14 +19,6 @@ const widthClass = {
 	wide: "max-w-[980px]",
 } satisfies Record<BlogAppearanceSettings["contentWidth"], string>;
 
-function getFontValue(fontId: BlogFontSelection, fallback: "heading" | "body") {
-	if (fontId === "site") {
-		return fallback === "heading" ? "var(--site-font-heading)" : "var(--site-font-body)";
-	}
-
-	return getSiteFontFamilyValue(fontId as SiteFontId);
-}
-
 function sanitizeBlogHtml(html: string): string {
 	return html
 		.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
@@ -46,36 +36,24 @@ interface BlogContentRendererProps {
 	appearance: BlogAppearanceSettings;
 }
 
-type BlogContentStyle = CSSProperties & {
-	"--blog-heading-font": string;
-	"--blog-body-font": string;
-};
-
 /**
  * Render blog HTML content with controlled typography and basic sanitation.
  * @param props - Blog content renderer props
  * @returns Blog article content
  */
 export function BlogContentRenderer({ html, appearance }: BlogContentRendererProps) {
-	const headingFont = getFontValue(appearance.headingFontId, "heading");
-	const bodyFont = getFontValue(appearance.bodyFontId, "body");
-	const style: BlogContentStyle = {
-		"--blog-heading-font": headingFont,
-		"--blog-body-font": bodyFont,
-		fontFamily: bodyFont,
-	};
-
 	return (
 		<div className={["w-full", widthClass[appearance.contentWidth]].join(" ")}>
 			<style>{`
-				.blog-rich-content {
-					font-family: var(--blog-body-font);
+				/* One font for the whole website: also overrides fonts picked per paragraph in older posts */
+				.blog-rich-content,
+				.blog-rich-content * {
+					font-family: var(--site-font) !important;
 				}
 
 				.blog-rich-content h1,
 				.blog-rich-content h2,
 				.blog-rich-content h3 {
-					font-family: var(--blog-heading-font);
 					font-weight: 800;
 					line-height: 1.18;
 					color: #342312;
@@ -148,7 +126,6 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 					bodySizeClass[appearance.bodySize],
 					lineHeightClass[appearance.lineHeight],
 				].join(" ")}
-				style={style}
 				dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(html) }}
 			/>
 		</div>

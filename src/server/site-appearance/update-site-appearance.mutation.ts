@@ -12,6 +12,10 @@ interface UpdateSiteAppearanceResult {
 
 interface SiteAppearanceDocument extends SiteAppearance {
 	_id?: unknown;
+	/** Legacy fields from when the site had separate heading and body fonts */
+	fontPresetId?: string;
+	headingFontId?: string;
+	bodyFontId?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -22,7 +26,7 @@ interface SiteAppearanceDocument extends SiteAppearance {
  * @returns Update result
  */
 export async function updateSiteAppearance(
-	input: Partial<SiteAppearance>,
+	input: Pick<SiteAppearance, "fontId">,
 ): Promise<UpdateSiteAppearanceResult> {
 	try {
 		const siteAppearance = normalizeSiteAppearance(input);
@@ -35,10 +39,13 @@ export async function updateSiteAppearance(
 			},
 			{
 				$set: {
-					fontPresetId: siteAppearance.fontPresetId,
-					headingFontId: siteAppearance.headingFontId,
-					bodyFontId: siteAppearance.bodyFontId,
+					fontId: siteAppearance.fontId,
 					updatedAt: now,
+				},
+				$unset: {
+					fontPresetId: "",
+					headingFontId: "",
+					bodyFontId: "",
 				},
 				$setOnInsert: {
 					id: SITE_APPEARANCE_ID,

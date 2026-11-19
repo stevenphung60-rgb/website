@@ -8,12 +8,10 @@ import {
 	ChevronDown,
 	Italic,
 	LinkIcon,
-	Type,
 	Underline,
 } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "src/components/ui/button";
-import { SITE_FONT_OPTIONS, type SiteFontId } from "src/lib/font-presets";
 
 interface BlogRichTextEditorProps {
 	fieldName: string;
@@ -21,7 +19,7 @@ interface BlogRichTextEditorProps {
 	defaultHtml?: string;
 }
 
-type ToolbarMenu = "font" | "size" | "lineHeight" | null;
+type ToolbarMenu = "size" | "lineHeight" | null;
 type TextAlignState = "left" | "center" | "right";
 
 const fontSizeOptions = [
@@ -38,12 +36,6 @@ const lineHeightOptions = [
 	{ label: "Rộng", value: "relaxed", cssValue: "2" },
 ];
 
-interface FontOption {
-	id: SiteFontId | "site";
-	label: string;
-	fontFamily: string;
-}
-
 /**
  * Lightweight controlled rich text editor for blog HTML content.
  * @param props - Blog rich text editor props
@@ -59,7 +51,6 @@ export function BlogRichTextEditor({
 	const hasInitializedRef = useRef(false);
 	const [html, setHtml] = useState(defaultHtml);
 	const [openMenu, setOpenMenu] = useState<ToolbarMenu>(null);
-	const [activeFontId, setActiveFontId] = useState<SiteFontId | "site">("site");
 	const [activeFontSize, setActiveFontSize] = useState("3");
 	const [activeLineHeight, setActiveLineHeight] = useState("default");
 	const [activeAlign, setActiveAlign] = useState<TextAlignState>("left");
@@ -68,26 +59,6 @@ export function BlogRichTextEditor({
 		italic: false,
 		underline: false,
 	});
-
-	const fontOptions = useMemo<FontOption[]>(() => {
-		const siteFontOption: FontOption = {
-			id: "site",
-			label: "Website",
-			fontFamily: "var(--site-font-body)",
-		};
-
-		return [
-			siteFontOption,
-			...(Object.entries(SITE_FONT_OPTIONS) as [
-				SiteFontId,
-				(typeof SITE_FONT_OPTIONS)[SiteFontId],
-			][]).map(([fontId, font]) => ({
-				id: fontId,
-				label: font.label,
-				fontFamily: `var(${font.cssVariable})`,
-			})),
-		];
-	}, []);
 
 	useEffect(() => {
 		if (!editorRef.current || hasInitializedRef.current) return;
@@ -191,14 +162,6 @@ export function BlogRichTextEditor({
 		runCommand("createLink", href);
 	}
 
-	function applyFont(fontId: SiteFontId | "site") {
-		const fontOption = fontOptions.find((option) => option.id === fontId) || fontOptions[0];
-
-		runCommand("fontName", fontOption.fontFamily);
-		setActiveFontId(fontId);
-		setOpenMenu(null);
-	}
-
 	function applyFontSize(fontSize: string) {
 		runCommand("fontSize", fontSize);
 		setActiveFontSize(fontSize);
@@ -239,48 +202,11 @@ export function BlogRichTextEditor({
 			setActiveAlign("left");
 		}
 
-		const currentFontId = getCurrentFontId();
 		const currentFontSize = document.queryCommandValue("fontSize") || "3";
 		const currentLineHeight = getCurrentLineHeight();
 
-		setActiveFontId(currentFontId);
 		setActiveFontSize(String(currentFontSize));
 		setActiveLineHeight(currentLineHeight);
-	}
-
-	function getCurrentFontId(): SiteFontId | "site" {
-		const editor = editorRef.current;
-		const selection = window.getSelection();
-
-		if (!editor || !selection || selection.rangeCount === 0) return "site";
-
-		let node: Node | null = selection.focusNode;
-		let element = node instanceof HTMLElement ? node : node?.parentElement || null;
-
-		while (element && element !== editor) {
-			const inlineFontFamily = element.style.fontFamily || "";
-			const normalizedFontFamily = inlineFontFamily.toLowerCase();
-
-			if (normalizedFontFamily.includes("--site-font-body")) return "site";
-
-			for (const option of fontOptions) {
-				if (option.id === "site") continue;
-
-				const normalizedOptionValue = option.fontFamily.toLowerCase();
-				const normalizedOptionLabel = option.label.toLowerCase();
-
-				if (
-					normalizedFontFamily.includes(normalizedOptionValue) ||
-					normalizedFontFamily.includes(normalizedOptionLabel)
-				) {
-					return option.id;
-				}
-			}
-
-			element = element.parentElement;
-		}
-
-		return "site";
 	}
 
 	function getCurrentLineHeight() {
@@ -313,8 +239,6 @@ export function BlogRichTextEditor({
 		return editor;
 	}
 
-	const currentFontLabel =
-		fontOptions.find((fontOption) => fontOption.id === activeFontId)?.label || "Website";
 	const currentFontSizeLabel =
 		fontSizeOptions.find((fontSizeOption) => fontSizeOption.value === activeFontSize)?.label ||
 		"Chuẩn";
@@ -329,35 +253,12 @@ export function BlogRichTextEditor({
 			<div className="border-b border-[#E7D0AF]/70 px-4 py-4 sm:px-6">
 				<p className="text-base font-semibold text-[#342312]">{label}</p>
 				<p className="mt-1 text-sm leading-6 text-[#342312]/65">
-					Nếu không chọn định dạng riêng, nội dung sẽ tự dùng font theo cấu hình chung của website.
+					Nội dung dùng font chung của website (chọn ở Admin → Giao diện).
 				</p>
 			</div>
 
 			<div className="space-y-4 px-4 py-5 sm:px-6">
 				<div className="flex min-h-12 flex-wrap items-center gap-2 rounded-xl border border-[#E7D0AF] bg-[#FAF7F1] p-2">
-					<ToolbarSelect
-						label="Font chữ"
-						isOpen={openMenu === "font"}
-						onToggle={() => setOpenMenu((currentMenu) => (currentMenu === "font" ? null : "font"))}
-						buttonContent={
-							<>
-								<Type className="size-4 shrink-0" />
-								<span className="min-w-0 truncate text-xs">{currentFontLabel}</span>
-								<ChevronDown className="size-3 shrink-0" />
-							</>
-						}
-					>
-						{fontOptions.map((fontOption) => (
-							<ToolbarMenuItem
-								key={fontOption.id}
-								isActive={activeFontId === fontOption.id}
-								onClick={() => applyFont(fontOption.id)}
-							>
-								{fontOption.label}
-							</ToolbarMenuItem>
-						))}
-					</ToolbarSelect>
-
 					<ToolbarSelect
 						label="Cỡ chữ"
 						isOpen={openMenu === "size"}

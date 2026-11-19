@@ -7,7 +7,7 @@ import { AppearanceForm } from "./appearance-form";
 
 export const metadata: Metadata = {
 	title: "Giao diện website - Admin - Nghiệp Hưng",
-	description: "Quản lý font chữ và giao diện website",
+	description: "Chọn font chữ cho toàn bộ website",
 };
 
 /**
@@ -24,7 +24,7 @@ export default async function AppearancePage() {
 			<AdminPageHeader
 				title="Giao diện website"
 				eyebrow="Quản trị giao diện"
-				description="Quản lý font tiêu đề và font nội dung hiển thị trên website."
+				description="Chọn một font chữ áp dụng cho toàn bộ website."
 				icon={Palette}
 			/>
 

@@ -317,7 +317,7 @@ export default function HomeServicesShowcase({
 				</Link>
 
 				<div
-					className="h-auto overflow-visible bg-[#342312] lg:h-[660px] lg:overflow-y-auto"
+					className="h-auto overflow-visible bg-[#342312] lg:h-[660px] lg:overflow-x-hidden lg:overflow-y-auto"
 					onMouseEnter={() => setIsPaused(true)}
 					onMouseLeave={() => setIsPaused(false)}
 				>

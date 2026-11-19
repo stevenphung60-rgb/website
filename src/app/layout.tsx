@@ -1,8 +1,17 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import {
+	Archivo,
+	Barlow,
+	Barlow_Condensed,
 	Be_Vietnam_Pro,
+	Big_Shoulders,
+	Bricolage_Grotesque,
+	Chakra_Petch,
+	IBM_Plex_Mono,
+	IBM_Plex_Sans,
 	Inter,
+	JetBrains_Mono,
 	Lora,
 	Merriweather,
 	Montserrat,
@@ -11,7 +20,9 @@ import {
 	Open_Sans,
 	Raleway,
 	Roboto,
+	Saira_Condensed,
 	Source_Sans_3,
+	Unbounded,
 } from "next/font/google";
 import type React from "react";
 import type { CSSProperties } from "react";
@@ -19,82 +30,195 @@ import { getSiteFontFamilyValue } from "src/lib/font-presets";
 import { getSiteAppearance } from "src/server/site-appearance";
 import "./globals.css";
 
-const montserrat = Montserrat({
+/*
+ * Every font the admin can pick in Admin > Giao diện (see src/lib/font-presets.ts).
+ * Only one is applied at a time through --site-font. preload is off so the browser
+ * downloads just the font that is actually used on the page.
+ */
+const bigShoulders = Big_Shoulders({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
-	variable: "--font-montserrat",
-	weight: ["400", "600", "700"],
+	preload: false,
+	variable: "--font-big-shoulders",
 });
 
-const openSans = Open_Sans({
+const bricolageGrotesque = Bricolage_Grotesque({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
-	variable: "--font-open-sans",
-	weight: ["400", "500", "600", "700"],
+	preload: false,
+	variable: "--font-bricolage-grotesque",
 });
 
-const roboto = Roboto({
+const unbounded = Unbounded({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
-	variable: "--font-roboto",
-	weight: ["400", "500", "700"],
+	preload: false,
+	variable: "--font-unbounded",
 });
 
-const raleway = Raleway({
+const chakraPetch = Chakra_Petch({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
-	variable: "--font-raleway",
-	weight: ["400", "500", "600", "700", "800", "900"],
+	preload: false,
+	variable: "--font-chakra-petch",
+	weight: ["300", "400", "500", "600", "700"],
+});
+
+const barlowCondensed = Barlow_Condensed({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-barlow-condensed",
+	weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const sairaCondensed = Saira_Condensed({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-saira-condensed",
+	weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const archivo = Archivo({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-archivo",
 });
 
 const beVietnamPro = Be_Vietnam_Pro({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-be-vietnam-pro",
-	weight: ["400", "500", "600", "700", "800"],
+	weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const barlow = Barlow({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-barlow",
+	weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-ibm-plex-sans",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-jetbrains-mono",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-ibm-plex-mono",
+	weight: ["300", "400", "500", "600", "700"],
+});
+
+const montserrat = Montserrat({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-montserrat",
+});
+
+const roboto = Roboto({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-roboto",
 });
 
 const inter = Inter({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-inter",
-	weight: ["400", "500", "600", "700", "800"],
+});
+
+const openSans = Open_Sans({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-open-sans",
 });
 
 const notoSans = Noto_Sans({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-noto-sans",
-	weight: ["400", "500", "600", "700", "800"],
 });
 
 const nunitoSans = Nunito_Sans({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-nunito-sans",
-	weight: ["400", "500", "600", "700", "800"],
 });
 
 const sourceSans3 = Source_Sans_3({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-source-sans-3",
-	weight: ["400", "500", "600", "700", "800"],
+});
+
+const raleway = Raleway({
+	subsets: ["latin", "vietnamese"],
+	display: "swap",
+	preload: false,
+	variable: "--font-raleway",
 });
 
 const lora = Lora({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-lora",
-	weight: ["400", "500", "600", "700"],
 });
 
 const merriweather = Merriweather({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
+	preload: false,
 	variable: "--font-merriweather",
-	weight: ["400", "700", "900"],
 });
+
+const fontVariableClasses = [
+	bigShoulders.variable,
+	bricolageGrotesque.variable,
+	unbounded.variable,
+	chakraPetch.variable,
+	barlowCondensed.variable,
+	sairaCondensed.variable,
+	archivo.variable,
+	beVietnamPro.variable,
+	barlow.variable,
+	ibmPlexSans.variable,
+	jetbrainsMono.variable,
+	ibmPlexMono.variable,
+	montserrat.variable,
+	roboto.variable,
+	inter.variable,
+	openSans.variable,
+	notoSans.variable,
+	nunitoSans.variable,
+	sourceSans3.variable,
+	raleway.variable,
+	lora.variable,
+	merriweather.variable,
+].join(" ");
 
 export const metadata: Metadata = {
 	metadataBase: new URL(
@@ -163,14 +287,13 @@ export const metadata: Metadata = {
 };
 
 type SiteFontStyle = CSSProperties & {
-	"--site-font-heading": string;
-	"--site-font-body": string;
+	"--site-font": string;
 };
 
 /**
  * Root application layout
  * @param props - Root layout props
- * @returns Root layout with site font variables
+ * @returns Root layout with the site font variable
  */
 export default async function RootLayout({
 	children,
@@ -180,17 +303,14 @@ export default async function RootLayout({
 	const siteAppearance = await getSiteAppearance();
 
 	const siteFontStyle: SiteFontStyle = {
-		"--site-font-heading": getSiteFontFamilyValue(
-			siteAppearance.headingFontId,
-		),
-		"--site-font-body": getSiteFontFamilyValue(siteAppearance.bodyFontId),
+		"--site-font": getSiteFontFamilyValue(siteAppearance.fontId),
 	};
 
 	return (
 		<html
 			lang="vi"
 			style={siteFontStyle}
-			className={`${montserrat.variable} ${openSans.variable} ${roboto.variable} ${raleway.variable} ${beVietnamPro.variable} ${inter.variable} ${notoSans.variable} ${nunitoSans.variable} ${sourceSans3.variable} ${lora.variable} ${merriweather.variable} antialiased`}
+			className={`${fontVariableClasses} antialiased`}
 		>
 			<body className="font-sans">
 				{children}

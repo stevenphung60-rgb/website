@@ -9,6 +9,8 @@ import {
 
 interface SiteAppearanceDocument extends SiteAppearance {
 	_id?: unknown;
+	/** Legacy field from when the site had separate heading and body fonts */
+	bodyFontId?: string;
 	createdAt?: Date;
 	updatedAt?: Date;
 }
@@ -36,9 +38,7 @@ export async function getSiteAppearance(): Promise<SiteAppearance> {
 		}
 
 		return normalizeSiteAppearance({
-			id: SITE_APPEARANCE_ID,
-			fontPresetId: document.fontPresetId,
-			headingFontId: document.headingFontId,
+			fontId: document.fontId,
 			bodyFontId: document.bodyFontId,
 		});
 	} catch (error) {

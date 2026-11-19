@@ -3,6 +3,31 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { getDatabase } from "src/lib/database";
 
 /**
+ * Resolve the public base URL used for OAuth redirects.
+ * On Vercel, a missing or localhost BETTER_AUTH_URL (a common copy-paste from
+ * .env.local) would send Google back to http://localhost:3000, so fall back to
+ * the deployment's own domain instead.
+ */
+function resolveBaseURL(): string | undefined {
+	const configured = process.env.BETTER_AUTH_URL?.trim().replace(/\/+$/, "");
+	const isLocalhost = !!configured && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured);
+
+	if (configured && !(process.env.VERCEL && isLocalhost)) {
+		return configured;
+	}
+
+	const vercelHost =
+		process.env.VERCEL_ENV === "production"
+			? process.env.VERCEL_PROJECT_PRODUCTION_URL
+			: process.env.VERCEL_URL;
+	if (vercelHost) {
+		return `https://${vercelHost}`;
+	}
+
+	return configured;
+}
+
+/**
  * Validate required environment variables
  */
 function validateEnvVars(): {
@@ -13,7 +38,7 @@ function validateEnvVars(): {
 	const required = {
 		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+		BETTER_AUTH_URL: resolveBaseURL(),
 	};
 
 	for (const [key, value] of Object.entries(required)) {
@@ -55,6 +80,7 @@ if (process.env.TRUSTED_ORIGINS) {
  * Configures Google OAuth-only authentication for admin access
  */
 export const auth = betterAuth({
+	baseURL: envVars.BETTER_AUTH_URL,
 	database: mongodbAdapter(await getDatabase()),
 	socialProviders: {
 		google: {

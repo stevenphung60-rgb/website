@@ -54,7 +54,7 @@ export function BlogContentRenderer({ html, appearance }: BlogContentRendererPro
 				.blog-rich-content h1,
 				.blog-rich-content h2,
 				.blog-rich-content h3 {
-					font-weight: 800;
+					font-weight: 700;
 					line-height: 1.18;
 					color: #342312;
 					margin-top: 2.1rem;

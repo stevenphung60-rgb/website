@@ -109,6 +109,10 @@
 	--font-serif: var(--site-font);
 	--font-mono: var(--site-font);
 
+	/* Cap heading weights at 700: font-extrabold / font-black looked too heavy with the new fonts */
+	--font-weight-extrabold: 700;
+	--font-weight-black: 700;
+
 	/* Radius */
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);

@@ -34,12 +34,15 @@ import "./globals.css";
  * Every font the admin can pick in Admin > Giao diện (see src/lib/font-presets.ts).
  * Only one is applied at a time through --site-font. preload is off so the browser
  * downloads just the font that is actually used on the page.
+ * Weights stop at 700 on purpose: headings use font-extrabold/font-black, which then
+ * render at 700 instead of the much heavier 800/900 cuts.
  */
 const bigShoulders = Big_Shoulders({
 	subsets: ["latin", "vietnamese"],
 	display: "swap",
 	preload: false,
 	variable: "--font-big-shoulders",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const bricolageGrotesque = Bricolage_Grotesque({
@@ -47,6 +50,7 @@ const bricolageGrotesque = Bricolage_Grotesque({
 	display: "swap",
 	preload: false,
 	variable: "--font-bricolage-grotesque",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const unbounded = Unbounded({
@@ -54,6 +58,7 @@ const unbounded = Unbounded({
 	display: "swap",
 	preload: false,
 	variable: "--font-unbounded",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const chakraPetch = Chakra_Petch({
@@ -69,7 +74,7 @@ const barlowCondensed = Barlow_Condensed({
 	display: "swap",
 	preload: false,
 	variable: "--font-barlow-condensed",
-	weight: ["300", "400", "500", "600", "700", "800", "900"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const sairaCondensed = Saira_Condensed({
@@ -77,7 +82,7 @@ const sairaCondensed = Saira_Condensed({
 	display: "swap",
 	preload: false,
 	variable: "--font-saira-condensed",
-	weight: ["300", "400", "500", "600", "700", "800", "900"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const archivo = Archivo({
@@ -85,6 +90,7 @@ const archivo = Archivo({
 	display: "swap",
 	preload: false,
 	variable: "--font-archivo",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -92,7 +98,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 	display: "swap",
 	preload: false,
 	variable: "--font-be-vietnam-pro",
-	weight: ["300", "400", "500", "600", "700", "800", "900"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const barlow = Barlow({
@@ -100,7 +106,7 @@ const barlow = Barlow({
 	display: "swap",
 	preload: false,
 	variable: "--font-barlow",
-	weight: ["300", "400", "500", "600", "700", "800", "900"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -108,6 +114,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 	display: "swap",
 	preload: false,
 	variable: "--font-ibm-plex-sans",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -115,6 +122,7 @@ const jetbrainsMono = JetBrains_Mono({
 	display: "swap",
 	preload: false,
 	variable: "--font-jetbrains-mono",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -130,6 +138,7 @@ const montserrat = Montserrat({
 	display: "swap",
 	preload: false,
 	variable: "--font-montserrat",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const roboto = Roboto({
@@ -137,6 +146,7 @@ const roboto = Roboto({
 	display: "swap",
 	preload: false,
 	variable: "--font-roboto",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const inter = Inter({
@@ -144,6 +154,7 @@ const inter = Inter({
 	display: "swap",
 	preload: false,
 	variable: "--font-inter",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const openSans = Open_Sans({
@@ -151,6 +162,7 @@ const openSans = Open_Sans({
 	display: "swap",
 	preload: false,
 	variable: "--font-open-sans",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const notoSans = Noto_Sans({
@@ -158,6 +170,7 @@ const notoSans = Noto_Sans({
 	display: "swap",
 	preload: false,
 	variable: "--font-noto-sans",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const nunitoSans = Nunito_Sans({
@@ -165,6 +178,7 @@ const nunitoSans = Nunito_Sans({
 	display: "swap",
 	preload: false,
 	variable: "--font-nunito-sans",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const sourceSans3 = Source_Sans_3({
@@ -172,6 +186,7 @@ const sourceSans3 = Source_Sans_3({
 	display: "swap",
 	preload: false,
 	variable: "--font-source-sans-3",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const raleway = Raleway({
@@ -179,6 +194,7 @@ const raleway = Raleway({
 	display: "swap",
 	preload: false,
 	variable: "--font-raleway",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const lora = Lora({
@@ -186,6 +202,7 @@ const lora = Lora({
 	display: "swap",
 	preload: false,
 	variable: "--font-lora",
+	weight: ["400", "500", "600", "700"],
 });
 
 const merriweather = Merriweather({
@@ -193,6 +210,7 @@ const merriweather = Merriweather({
 	display: "swap",
 	preload: false,
 	variable: "--font-merriweather",
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 const fontVariableClasses = [

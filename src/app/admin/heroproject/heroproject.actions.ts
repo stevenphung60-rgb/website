@@ -1,12 +1,10 @@
 "use server";
 
-import { Buffer } from "buffer";
-import fs from "fs/promises";
 import { revalidatePath, revalidateTag } from "next/cache";
-import path from "path";
 import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
+import { uploadImageFile } from "src/lib/s3";
 import { updateHeroProjectInfo } from "src/server/heroproject";
 import type {
 	HeroProjectImage,
@@ -197,22 +195,11 @@ export async function uploadHeroProjectGalleryImage(
 			};
 		}
 
-		const bytes = await file.arrayBuffer();
-		const buffer = Buffer.from(bytes);
-
-		const uploadDir = path.join(process.cwd(), "public", "uploads", "heroproject");
-
-		await fs.mkdir(uploadDir, { recursive: true });
-
-		const ext = file.name.split(".").pop() || "jpg";
-		const fileName = `heroproject-${Date.now()}.${ext}`;
-		const filePath = path.join(uploadDir, fileName);
-
-		await fs.writeFile(filePath, buffer);
+		const url = await uploadImageFile(file, "heroproject", "heroproject");
 
 		return {
 			success: true,
-			data: `/uploads/heroproject/${fileName}`,
+			data: url,
 		};
 	} catch (error) {
 		console.error("Upload hero project image error:", error);

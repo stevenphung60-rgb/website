@@ -1,12 +1,10 @@
 "use server";
 
-import { Buffer } from "buffer";
-import fs from "fs/promises";
 import { revalidatePath, revalidateTag } from "next/cache";
-import path from "path";
 import { z } from "zod";
 import type { FormResult } from "src/components/form-state";
 import { CACHE_TAGS } from "src/lib/cache-tags";
+import { uploadImageFile } from "src/lib/s3";
 import { updateHeroBrandInfo } from "src/server/herobrand";
 import type {
 	HeroBrandInfoFormData,
@@ -193,22 +191,11 @@ export async function uploadHeroBrandLogoImage(
 			};
 		}
 
-		const bytes = await file.arrayBuffer();
-		const buffer = Buffer.from(bytes);
-
-		const uploadDir = path.join(process.cwd(), "public", "uploads", "herobrand");
-
-		await fs.mkdir(uploadDir, { recursive: true });
-
-		const ext = file.name.split(".").pop() || "jpg";
-		const fileName = `herobrand-logo-${Date.now()}.${ext}`;
-		const filePath = path.join(uploadDir, fileName);
-
-		await fs.writeFile(filePath, buffer);
+		const url = await uploadImageFile(file, "herobrand", "herobrand-logo");
 
 		return {
 			success: true,
-			data: `/uploads/herobrand/${fileName}`,
+			data: url,
 		};
 	} catch (error) {
 		console.error("Upload hero brand logo error:", error);

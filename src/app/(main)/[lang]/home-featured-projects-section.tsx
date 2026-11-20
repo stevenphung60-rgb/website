@@ -116,7 +116,7 @@ export default async function HomeFeaturedProjectsSection({
 		const existingGroup = categoryMap.get(project.categoryKey);
 
 		if (existingGroup) {
-			if (existingGroup.projects.length < 3) {
+			if (existingGroup.projects.length < 4) {
 				existingGroup.projects.push({
 					id: project.id,
 					name: project.name,

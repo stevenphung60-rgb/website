@@ -54,7 +54,7 @@ export function ViewAllButton() {
 	};
 
 	const buttonClassName =
-		"flex h-11 w-11 items-center justify-center rounded-full border border-[#E7D0AF] bg-[#F7F1E6] text-sm font-semibold text-[#342312] transition-all duration-300 hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF] disabled:pointer-events-none disabled:opacity-40 sm:h-12 sm:w-12";
+		"flex h-11 w-11 items-center justify-center rounded-full border border-[#E7D0AF] bg-white text-sm font-semibold text-[#342312] transition-all duration-300 hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF] disabled:pointer-events-none disabled:opacity-40 sm:h-12 sm:w-12";
 
 	return (
 		<div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:mt-12 sm:gap-3 lg:mt-14">
@@ -85,7 +85,7 @@ export function ViewAllButton() {
 							${
 								isActive
 									? "border-[#342312] bg-[#342312] text-[#E7D0AF]"
-									: "border-[#E7D0AF] bg-[#F7F1E6] text-[#342312] hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF]"
+									: "border-[#E7D0AF] bg-white text-[#342312] hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF]"
 							}
 						`}
 					>

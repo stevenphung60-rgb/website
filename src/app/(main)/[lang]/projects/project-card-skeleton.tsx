@@ -1,25 +1,19 @@
-import { Card, CardContent } from "src/components/ui/card";
-import { Skeleton } from "src/components/ui/skeleton";
-
 /**
- * Skeleton placeholder for ProjectCard while loading
+ * Placeholder with the shape of the shared project card (image, category, title, two detail rows)
  */
 export function ProjectCardSkeleton() {
 	return (
-		<Card className="relative h-full min-h-0 gap-0 overflow-hidden !rounded-none border-[#A87E3C]/20 bg-[#F7F1E6] py-0 md:h-[520px] md:border-[#342312]/20 lg:h-[440px]">
-			<Skeleton className="aspect-[16/10] w-full shrink-0 rounded-none md:absolute md:inset-0 md:h-full md:aspect-auto" />
-
-			<CardContent className="space-y-3 p-5 md:hidden">
-				<Skeleton className="h-2.5 w-2/3" />
-				<Skeleton className="h-6 w-full" />
-				<Skeleton className="h-6 w-4/5" />
-				<div className="space-y-2 border-y border-[#A87E3C]/15 py-3">
-					<Skeleton className="h-4 w-4/5" />
-					<Skeleton className="h-4 w-1/2" />
-				</div>
-				<Skeleton className="h-4 w-full" />
-				<Skeleton className="h-4 w-5/6" />
-			</CardContent>
-		</Card>
+		<div
+			aria-hidden="true"
+			className="flex h-full w-full flex-col overflow-hidden rounded-md border border-[#E7D0AF]/70 bg-white"
+		>
+			<div className="aspect-[4/3] w-full animate-pulse bg-[#E7D0AF]/40" />
+			<div className="space-y-2.5 px-5 py-5">
+				<div className="h-3 w-1/3 animate-pulse rounded bg-[#E7D0AF]/50" />
+				<div className="h-5 w-4/5 animate-pulse rounded bg-[#E7D0AF]/50" />
+				<div className="h-4 w-3/5 animate-pulse rounded bg-[#E7D0AF]/40" />
+				<div className="h-4 w-2/5 animate-pulse rounded bg-[#E7D0AF]/40" />
+			</div>
+		</div>
 	);
 }

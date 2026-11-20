@@ -9,6 +9,17 @@ interface ProjectFilterButtonsProps {
 	locale: Locale;
 }
 
+const TAB_BASE_CLASS =
+	"inline-flex min-h-10 max-w-full items-center justify-center rounded px-4 py-2 text-center text-[13px] font-bold uppercase leading-tight tracking-[0.08em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#A87E3C] sm:min-h-11 sm:px-5 sm:text-[14px]";
+
+const ACTIVE_TAB_CLASS = `${TAB_BASE_CLASS} bg-[#342312] text-[#FFF8EC] shadow-sm`;
+const INACTIVE_TAB_CLASS = `${TAB_BASE_CLASS} text-[#342312] hover:bg-[#F7F1E6] hover:text-[#7A5426]`;
+
+/**
+ * Project category filter.
+ * - Below md: the existing mobile category drawer (ProjectMobileCategorySelect).
+ * - From md up: a white floating tab bar that overlaps the hero; tabs wrap if they run out of room.
+ */
 export async function ProjectFilterButtons({ locale }: ProjectFilterButtonsProps) {
 	const categoryIds = await getActiveProjectCategoryIds();
 
@@ -22,70 +33,38 @@ export async function ProjectFilterButtons({ locale }: ProjectFilterButtonsProps
 		)
 		.map((category) => ({
 			id: category.id,
-			name: category.name,
+			label: category.name[locale] || category.name.vi || category.name.en,
 		}))
-		.filter((category) => category.name.en || category.name.vi);
+		.filter((category) => category.label);
 
 	const dictionary = getDictionary(locale);
-	const mobileCategories = categories.map((category) => ({
-		id: category.id,
-		label:
-			category.name[locale] ||
-			category.name.vi ||
-			category.name.en ||
-			dictionary.projects.filter.all,
-	}));
-	const mobileFilterLabel = locale === "vi" ? "Danh mục dự án" : "Project category";
-
-	const activeButtonClassName =
-		"flex min-h-[48px] w-full items-center justify-center rounded-none border border-[#342312] bg-[#342312] px-4 py-3 text-center text-[16px] font-bold uppercase leading-snug tracking-[0.01em] text-[#E7D0AF] transition-colors duration-300 hover:border-[#342312] hover:bg-[#342312] hover:text-[#E7D0AF] lg:w-auto lg:px-5";
-
-	const inactiveButtonClassName =
-		"flex min-h-[48px] w-full items-center justify-center rounded-none border border-[#E7D0AF] bg-[#FAF7F0] px-4 py-3 text-center text-[16px] font-bold uppercase leading-snug tracking-[0.01em] text-[#342312] transition-colors duration-300 hover:border-[#A87E3C] hover:bg-[#F7F1E6] hover:text-[#A87E3C] lg:w-auto lg:px-5";
+	const tabs = [{ id: null, label: dictionary.projects.filter.all }, ...categories];
 
 	return (
 		<div className="relative z-20">
 			<ProjectMobileCategorySelect
 				allLabel={dictionary.projects.filter.all}
-				categories={mobileCategories}
-				label={mobileFilterLabel}
+				categories={categories}
+				label={locale === "vi" ? "Danh mục dự án" : "Project category"}
 			/>
 
-			<div className="mx-auto hidden w-full max-w-full border border-[#E7D0AF] bg-[#F7F1E6] p-2 md:block lg:w-fit lg:max-w-[980px]">
-				<div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-center">
-					<div className="min-w-0">
-						<ActiveFilterButton id={null}>
-							<button type="button" aria-pressed="true" className={activeButtonClassName}>
-								<span className="block max-w-full whitespace-normal break-words">
-									{dictionary.projects.filter.all}
-								</span>
-							</button>
-						</ActiveFilterButton>
-
-						<InactiveFilterButton id={null}>
-							<button type="button" aria-pressed="false" className={inactiveButtonClassName}>
-								<span className="block max-w-full whitespace-normal break-words">
-									{dictionary.projects.filter.all}
-								</span>
-							</button>
-						</InactiveFilterButton>
-					</div>
-
-					{categories.map((category) => (
-						<div key={category.id} className="min-w-0">
-							<ActiveFilterButton id={category.id}>
-								<button type="button" aria-pressed="true" className={activeButtonClassName}>
-									<span className="block max-w-full whitespace-normal break-words">
-										{category.name[locale]}
-									</span>
+			<div className="hidden justify-center md:flex">
+				<div
+					role="toolbar"
+					aria-label={locale === "vi" ? "Lọc dự án theo danh mục" : "Filter projects by category"}
+					className="flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-md border border-[#E7D0AF]/60 bg-white p-1.5 shadow-[0_14px_36px_rgba(52,35,18,0.12)]"
+				>
+					{tabs.map((tab) => (
+						<div key={tab.id ?? "all"} className="max-w-full">
+							<ActiveFilterButton id={tab.id}>
+								<button type="button" aria-pressed="true" className={ACTIVE_TAB_CLASS}>
+									{tab.label}
 								</button>
 							</ActiveFilterButton>
 
-							<InactiveFilterButton id={category.id}>
-								<button type="button" aria-pressed="false" className={inactiveButtonClassName}>
-									<span className="block max-w-full whitespace-normal break-words">
-										{category.name[locale]}
-									</span>
+							<InactiveFilterButton id={tab.id}>
+								<button type="button" aria-pressed="false" className={INACTIVE_TAB_CLASS}>
+									{tab.label}
 								</button>
 							</InactiveFilterButton>
 						</div>

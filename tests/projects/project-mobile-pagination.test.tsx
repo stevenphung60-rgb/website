@@ -49,7 +49,7 @@ describe("project responsive pagination", () => {
 		});
 	});
 
-	it("shows 12 projects on mobile while retaining 5 projects per page on desktop", async () => {
+	it("shows 8 projects per page on both mobile and desktop", async () => {
 		render(
 			<ProjectFilterProvider>
 				<ProjectGridController projectIds={projectIds} limitRows>
@@ -65,7 +65,7 @@ describe("project responsive pagination", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getAllByTestId("project-page-card")).toHaveLength(12);
+			expect(screen.getAllByTestId("project-page-card")).toHaveLength(8);
 		});
 		expect(screen.getByRole("status")).toHaveTextContent("Trang 1 / 2");
 
@@ -74,9 +74,7 @@ describe("project responsive pagination", () => {
 			window.dispatchEvent(new Event("resize"));
 		});
 
-		await waitFor(() => {
-			expect(screen.getAllByTestId("project-page-card")).toHaveLength(5);
-		});
+		expect(screen.getAllByTestId("project-page-card")).toHaveLength(8);
 	});
 
 	it("returns to page one when the project category changes", async () => {
@@ -102,7 +100,7 @@ describe("project responsive pagination", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getAllByTestId("project-page-card")).toHaveLength(12);
+			expect(screen.getAllByTestId("project-page-card")).toHaveLength(8);
 		});
 
 		await user.click(screen.getByRole("button", { name: "Go to page two" }));
@@ -113,9 +111,9 @@ describe("project responsive pagination", () => {
 		await user.click(screen.getByRole("button", { name: "Filter category A" }));
 
 		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Trang 1 / 1");
+			expect(screen.getByRole("status")).toHaveTextContent("Trang 1 / 2");
 		});
-		expect(screen.getAllByTestId("project-page-card")).toHaveLength(12);
+		expect(screen.getAllByTestId("project-page-card")).toHaveLength(8);
 	});
 
 	it("returns to the exact project list start after changing pages", async () => {
@@ -142,7 +140,7 @@ describe("project responsive pagination", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getAllByTestId("project-page-card")).toHaveLength(12);
+			expect(screen.getAllByTestId("project-page-card")).toHaveLength(8);
 		});
 
 		const listStart = document.getElementById("projects-list-start");

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import HomepageLoading from "src/app/(main)/[lang]/homepage-loading";
 import Prefetch from "src/components/behaviors/prefetch";
+import { PageLoader } from "src/components/page-loader";
 import type { Locale } from "src/lib/i18n/config";
 import { generateHomeMetadata } from "src/lib/seo/metadata";
 import { getHeroInfo } from "src/server/hero";
 
 import AboutProductionCapabilitySection from "./about/about-production-capability-section";
-import HeroSection from "./home-hero-section";
 import HomeFeaturedClientsSection from "./home-featured-clients-section";
 import HomeFeaturedProjectsSection from "./home-featured-projects-section";
+import HeroSection from "./home-hero-section";
 import HomeMachineryTechnologySection from "./home-machinery-technology-section";
 import HomeProductsSectionDatabase from "./home-products-section-database";
 import HomeServicesSection from "./home-services-section";
@@ -31,7 +31,7 @@ export default async function HomePage({
 	const { lang: locale } = await params;
 
 	return (
-		<Suspense fallback={<HomepageLoading />}>
+		<Suspense fallback={<PageLoader />}>
 			<HomePageContent locale={locale} />
 		</Suspense>
 	);

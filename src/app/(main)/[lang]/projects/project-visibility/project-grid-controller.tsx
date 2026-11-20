@@ -10,17 +10,8 @@ import {
 import { useProjectFilterState } from "../project-filter/project-filter.state";
 import { ProjectVisibilityContext } from "./project-visibility.state";
 
-const DESKTOP_PAGE_SIZE = 5;
-const MOBILE_PAGE_SIZE = 12;
-
-/**
- * Get number of columns based on window width
- * Matches Tailwind breakpoints: md:grid-cols-2 lg:grid-cols-3
- */
-function getPageSize(width: number): number {
-	if (width < 768) return MOBILE_PAGE_SIZE;
-	return DESKTOP_PAGE_SIZE;
-}
+/** Two full rows of the 4-column desktop grid; divides evenly into 1 and 2 columns too */
+const PAGE_SIZE = 8;
 
 interface ProjectGridControllerProps {
 	projectIds: string[];
@@ -31,7 +22,7 @@ interface ProjectGridControllerProps {
 /**
  * Client component that manages project visibility based on:
  * - Filter state selected categoryId
- * - Pagination, 5 projects per page
+ * - Pagination, 8 projects per page
  *
  * Cards register themselves when they load, and visibility is recalculated.
  */
@@ -42,28 +33,19 @@ export function ProjectGridController({
 }: ProjectGridControllerProps) {
 	const { selectedCategory } = useProjectFilterState();
 	const [isReady, setIsReady] = useState(false);
-	const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [loadedProjects, setLoadedProjects] = useState<
 		Map<string, string | null>
 	>(new Map());
 
 	useLayoutEffect(() => {
-		const updateLayoutState = () => {
-			setPageSize(getPageSize(window.innerWidth));
-			setIsReady(true);
-		};
-
-		updateLayoutState();
-		window.addEventListener("resize", updateLayoutState);
-
-		return () => window.removeEventListener("resize", updateLayoutState);
+		setIsReady(true);
 	}, []);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: A category or breakpoint change must reset pagination even though their values are not read inside the effect.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: A category change must reset pagination even though its value is not read inside the effect.
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [selectedCategory, pageSize]);
+	}, [selectedCategory]);
 
 	const registerProject = useCallback((id: string, categoryId: string | null) => {
 		setLoadedProjects((prev) => {
@@ -94,10 +76,10 @@ export function ProjectGridController({
 			};
 		}
 
-		const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+		const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 		const safePage = Math.min(currentPage, pageCount);
-		const startIndex = (safePage - 1) * pageSize;
-		const visible = new Set(filtered.slice(startIndex, startIndex + pageSize));
+		const startIndex = (safePage - 1) * PAGE_SIZE;
+		const visible = new Set(filtered.slice(startIndex, startIndex + PAGE_SIZE));
 
 		return {
 			visibleIds: visible,
@@ -110,7 +92,6 @@ export function ProjectGridController({
 		selectedCategory,
 		limitRows,
 		currentPage,
-		pageSize,
 	]);
 
 	useEffect(() => {

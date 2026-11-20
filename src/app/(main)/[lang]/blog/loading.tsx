@@ -1,47 +1,8 @@
-const BLOG_LOADING_CARD_KEYS = [
-	"blog-loading-1",
-	"blog-loading-2",
-	"blog-loading-3",
-	"blog-loading-4",
-	"blog-loading-5",
-	"blog-loading-6",
-	"blog-loading-7",
-	"blog-loading-8",
-	"blog-loading-9",
-	"blog-loading-10",
-	"blog-loading-11",
-	"blog-loading-12",
-];
+import { PageLoader } from "src/components/page-loader";
 
-export default function BlogLoading() {
-	return (
-		<main className="bg-[#FAF7F1] px-4 py-10 text-[#342312] sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-			<div className="mx-auto max-w-[1560px] animate-pulse space-y-8">
-				<div className="h-5 w-40 rounded bg-[#E7D0AF]/60" />
-				<div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-					<div className="space-y-10">
-						<div className="h-[360px] border border-[#E7D0AF] bg-white" />
-						<div className="grid grid-cols-2 gap-3 md:gap-6 xl:grid-cols-3">
-							{BLOG_LOADING_CARD_KEYS.map((key, index) => (
-								<div
-									key={key}
-									className={[
-										"h-[310px] border border-[#E7D0AF] bg-white md:h-[380px]",
-										index >= 6 ? "lg:hidden" : "",
-									]
-										.filter(Boolean)
-										.join(" ")}
-								/>
-							))}
-						</div>
-					</div>
-					<div className="hidden space-y-6 lg:block">
-						<div className="h-72 border border-[#E7D0AF] bg-white" />
-						<div className="h-72 border border-[#E7D0AF] bg-white" />
-						<div className="h-40 border border-[#E7D0AF] bg-white" />
-					</div>
-				</div>
-			</div>
-		</main>
-	);
+/**
+ * Route loading state: the shared site loader
+ */
+export default function Loading() {
+	return <PageLoader />;
 }

@@ -1,14 +1,13 @@
 import type React from "react";
 import { Suspense } from "react";
 import { FloatingContactButtons } from "src/components/floating-contact-buttons";
+import { FooterPlaceholder, HeaderPlaceholder } from "src/components/page-loader";
 import { OrganizationSchema, WebsiteSchema } from "src/components/seo/json-ld";
 import type { Locale } from "src/lib/i18n/config";
 import { getContactInfo } from "src/server/contact";
 import SplashScreenProvider from "../../splash-screen-provider";
 import Footer from "./layout/footer";
-import FooterLoading from "./layout/footer-loading";
 import Header from "./layout/header";
-import HeaderLoading from "./layout/header-loading";
 
 export async function generateStaticParams() {
 	return [{ lang: "en" }, { lang: "vi" }];
@@ -36,13 +35,13 @@ export default async function MainLayout({
 
 			<SplashScreenProvider>
 				<div className="min-h-screen">
-					<Suspense fallback={<HeaderLoading />}>
+					<Suspense fallback={<HeaderPlaceholder />}>
 						<Header locale={locale} />
 					</Suspense>
 
 					<main>{children}</main>
 
-					<Suspense fallback={<FooterLoading />}>
+					<Suspense fallback={<FooterPlaceholder />}>
 						<Footer locale={locale} />
 					</Suspense>
 

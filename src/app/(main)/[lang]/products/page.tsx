@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageLoader } from "src/components/page-loader";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateProductsMetadata } from "src/lib/seo/metadata";
-import ProductsPageLoading from "./products-page-loading";
 import ProductsSectionDatabase from "./products-section-database";
 
 interface ProductsPageProps {
@@ -27,7 +27,7 @@ export default function SuspendedProductsPage({
 	searchParams,
 }: ProductsPageProps) {
 	return (
-		<Suspense fallback={<ProductsPageLoading />}>
+		<Suspense fallback={<PageLoader />}>
 			<ProductsPage params={params} searchParams={searchParams} />
 		</Suspense>
 	);

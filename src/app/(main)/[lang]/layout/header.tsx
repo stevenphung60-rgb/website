@@ -208,11 +208,12 @@ export default async function Header({ locale }: { locale: Locale }) {
 								/>
 							</div>
 
-							<div className="hidden shrink-0 items-center gap-2 lg:flex">
+							{/* Phone from lg, email from xl (room for search); the language switch from md up (tablets have no mobile menu) */}
+							<div className="hidden shrink-0 items-center gap-2 md:flex">
 								{contactInfo.phone1 ? (
 									<a
 										href={`tel:${contactInfo.phone1.replace(/[^\d+]/g, "")}`}
-										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
+										className="hidden min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55 lg:inline-flex"
 									>
 										<Phone className="h-4 w-4 text-[#A87E3C]" />
 										<span>{contactInfo.phone1}</span>
@@ -222,7 +223,7 @@ export default async function Header({ locale }: { locale: Locale }) {
 								{contactInfo.email1 ? (
 									<a
 										href={`mailto:${contactInfo.email1}`}
-										className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55"
+										className="hidden min-h-9 items-center gap-1.5 rounded-full px-2.5 font-heading text-[15px] font-medium text-[#342312] transition-colors hover:bg-[#E7D0AF]/55 xl:inline-flex"
 									>
 										<Mail className="h-4 w-4 text-[#A87E3C]" />
 										<span>{contactInfo.email1}</span>

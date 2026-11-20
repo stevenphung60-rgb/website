@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageLoader } from "src/components/page-loader";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateContactMetadata } from "src/lib/seo/metadata";
 import { getHeroContactInfo } from "src/server/herocontact/get-herocontact-info.query";
-import ContactPageLoading from "./contact-page-loading";
 import ContactSectionDatabase from "./contact-section-database";
 import HeroContactBanner from "./hero-contact-banner";
 
@@ -26,7 +26,7 @@ export async function generateMetadata({
 
 export default function SuspendedContactPage({ params }: ContactPageProps) {
 	return (
-		<Suspense fallback={<ContactPageLoading />}>
+		<Suspense fallback={<PageLoader />}>
 			<ContactPage params={params} />
 		</Suspense>
 	);

@@ -1,9 +1,8 @@
 "use client";
 
-import { Calendar, MapPin } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import LocaleLink from "src/components/behaviors/LocaleLink";
+import { ProjectGridCard } from "src/components/projects/project-grid-card";
 import type { Locale } from "src/lib/i18n/config";
 
 export type HomeProjectCardItem = {
@@ -44,9 +43,6 @@ export default function HomeFeaturedProjectsShowcase({
 	const [isVisible, setIsVisible] = useState(false);
 
 	const activeGroup = groups.find((group) => group.key === activeCategoryKey) || groups[0];
-
-	const locationLabel = locale === "vi" ? "Địa điểm" : "Location";
-	const timeLabel = locale === "vi" ? "Thời gian" : "Time";
 
 	useEffect(() => {
 		const currentSection = sectionRef.current;
@@ -217,83 +213,25 @@ export default function HomeFeaturedProjectsShowcase({
 
 			<div
 				key={activeGroup.key}
-				className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:none] lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 lg:snap-none [&::-webkit-scrollbar]:hidden"
+				className="-mb-5 flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain pb-8 pt-2 [scrollbar-width:none] lg:mb-0 lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:overflow-visible lg:pb-0 lg:pt-0 lg:snap-none [&::-webkit-scrollbar]:hidden"
 			>
 				{activeGroup.projects.map((project, index) => (
-					<LocaleLink
+					<div
 						key={project.id}
-						href={`/projects/${project.id}`}
-						className="home-project-card-reveal group flex h-[460px] w-[86vw] max-w-[420px] shrink-0 snap-start sm:h-[510px] lg:block lg:h-full lg:w-auto lg:max-w-none"
+						className="home-project-card-reveal flex w-[86vw] max-w-[420px] shrink-0 snap-start lg:w-auto lg:max-w-none"
 						style={{ animationDelay: `${560 + index * 150}ms` }}
 					>
-						<article className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden border border-[#A87E3C]/28 bg-[#F7F1E6] lg:block lg:h-[480px] lg:border-[#342312]/15 lg:bg-[#342312]">
-							<div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#E7D0AF]/25 lg:absolute lg:inset-0 lg:aspect-auto">
-								<Image
-									src={project.imageUrl}
-									alt={project.name}
-									fill
-									className="object-cover transition duration-700 ease-out lg:group-hover:scale-[1.045] lg:group-hover:brightness-[1.04] lg:group-hover:saturate-[1.05]"
-									sizes="(min-width: 1024px) 33vw, (min-width: 768px) 420px, 86vw"
-								/>
-
-								<div className="absolute inset-0 bg-gradient-to-t from-[#342312]/18 via-transparent to-transparent lg:bg-gradient-to-t lg:from-[#342312]/82 lg:via-[#342312]/26 lg:transition lg:duration-500" />
-							</div>
-
-							<div className="pointer-events-none absolute inset-0 border border-[#E7D0AF]/20 transition duration-500 lg:border-[#E7D0AF]/14 lg:group-hover:border-[#E7D0AF]/55" />
-
-							<div className="relative z-10 flex min-w-0 items-center gap-2 px-5 pb-0 pt-4 lg:absolute lg:left-6 lg:top-6 lg:max-w-[calc(100%-2.5rem)] lg:gap-3 lg:p-0">
-								<span className="h-px w-6 shrink-0 bg-[#A87E3C] lg:w-8 lg:bg-[#E7D0AF]" />
-
-								<p className="line-clamp-1 min-w-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#A87E3C] lg:text-[12px] lg:tracking-[0.2em] lg:text-[#F0D5AB] lg:[text-shadow:0_1px_6px_rgba(22,14,6,0.85)]">
-									{project.categoryName}
-								</p>
-							</div>
-
-							<div className="relative z-10 flex min-w-0 flex-1 flex-col bg-[#F7F1E6] p-5 pt-3 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block lg:bg-transparent lg:p-6 lg:[text-shadow:0_2px_10px_rgba(22,14,6,0.72)]">
-								<h3 className="mb-3 line-clamp-2 break-words text-[20px] font-black uppercase leading-[1.22] tracking-[-0.02em] text-[#342312] transition-colors duration-300 group-hover:text-[#A87E3C] lg:mb-0 lg:line-clamp-3 lg:text-[38px] lg:leading-[1.03] lg:tracking-[-0.04em] lg:text-[#F7F1E6] lg:group-hover:text-[#E7D0AF]">
-									{project.name}
-								</h3>
-
-								{project.location || project.year ? (
-									<div className="mb-3 space-y-2 border-y border-[#A87E3C]/22 py-3 lg:mb-0 lg:mt-5 lg:space-y-2.5 lg:border-[#E7D0AF]/32 lg:py-4">
-										{project.location ? (
-											<div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
-												<MapPin className="mt-0.5 size-4 shrink-0 text-[#A87E3C] lg:mt-1 lg:text-[#F0D5AB]" />
-
-												<p className="min-w-0 flex-1 truncate text-[14px] font-semibold leading-5 text-[#5A3719] lg:line-clamp-none lg:overflow-visible lg:text-clip lg:whitespace-normal lg:leading-6 lg:text-[#F7F1E6]/95">
-													<span className="font-medium text-[#A87E3C] lg:font-light lg:text-[#F0D5AB]/88">
-														{locationLabel}:{" "}
-													</span>
-
-													<span className="font-bold">{project.location}</span>
-												</p>
-											</div>
-										) : null}
-
-										{project.year ? (
-											<div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
-												<Calendar className="mt-0.5 size-4 shrink-0 text-[#A87E3C] lg:mt-1 lg:text-[#F0D5AB]" />
-
-												<p className="min-w-0 flex-1 truncate text-[14px] font-semibold leading-5 text-[#5A3719] lg:line-clamp-none lg:overflow-visible lg:text-clip lg:whitespace-normal lg:leading-6 lg:text-[#F7F1E6]/95">
-													<span className="font-medium text-[#A87E3C] lg:font-light lg:text-[#F0D5AB]/88">
-														{timeLabel}:{" "}
-													</span>
-
-													<span className="font-bold">{project.year}</span>
-												</p>
-											</div>
-										) : null}
-									</div>
-								) : null}
-
-								{project.description ? (
-									<p className="line-clamp-2 text-[14px] leading-[1.65] text-[#6B5137] lg:mt-4 lg:leading-[1.75] lg:text-[#F7F1E6]/92">
-										{project.description}
-									</p>
-								) : null}
-							</div>
-						</article>
-					</LocaleLink>
+						<ProjectGridCard
+							locale={locale}
+							projectId={project.id}
+							name={project.name}
+							categoryName={project.categoryName}
+							imageUrl={project.imageUrl}
+							location={project.location}
+							year={project.year}
+							imageSizes="(min-width: 1280px) 25vw, (min-width: 1024px) 50vw, (min-width: 768px) 420px, 86vw"
+						/>
+					</div>
 				))}
 			</div>
 		</section>

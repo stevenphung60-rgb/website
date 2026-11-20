@@ -7,6 +7,17 @@ interface Props {
 	currentLang: Locale;
 }
 
+const LANGUAGES: { code: Locale; label: string }[] = [
+	{ code: "vi", label: "VI" },
+	{ code: "en", label: "EN" },
+];
+
+/**
+ * Pill-shaped VI / EN switch: the active language sits in a dark rounded pill
+ * inside a light beige track.
+ * Below md it only appears in the mobile menu, where the whole switch is 44px tall (touch target);
+ * from md up it sits in the header at a compact size.
+ */
 export function LanguageSwitcher({ currentLang }: Props) {
 	const pathname = usePathname();
 	const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
@@ -14,36 +25,28 @@ export function LanguageSwitcher({ currentLang }: Props) {
 	const buildPath = (lang: Locale) => `/${lang}${pathWithoutLocale}`;
 
 	return (
-		<div className="inline-flex shrink-0 items-center overflow-hidden rounded-full border border-[#E7D0AF] bg-[#E7D0AF] text-[12px] font-semibold leading-none shadow-sm sm:text-[14px]">
-			<button
-				type="button"
-				aria-pressed={currentLang === "vi"}
-				className={`min-h-8 min-w-9 px-2.5 py-1 transition-colors duration-200 sm:min-h-9 sm:min-w-10 sm:px-3 ${
-					currentLang === "vi"
-						? "bg-[#342312] text-[#E7D0AF]"
-						: "bg-[#E7D0AF] text-[#342312] hover:bg-[#DABF96]"
-				}`}
-				onClick={() => {
-					window.location.href = buildPath("vi");
-				}}
-			>
-				VI
-			</button>
+		<div className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#EADCC4] p-1 shadow-[inset_0_1px_2px_rgba(52,35,18,0.08)]">
+			{LANGUAGES.map(({ code, label }) => {
+				const isActive = currentLang === code;
 
-			<button
-				type="button"
-				aria-pressed={currentLang === "en"}
-				className={`min-h-8 min-w-9 px-2.5 py-1 transition-colors duration-200 sm:min-h-9 sm:min-w-10 sm:px-3 ${
-					currentLang === "en"
-						? "bg-[#342312] text-[#E7D0AF]"
-						: "bg-[#E7D0AF] text-[#342312] hover:bg-[#DABF96]"
-				}`}
-				onClick={() => {
-					window.location.href = buildPath("en");
-				}}
-			>
-				EN
-			</button>
+				return (
+					<button
+						key={code}
+						type="button"
+						aria-pressed={isActive}
+						className={`inline-flex h-9 min-w-14 items-center justify-center rounded-full px-4 text-[15px] font-bold leading-none tracking-[0.06em] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A87E3C] md:h-8 md:min-w-12 md:px-3 md:text-[15px] ${
+							isActive
+								? "bg-[#342312] text-[#FFF8EC] shadow-sm"
+								: "text-[#342312] hover:bg-[#342312]/10"
+						}`}
+						onClick={() => {
+							if (!isActive) window.location.href = buildPath(code);
+						}}
+					>
+						{label}
+					</button>
+				);
+			})}
 		</div>
 	);
 }

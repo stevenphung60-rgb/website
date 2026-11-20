@@ -35,7 +35,7 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 			className="group block h-full min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A87E3C] focus-visible:ring-offset-2"
 			data-testid="service-card"
 		>
-			<Card className="relative grid h-full min-w-0 gap-0 overflow-hidden rounded-none border border-[#342312]/10 bg-[#FAF7F0] py-0 shadow-[0_12px_36px_rgba(52,35,18,0.08)] transition-all duration-500 motion-reduce:transition-none md:h-auto md:gap-6 md:border-[#342312]/15 md:bg-[#F7F1E6] md:shadow-sm md:hover:-translate-y-1 md:hover:border-[#342312]/35 md:hover:shadow-[0_24px_70px_rgba(0,0,0,0.16)] md:motion-reduce:hover:translate-y-0 lg:h-[420px] lg:grid-cols-2 xl:h-[460px]">
+			<Card className="relative grid h-full min-w-0 gap-0 overflow-hidden rounded-none border border-[#342312]/10 bg-[#FAF7F0] py-0 shadow-[0_12px_36px_rgba(52,35,18,0.08)] transition-all duration-500 motion-reduce:transition-none md:h-[260px] md:grid-cols-2 md:gap-0 md:border-[#342312]/15 md:bg-[#F7F1E6] md:shadow-sm md:hover:-translate-y-1 md:hover:border-[#342312]/35 md:hover:shadow-[0_24px_70px_rgba(0,0,0,0.16)] md:motion-reduce:hover:translate-y-0 lg:h-[280px] xl:h-[300px]">
 				<div className="pointer-events-none absolute left-0 top-0 z-20 hidden h-[3px] w-full origin-left bg-[#342312] md:block md:scale-x-0 md:transition-transform md:duration-500 md:group-hover:scale-x-100 md:motion-reduce:transition-none" />
 				<div
 					aria-hidden="true"
@@ -43,8 +43,8 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 				/>
 
 				<div
-					className={`relative z-10 aspect-[16/10] w-full overflow-hidden sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-auto lg:h-full ${
-						isReversed ? "lg:order-2" : "lg:order-1"
+					className={`relative z-10 aspect-[16/10] w-full overflow-hidden sm:aspect-[16/9] md:aspect-auto md:h-full ${
+						isReversed ? "md:order-2" : "md:order-1"
 					}`}
 				>
 					<Image
@@ -52,7 +52,7 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 						alt={serviceName}
 						width={1200}
 						height={850}
-						sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(100vw - 3rem), 50vw"
+						sizes="(max-width: 767px) calc(100vw - 2rem), 40vw"
 						className="h-full w-full object-cover transition-all duration-700 motion-reduce:transition-none md:grayscale-[12%] md:group-hover:scale-105 md:group-hover:grayscale-0 md:motion-reduce:group-hover:scale-100"
 					/>
 
@@ -60,8 +60,8 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 				</div>
 
 				<CardContent
-					className={`relative z-10 flex min-h-[200px] min-w-0 flex-col overflow-visible p-5 sm:min-h-[210px] sm:p-6 md:min-h-[280px] md:justify-between md:overflow-hidden md:p-8 lg:h-full lg:min-h-0 lg:p-10 xl:p-12 ${
-						isReversed ? "lg:order-1" : "lg:order-2"
+					className={`relative z-10 flex min-h-[200px] min-w-0 flex-col overflow-visible p-5 sm:min-h-[210px] sm:p-6 md:h-full md:min-h-0 md:justify-between md:overflow-hidden md:p-6 lg:p-8 xl:p-9 ${
+						isReversed ? "md:order-1" : "md:order-2"
 					}`}
 				>
 					<div className="flex min-w-0 items-center gap-2 md:gap-4">
@@ -73,10 +73,10 @@ export default async function ServiceDialog({ serviceId, locale, index = 0 }: Se
 						</p>
 					</div>
 
-					<div className="flex min-w-0 items-stretch gap-4 py-5 md:block md:py-10 lg:py-0">
+					<div className="flex min-w-0 items-stretch gap-4 py-5 md:mt-5 md:block md:py-0 lg:mt-6">
 						<span className="w-[2px] shrink-0 bg-[#B99354] md:hidden" />
 
-						<h2 className="min-w-0 max-w-2xl break-words text-[24px] font-black uppercase leading-[1.16] tracking-[0.01em] text-[#342312] transition-colors duration-300 md:line-clamp-none md:text-[42px] md:leading-[1.12] md:tracking-[0.03em] md:group-hover:text-[#A87E3C] lg:text-[48px] xl:text-[56px]">
+						<h2 className="min-w-0 max-w-2xl break-words text-[22px] font-black uppercase leading-[1.16] tracking-[0.01em] text-[#342312] transition-colors duration-300 md:line-clamp-3 md:pt-[0.2em] md:text-[24px] md:leading-[1.28] md:tracking-[0.02em] md:group-hover:text-[#A87E3C] lg:text-[28px] xl:text-[32px]">
 							{serviceName}
 						</h2>
 					</div>

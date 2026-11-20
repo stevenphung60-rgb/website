@@ -61,13 +61,13 @@ export default async function ProjectsSectionDatabase({
 			id="projects"
 			className="relative w-full bg-[#FAF7F0] pb-12 pt-0 sm:pb-16 lg:pb-20"
 		>
-			<div className="mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8">
+			<div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
 				{projectIds.length > 0 ? (
 					<ProjectFilterProvider selectedCategory={initialCategory}>
 						{/* biome-ignore lint/correctness/useUniqueElementIds: Stable anchor used by category links. */}
 						<div
 							id="projects-filter"
-							className="relative z-30 scroll-mt-24 pt-6 md:-mt-9 md:pt-0 lg:-mt-12"
+							className="relative z-30 scroll-mt-24 pt-6 md:-mt-7 md:pt-0"
 						>
 							<ProjectFilterButtons locale={locale} />
 
@@ -80,7 +80,7 @@ export default async function ProjectsSectionDatabase({
 									<ProjectMobilePageIndicator locale={locale} />
 								</div>
 
-								<div className="mt-4 grid grid-cols-1 gap-6 sm:mt-5 md:mt-10 md:block md:space-y-10 lg:mt-12 lg:space-y-12">
+								<div className="mt-4 grid grid-cols-1 gap-5 sm:mt-6 sm:grid-cols-2 sm:gap-6 md:mt-10 lg:mt-12 lg:grid-cols-3 xl:grid-cols-4">
 									{projectIds.map((id) => (
 										<Suspense key={id} fallback={<ProjectCardSkeleton />}>
 											<ProjectCard id={id} locale={locale} />

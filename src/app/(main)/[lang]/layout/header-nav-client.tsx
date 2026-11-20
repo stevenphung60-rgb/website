@@ -25,7 +25,7 @@ export function HeaderNavClient({
 	}, [pathname]);
 
 	return (
-		<nav className="hidden w-full items-center justify-center gap-8 font-heading md:flex">
+		<nav className="hidden w-full items-center justify-center gap-1 font-heading md:flex lg:gap-4 xl:gap-8">
 			{navigation.map((item) => {
 				const hasChildren = !!item.children?.length;
 				const isActive = activeMenu === item.name;
@@ -37,7 +37,7 @@ export function HeaderNavClient({
 							href={item.href}
 							prefetch={true}
 							onClick={() => setActiveMenu(null)}
-							className="relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.1em] text-[#241407] hover:text-[#A87E3C]
+							className="relative whitespace-nowrap px-2 py-2 text-[14px] font-semibold uppercase tracking-[0.06em] text-[#241407] lg:px-3 lg:text-[15px] lg:tracking-[0.08em] xl:px-4 xl:text-[16px] xl:tracking-[0.1em] hover:text-[#A87E3C]
 							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
 							after:origin-left after:scale-x-0 after:bg-[#A87E3C] after:transition-transform
 							hover:after:scale-x-100"
@@ -58,7 +58,7 @@ export function HeaderNavClient({
 							href={item.href}
 							prefetch={true}
 							onClick={() => setActiveMenu(null)}
-							className={`relative px-4 py-2 text-[16px] font-semibold uppercase tracking-[0.1em] text-[#241407] transition-colors hover:text-[#A87E3C]
+							className={`relative whitespace-nowrap px-2 py-2 text-[14px] font-semibold uppercase tracking-[0.06em] text-[#241407] lg:px-3 lg:text-[15px] lg:tracking-[0.08em] xl:px-4 xl:text-[16px] xl:tracking-[0.1em] transition-colors hover:text-[#A87E3C]
 							after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-[2px]
 							after:origin-left after:bg-[#A87E3C] after:transition-transform ${
 								isActive ? "after:scale-x-100" : "after:scale-x-0"

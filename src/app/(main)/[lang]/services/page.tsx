@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageLoader } from "src/components/page-loader";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { getDictionary } from "src/lib/i18n/dictionaries";
 import { generateServicesMetadata } from "src/lib/seo/metadata";
 import { getHeroServiceInfo } from "src/server/heroservice/get-heroservice-info.query";
 import HeroServiceBanner from "./hero-service-banner";
-import ServicesPageLoading from "./services-page-loading";
 import ServicesSectionDatabase from "./services-section-database";
 
 interface ServicesPageProps {
@@ -27,7 +27,7 @@ export async function generateMetadata({
 
 export default function SuspendedServicesPage({ params }: ServicesPageProps) {
 	return (
-		<Suspense fallback={<ServicesPageLoading />}>
+		<Suspense fallback={<PageLoader />}>
 			<ServicesPage params={params} />
 		</Suspense>
 	);

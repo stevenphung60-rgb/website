@@ -40,6 +40,8 @@ vi.mock("next/link", () => ({
  */
 vi.mock("next/cache", () => ({
 	unstable_cacheTag: () => {},
+	cacheTag: () => {},
+	cacheLife: () => {},
 	revalidateTag: vi.fn(),
 	revalidatePath: vi.fn(),
 }));

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageLoader } from "src/components/page-loader";
 import ScrollToTopHandler from "src/components/scroll-to-top-handler";
 import type { Locale } from "src/lib/i18n/config";
 import { generateProjectsMetadata } from "src/lib/seo/metadata";
 import { getHeroProjectInfo } from "src/server/heroproject/get-heroproject-info.query";
 import HeroProjectBanner from "./hero-project-banner";
-import ProjectsPageLoading from "./projects-page-loading";
 import ProjectsSectionDatabase from "./projects-section-database";
 
 interface ProjectsPageProps {
@@ -29,7 +29,7 @@ export default function SuspendedProjectsPage({
 	searchParams,
 }: ProjectsPageProps) {
 	return (
-		<Suspense fallback={<ProjectsPageLoading />}>
+		<Suspense fallback={<PageLoader />}>
 			<ProjectsPage params={params} searchParams={searchParams} />
 		</Suspense>
 	);

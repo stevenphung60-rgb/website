@@ -507,3 +507,51 @@
 	animation: projectFilterReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	will-change: transform, opacity, filter;
 }
+
+/* Page loader (src/components/page-loader.tsx): fade in after a short delay so fast loads never flash it */
+@keyframes page-loader-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes page-loader-slide {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(250%);
+	}
+}
+
+@keyframes page-loader-pulse {
+	0%,
+	100% {
+		opacity: 0.35;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+.page-loader {
+	animation: page-loader-in 300ms ease-out 300ms both;
+}
+
+.page-loader-bar {
+	animation: page-loader-slide 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-loader {
+		animation: none;
+	}
+
+	.page-loader-bar {
+		width: 100%;
+		animation: page-loader-pulse 1.6s ease-in-out infinite;
+	}
+}

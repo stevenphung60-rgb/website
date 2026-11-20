@@ -8,6 +8,7 @@ import { type Db, MongoClient } from "mongodb";
 class DatabaseClient {
 	private static instance: DatabaseClient;
 	private client: MongoClient | null = null;
+	private connecting: Promise<MongoClient> | null = null;
 	private db: Db | null = null;
 
 	private constructor() {}
@@ -52,13 +53,34 @@ class DatabaseClient {
 	 * Get MongoDB client instance
 	 */
 	public async getClient(): Promise<MongoClient> {
-		if (!this.client) {
-			const connectionString = this.buildConnectionString();
-			this.client = new MongoClient(connectionString);
-			await this.client.connect();
+		if (this.client) {
+			return this.client;
 		}
 
-		return this.client;
+		if (!this.connecting) {
+			const connectionString = this.buildConnectionString();
+			// primaryPreferred: if the replica set primary is unreachable, reads fall back to a
+			// secondary so public pages keep working (writes still need the primary).
+			const client = new MongoClient(connectionString, { readPreference: "primaryPreferred" });
+
+			this.connecting = client
+				.connect()
+				.then(() => {
+					this.client = client;
+					return client;
+				})
+				.catch(async (error) => {
+					// Drop the failed client so the next request retries instead of reusing a
+					// closed topology ("Topology is closed").
+					await client.close().catch(() => {});
+					throw error;
+				})
+				.finally(() => {
+					this.connecting = null;
+				});
+		}
+
+		return this.connecting;
 	}
 
 	/**
